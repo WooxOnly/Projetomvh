@@ -28,17 +28,21 @@ export async function POST(request: Request) {
     await runDailyOperation({
       spreadsheetUploadId: latestOperationRun.spreadsheetUpload.id,
       decisionMode: latestOperationRun.decisionMode === "override" ? "override" : "default",
-      availablePropertyManagerIds: latestOperationRun.availablePMs.map(
-        (item) => item.propertyManagerId,
-      ),
+      availablePropertyManagerIds: latestOperationRun.availablePMs.map(({ propertyManagerId }) => {
+        return propertyManagerId;
+      }),
       preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
       forceEqualCheckins: latestOperationRun.forceEqualCheckins,
       useHereRouting: payload.useHereRouting === true,
-      temporaryOfficeByManagerId: Object.fromEntries(
-        latestOperationRun.availablePMs
-          .filter((item) => item.temporaryOfficeId)
-          .map((item) => [item.propertyManagerId, item.temporaryOfficeId!]),
-      ),
+      temporaryOfficeByManagerId: (() => {
+        const entries: Record<string, string> = {};
+        for (const availablePm of latestOperationRun.availablePMs) {
+          if (availablePm.temporaryOfficeId) {
+            entries[availablePm.propertyManagerId] = availablePm.temporaryOfficeId;
+          }
+        }
+        return entries;
+      })(),
     });
 
     revalidatePath("/dashboard");
