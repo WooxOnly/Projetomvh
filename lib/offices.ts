@@ -78,6 +78,7 @@ export async function ensureDefaultOffices() {
 
   await prisma.office.createMany({
     data: missingOffices,
+    skipDuplicates: true,
   });
 }
 
