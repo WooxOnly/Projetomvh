@@ -25,12 +25,15 @@ export async function POST(request: Request) {
       );
     }
 
+    const availablePropertyManagerIds: string[] = [];
+    for (const availablePm of latestOperationRun.availablePMs) {
+      availablePropertyManagerIds.push(availablePm.propertyManagerId);
+    }
+
     await runDailyOperation({
       spreadsheetUploadId: latestOperationRun.spreadsheetUpload.id,
       decisionMode: latestOperationRun.decisionMode === "override" ? "override" : "default",
-      availablePropertyManagerIds: latestOperationRun.availablePMs.map(({ propertyManagerId }) => {
-        return propertyManagerId;
-      }),
+      availablePropertyManagerIds,
       preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
       forceEqualCheckins: latestOperationRun.forceEqualCheckins,
       useHereRouting: payload.useHereRouting === true,
