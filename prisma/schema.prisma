@@ -1,0 +1,270 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  OPERATIONAL
+}
+
+enum OrlandoRegion {
+  NORTH
+  SOUTH
+  EAST
+  WEST
+  UNASSIGNED
+}
+
+enum LocationReviewStatus {
+  PENDING
+  RESOLVED
+}
+
+enum LocationReviewEntityType {
+  CONDOMINIUM
+  PROPERTY
+  CHECKIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model PropertyManager {
+  id                  String               @id @default(cuid())
+  name                String
+  referenceCode       String?              @unique
+  phone               String?
+  email               String?
+  isActive            Boolean              @default(true)
+  officeId            String?
+  notes               String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  office              Office?              @relation(fields: [officeId], references: [id], onDelete: SetNull)
+  properties          Property[]           @relation("PropertyDefaultPM")
+  checkins            Checkin[]
+  availableInRuns     OperationAvailablePM[]
+  assignments         OperationAssignment[]
+}
+
+model Condominium {
+  id             String   @id @default(cuid())
+  nameOriginal   String
+  nameNormalized String   @unique
+  officeId       String?
+  region         OrlandoRegion @default(UNASSIGNED)
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?
+  lat            Float?
+  lng            Float?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  office         Office?  @relation(fields: [officeId], references: [id], onDelete: SetNull)
+  properties     Property[]
+  checkins       Checkin[]
+}
+
+model Office {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  address      String?
+  city         String?
+  state        String?
+  zipCode      String?
+  lat          Float?
+  lng          Float?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  condominiums Condominium[]
+  propertyManagers PropertyManager[]
+  temporaryOperationPMs OperationAvailablePM[] @relation("OperationAvailablePMTemporaryOffice")
+}
+
+model Property {
+  id                       String   @id @default(cuid())
+  nameOriginal             String
+  nameNormalized           String
+  address                  String?
+  lat                      Float?
+  lng                      Float?
+  bedrooms                 Int?
+  hasBbqGrill              Boolean?
+  notes                    String?
+  condominiumId            String?
+  defaultPropertyManagerId String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  condominium          Condominium?    @relation(fields: [condominiumId], references: [id], onDelete: SetNull)
+  defaultPropertyManager PropertyManager? @relation("PropertyDefaultPM", fields: [defaultPropertyManagerId], references: [id], onDelete: SetNull)
+  checkins              Checkin[]
+
+  @@unique([condominiumId, nameNormalized])
+}
+
+model SpreadsheetUpload {
+  id                      String    @id @default(cuid())
+  operationDate           DateTime
+  fileName                String
+  filePath                String
+  totalRows               Int       @default(0)
+  totalCheckins           Int       @default(0)
+  totalUniqueCondominiums Int       @default(0)
+  totalUniqueProperties   Int       @default(0)
+  totalUniquePMs          Int       @default(0)
+  createdAt               DateTime  @default(now())
+  expiresAt               DateTime
+  checkins                Checkin[]
+  operationRuns           OperationRun[]
+  activeInSystemState     SystemState[]
+}
+
+model SystemState {
+  id                      String            @id
+  activeSpreadsheetUploadId String?
+  lastLocationMaintenanceAt DateTime?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  activeSpreadsheetUpload SpreadsheetUpload? @relation(fields: [activeSpreadsheetUploadId], references: [id], onDelete: SetNull)
+}
+
+model LocationMaintenanceRun {
+  id                      String   @id @default(cuid())
+  condominiumsMissingBefore Int
+  condominiumsMissingAfter  Int
+  propertiesMissingBefore   Int
+  propertiesMissingAfter    Int
+  checkinsMissingBefore     Int
+  checkinsMissingAfter      Int
+  createdAt               DateTime @default(now())
+}
+
+model Checkin {
+  id                    String                @id @default(cuid())
+  spreadsheetUploadId   String
+  operationDate         DateTime
+  condominiumId         String?
+  condominiumName       String?
+  propertyId            String?
+  propertyName          String?
+  address               String?
+  lat                   Float?
+  lng                   Float?
+  bedroomsSnapshot      Int?
+  propertyManagerId     String?
+  propertyManagerName   String?
+  responsibleReference  String?
+  integratorName        String?
+  guestName             String?
+  numberOfNights        Int?
+  doorCode              String?
+  hasBbqGrill           Boolean?
+  hasEarlyCheckin       Boolean?
+  rawDataJson           String?
+  status                String                @default("pending")
+  createdAt             DateTime              @default(now())
+  expiresAt             DateTime
+
+  spreadsheetUpload   SpreadsheetUpload    @relation(fields: [spreadsheetUploadId], references: [id], onDelete: Cascade)
+  condominium         Condominium?         @relation(fields: [condominiumId], references: [id], onDelete: SetNull)
+  property            Property?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  propertyManager     PropertyManager?     @relation(fields: [propertyManagerId], references: [id], onDelete: SetNull)
+  assignments         OperationAssignment[]
+}
+
+model OperationRun {
+  id                String                 @id @default(cuid())
+  spreadsheetUploadId String
+  operationDate     DateTime
+  decisionMode      String
+  preventMixedCondominiumOffices Boolean   @default(true)
+  forceEqualCheckins Boolean               @default(false)
+  status            String                 @default("ready")
+  notes             String?
+  routeAnalysisJson String?
+  routeAnalysisSource String?
+  routeAnalysisModel String?
+  routeAnalysisGeneratedAt DateTime?
+  totalCheckins     Int                    @default(0)
+  totalAssignments  Int                    @default(0)
+  createdAt         DateTime               @default(now())
+  expiresAt         DateTime
+
+  spreadsheetUpload SpreadsheetUpload      @relation(fields: [spreadsheetUploadId], references: [id], onDelete: Cascade)
+  availablePMs      OperationAvailablePM[]
+  assignments       OperationAssignment[]
+}
+
+model OperationAvailablePM {
+  id                String          @id @default(cuid())
+  operationRunId    String
+  propertyManagerId String
+  temporaryOfficeId String?
+
+  operationRun    OperationRun    @relation(fields: [operationRunId], references: [id], onDelete: Cascade)
+  propertyManager PropertyManager @relation(fields: [propertyManagerId], references: [id], onDelete: Cascade)
+  temporaryOffice Office?         @relation("OperationAvailablePMTemporaryOffice", fields: [temporaryOfficeId], references: [id], onDelete: SetNull)
+
+  @@unique([operationRunId, propertyManagerId])
+}
+
+model OperationAssignment {
+  id                String          @id @default(cuid())
+  operationRunId    String
+  checkinId         String
+  propertyManagerId String
+  routeOrder        Int
+  workload          Int             @default(1)
+  clusterLabel      String?
+  source            String          @default("distribution")
+  createdAt         DateTime        @default(now())
+
+  operationRun    OperationRun    @relation(fields: [operationRunId], references: [id], onDelete: Cascade)
+  checkin         Checkin         @relation(fields: [checkinId], references: [id], onDelete: Cascade)
+  propertyManager PropertyManager @relation(fields: [propertyManagerId], references: [id], onDelete: Cascade)
+
+  @@unique([operationRunId, checkinId])
+}
+
+model LocationReview {
+  id                    String                   @id @default(cuid())
+  entityType            LocationReviewEntityType
+  entityId              String
+  status                LocationReviewStatus     @default(PENDING)
+  title                 String
+  originalQuery         String?
+  normalizedAddress     String?
+  condominiumName       String?
+  condominiumCity       String?
+  condominiumState      String?
+  condominiumZipCode    String?
+  confidence            Float?
+  aiModel               String?
+  aiRationale           String?
+  selectedDisplayName   String?
+  selectedLat           Float?
+  selectedLng           Float?
+  candidatesJson        String?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  @@unique([entityType, entityId])
+}
