@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { OrlandoRegion } from "@prisma/client";
+import type { OrlandoRegion } from "@/lib/orlando-region";
 
 import {
   composeAddress,

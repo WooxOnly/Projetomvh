@@ -1,5 +1,4 @@
-import type { OrlandoRegion } from "@prisma/client";
-
+import type { OrlandoRegion } from "@/lib/orlando-region";
 import { normalizeText } from "@/lib/upload/normalize";
 
 type SuggestedClassification = {
