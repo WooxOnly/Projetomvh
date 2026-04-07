@@ -9,7 +9,17 @@ import {
 } from "@/lib/geocoding";
 import { prisma } from "@/lib/prisma";
 
-const DEFAULT_OFFICES = [
+type DefaultOffice = {
+  name: string;
+  slug: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  notes: string;
+};
+
+const DEFAULT_OFFICES: DefaultOffice[] = [
   {
     name: "Office 3",
     slug: "orlando-office",
@@ -50,8 +60,17 @@ export async function ensureDefaultOffices() {
     },
   });
 
-  const existingSlugs = new Set(existingOffices.map((office) => office.slug));
-  const missingOffices = DEFAULT_OFFICES.filter((office) => !existingSlugs.has(office.slug));
+  const existingSlugs = new Set<string>();
+  for (const existingOffice of existingOffices) {
+    existingSlugs.add(existingOffice.slug);
+  }
+
+  const missingOffices: DefaultOffice[] = [];
+  for (const defaultOffice of DEFAULT_OFFICES) {
+    if (!existingSlugs.has(defaultOffice.slug)) {
+      missingOffices.push(defaultOffice);
+    }
+  }
 
   if (missingOffices.length === 0) {
     return;
