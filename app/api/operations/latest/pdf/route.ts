@@ -52,11 +52,15 @@ export async function GET(request: Request) {
     })
       .format(new Date(latestOperationRun.operationDate))
       .replace(/\//g, "-");
-    const managerName = propertyManagerId
-      ? latestOperationRun.assignments.find(
-          (assignment) => assignment.propertyManager.id === propertyManagerId,
-        )?.propertyManager.name
-      : null;
+    let managerName: string | null = null;
+    if (propertyManagerId) {
+      for (const assignment of latestOperationRun.assignments) {
+        if (assignment.propertyManager.id === propertyManagerId) {
+          managerName = assignment.propertyManager.name;
+          break;
+        }
+      }
+    }
     const fileName = managerName
       ? `rota-${fileDate}-${sanitizeFileNamePart(managerName)}.pdf`
       : `rota-${fileDate}.pdf`;
