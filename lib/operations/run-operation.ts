@@ -113,21 +113,31 @@ export async function runDailyOperation(input: RunOperationInput) {
     },
   });
 
-  const temporaryOfficeEntries = Object.entries(input.temporaryOfficeByManagerId ?? {}).filter(
-    ([propertyManagerId, officeId]) =>
-      Boolean(propertyManagerId) &&
-      Boolean(officeId) &&
-      availableManagers.some((manager) => manager.id === propertyManagerId),
-  );
+  const availableManagerIds = new Set<string>();
+  for (const managerRecord of availableManagers) {
+    availableManagerIds.add(managerRecord.id);
+  }
+
+  const temporaryOfficeEntries: Array<[string, string]> = [];
+  for (const [propertyManagerId, officeId] of Object.entries(input.temporaryOfficeByManagerId ?? {})) {
+    if (propertyManagerId && officeId && availableManagerIds.has(propertyManagerId)) {
+      temporaryOfficeEntries.push([propertyManagerId, officeId]);
+    }
+  }
+
+  const temporaryOfficeIds: string[] = [];
+  for (const [, officeId] of temporaryOfficeEntries) {
+    temporaryOfficeIds.push(officeId);
+  }
 
   const temporaryOffices =
     temporaryOfficeEntries.length > 0
       ? await prisma.office.findMany({
           where: {
-            id: {
-              in: temporaryOfficeEntries.map(([, officeId]) => officeId),
-            },
-          },
+             id: {
+               in: temporaryOfficeIds,
+             },
+           },
           select: {
             id: true,
             name: true,
@@ -141,22 +151,27 @@ export async function runDailyOperation(input: RunOperationInput) {
         })
       : [];
 
-  const temporaryOfficeById = new Map(temporaryOffices.map((office) => [office.id, office]));
+  const temporaryOfficeById = new Map();
+  for (const officeRecord of temporaryOffices) {
+    temporaryOfficeById.set(officeRecord.id, officeRecord);
+  }
 
-  const managersForOperation = availableManagers.map((manager) => {
-    const overrideOfficeId = input.temporaryOfficeByManagerId?.[manager.id];
+  const managersForOperation = [];
+  for (const managerRecord of availableManagers) {
+    const overrideOfficeId = input.temporaryOfficeByManagerId?.[managerRecord.id];
     const overrideOffice = overrideOfficeId ? temporaryOfficeById.get(overrideOfficeId) : null;
 
     if (!overrideOffice) {
-      return manager;
+      managersForOperation.push(managerRecord);
+      continue;
     }
 
-    return {
-      ...manager,
+    managersForOperation.push({
+      ...managerRecord,
       officeId: overrideOffice.id,
       office: overrideOffice,
-    };
-  });
+    });
+  }
 
   const basePlan = enforceSmallResortSingleManager(
     await buildOperationPlan({
@@ -211,24 +226,36 @@ export async function runDailyOperation(input: RunOperationInput) {
       totalAssignments: plan.length,
       expiresAt,
       availablePMs: {
-        create: managersForOperation.map((manager) => ({
-          propertyManagerId: manager.id,
-          temporaryOfficeId:
-            input.temporaryOfficeByManagerId?.[manager.id] &&
-            temporaryOfficeById.has(input.temporaryOfficeByManagerId[manager.id]!)
-              ? input.temporaryOfficeByManagerId[manager.id]!
-              : null,
-        })),
+        create: (() => {
+          const rows = [];
+          for (const managerRecord of managersForOperation) {
+            const temporaryOfficeId = input.temporaryOfficeByManagerId?.[managerRecord.id];
+            rows.push({
+              propertyManagerId: managerRecord.id,
+              temporaryOfficeId:
+                temporaryOfficeId && temporaryOfficeById.has(temporaryOfficeId)
+                  ? temporaryOfficeId
+                  : null,
+            });
+          }
+          return rows;
+        })(),
       },
       assignments: {
-        create: plan.map((assignment) => ({
-          checkinId: assignment.checkinId,
-          propertyManagerId: assignment.propertyManagerId,
-          routeOrder: assignment.routeOrder,
-          workload: assignment.workload,
-          clusterLabel: assignment.clusterLabel,
-          source: assignment.source,
-        })),
+        create: (() => {
+          const rows = [];
+          for (const assignmentRecord of plan) {
+            rows.push({
+              checkinId: assignmentRecord.checkinId,
+              propertyManagerId: assignmentRecord.propertyManagerId,
+              routeOrder: assignmentRecord.routeOrder,
+              workload: assignmentRecord.workload,
+              clusterLabel: assignmentRecord.clusterLabel,
+              source: assignmentRecord.source,
+            });
+          }
+          return rows;
+        })(),
       },
     },
     select: {
@@ -239,7 +266,13 @@ export async function runDailyOperation(input: RunOperationInput) {
   await prisma.checkin.updateMany({
     where: {
       id: {
-        in: plan.map((assignment) => assignment.checkinId),
+        in: (() => {
+          const checkinIds: string[] = [];
+          for (const assignmentRecord of plan) {
+            checkinIds.push(assignmentRecord.checkinId);
+          }
+          return checkinIds;
+        })(),
       },
     },
     data: {

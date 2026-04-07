@@ -96,9 +96,12 @@ export async function listOffices() {
     },
   });
 
-  const officesWithoutCoordinates = allOffices.filter(
-    (office) => !isWithinCentralFloridaServiceArea(office),
-  );
+  const officesWithoutCoordinates = [];
+  for (const officeRecord of allOffices) {
+    if (!isWithinCentralFloridaServiceArea(officeRecord)) {
+      officesWithoutCoordinates.push(officeRecord);
+    }
+  }
 
   for (const office of officesWithoutCoordinates) {
     const query = composeAddress([

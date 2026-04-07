@@ -39,21 +39,31 @@ async function getWeeklyLocationMaintenanceSummary() {
     },
   });
 
+  let totalCondominiumsImproved = 0;
+  let totalPropertiesImproved = 0;
+  let totalCheckinsImproved = 0;
+
+  for (const run of runs) {
+    totalCondominiumsImproved += Math.max(
+      0,
+      run.condominiumsMissingBefore - run.condominiumsMissingAfter,
+    );
+    totalPropertiesImproved += Math.max(
+      0,
+      run.propertiesMissingBefore - run.propertiesMissingAfter,
+    );
+    totalCheckinsImproved += Math.max(
+      0,
+      run.checkinsMissingBefore - run.checkinsMissingAfter,
+    );
+  }
+
   return {
     runs,
     totalRuns: runs.length,
-    totalCondominiumsImproved: runs.reduce(
-      (total, run) => total + Math.max(0, run.condominiumsMissingBefore - run.condominiumsMissingAfter),
-      0,
-    ),
-    totalPropertiesImproved: runs.reduce(
-      (total, run) => total + Math.max(0, run.propertiesMissingBefore - run.propertiesMissingAfter),
-      0,
-    ),
-    totalCheckinsImproved: runs.reduce(
-      (total, run) => total + Math.max(0, run.checkinsMissingBefore - run.checkinsMissingAfter),
-      0,
-    ),
+    totalCondominiumsImproved,
+    totalPropertiesImproved,
+    totalCheckinsImproved,
     latestRunAt: runs[0]?.createdAt ?? null,
   };
 }

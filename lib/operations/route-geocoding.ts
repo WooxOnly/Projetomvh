@@ -951,13 +951,14 @@ export async function ensureOperationRouteCoordinates(operationRunId: string) {
     },
   });
 
-  const officeIds = Array.from(
-    new Set(
-      assignments
-        .map((assignment) => assignment.propertyManager.officeId)
-        .filter((value): value is string => Boolean(value)),
-    ),
-  );
+  const officeIdsSet = new Set<string>();
+  for (const assignmentRecord of assignments) {
+    const officeId = assignmentRecord.propertyManager.officeId;
+    if (officeId) {
+      officeIdsSet.add(officeId);
+    }
+  }
+  const officeIds = Array.from(officeIdsSet);
 
   for (const officeId of officeIds) {
     await geocodeOffice(officeId);
@@ -1046,26 +1047,30 @@ export async function auditPropertyLocationData(limit = 200) {
     },
   });
 
-  const candidates = properties
-    .filter((property) => {
-      const missingCoordinates = property.lat == null || property.lng == null;
-      const outsideServiceArea =
-        property.lat != null &&
-        property.lng != null &&
-        !isWithinCentralFloridaServiceArea({ lat: property.lat, lng: property.lng });
-      const farFromCondominium =
-        property.lat != null &&
-        property.lng != null &&
-        property.condominium?.lat != null &&
-        property.condominium?.lng != null &&
-        haversineDistanceMiles(
-          { lat: property.lat, lng: property.lng },
-          { lat: property.condominium.lat, lng: property.condominium.lng },
-        ) > 8;
+  const candidates = [];
+  for (const propertyRecord of properties) {
+    const missingCoordinates = propertyRecord.lat == null || propertyRecord.lng == null;
+    const outsideServiceArea =
+      propertyRecord.lat != null &&
+      propertyRecord.lng != null &&
+      !isWithinCentralFloridaServiceArea({ lat: propertyRecord.lat, lng: propertyRecord.lng });
+    const farFromCondominium =
+      propertyRecord.lat != null &&
+      propertyRecord.lng != null &&
+      propertyRecord.condominium?.lat != null &&
+      propertyRecord.condominium?.lng != null &&
+      haversineDistanceMiles(
+        { lat: propertyRecord.lat, lng: propertyRecord.lng },
+        { lat: propertyRecord.condominium.lat, lng: propertyRecord.condominium.lng },
+      ) > 8;
 
-      return missingCoordinates || outsideServiceArea || farFromCondominium;
-    })
-    .slice(0, limit);
+    if (missingCoordinates || outsideServiceArea || farFromCondominium) {
+      candidates.push(propertyRecord);
+      if (candidates.length >= limit) {
+        break;
+      }
+    }
+  }
 
   for (const property of candidates) {
     await geocodeProperty(property.id);
@@ -1110,26 +1115,30 @@ export async function auditCheckinLocationData(limit = 500) {
     },
   });
 
-  const candidates = checkins
-    .filter((checkin) => {
-      const missingCoordinates = checkin.lat == null || checkin.lng == null;
-      const outsideServiceArea =
-        checkin.lat != null &&
-        checkin.lng != null &&
-        !isWithinCentralFloridaServiceArea({ lat: checkin.lat, lng: checkin.lng });
-      const farFromCondominium =
-        checkin.lat != null &&
-        checkin.lng != null &&
-        checkin.condominium?.lat != null &&
-        checkin.condominium?.lng != null &&
-        haversineDistanceMiles(
-          { lat: checkin.lat, lng: checkin.lng },
-          { lat: checkin.condominium.lat, lng: checkin.condominium.lng },
-        ) > 8;
+  const candidates = [];
+  for (const checkinRecord of checkins) {
+    const missingCoordinates = checkinRecord.lat == null || checkinRecord.lng == null;
+    const outsideServiceArea =
+      checkinRecord.lat != null &&
+      checkinRecord.lng != null &&
+      !isWithinCentralFloridaServiceArea({ lat: checkinRecord.lat, lng: checkinRecord.lng });
+    const farFromCondominium =
+      checkinRecord.lat != null &&
+      checkinRecord.lng != null &&
+      checkinRecord.condominium?.lat != null &&
+      checkinRecord.condominium?.lng != null &&
+      haversineDistanceMiles(
+        { lat: checkinRecord.lat, lng: checkinRecord.lng },
+        { lat: checkinRecord.condominium.lat, lng: checkinRecord.condominium.lng },
+      ) > 8;
 
-      return missingCoordinates || outsideServiceArea || farFromCondominium;
-    })
-    .slice(0, limit);
+    if (missingCoordinates || outsideServiceArea || farFromCondominium) {
+      candidates.push(checkinRecord);
+      if (candidates.length >= limit) {
+        break;
+      }
+    }
+  }
 
   for (const checkin of candidates) {
     await geocodeCheckin(checkin.id);

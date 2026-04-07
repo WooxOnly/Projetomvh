@@ -20,18 +20,21 @@ export async function cleanupExpiredOperationalData() {
   });
 
   if (expiredUploads.length > 0) {
-    await Promise.all(
-      expiredUploads.map(async (upload) => {
-        try {
-          await unlink(upload.filePath);
-        } catch {}
-      }),
-    );
+    for (const uploadRecord of expiredUploads) {
+      try {
+        await unlink(uploadRecord.filePath);
+      } catch {}
+    }
+
+    const expiredUploadIds: string[] = [];
+    for (const uploadRecord of expiredUploads) {
+      expiredUploadIds.push(uploadRecord.id);
+    }
 
     await prisma.spreadsheetUpload.deleteMany({
       where: {
         id: {
-          in: expiredUploads.map((upload) => upload.id),
+          in: expiredUploadIds,
         },
       },
     });
