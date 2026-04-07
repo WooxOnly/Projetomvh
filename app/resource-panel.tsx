@@ -179,8 +179,8 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
   const config = useMemo(() => {
     if (kind === "offices") {
       return {
-        title: isEnglish ? "Office record" : "Cadastro de escritÃ³rio",
-        button: isEnglish ? "Office" : "EscritÃ³rio",
+        title: isEnglish ? "Office record" : "Cadastro de escritório",
+        button: isEnglish ? "Office" : "Escritório",
         route: "/api/offices",
       };
     }
@@ -195,8 +195,8 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
 
     if (kind === "condominiums") {
       return {
-        title: isEnglish ? "Resort record" : "Cadastro de condomÃ­nio",
-        button: isEnglish ? "Resort" : "CondomÃ­nio",
+        title: isEnglish ? "Resort record" : "Cadastro de condomínio",
+        button: isEnglish ? "Resort" : "Condomínio",
         route: "/api/condominiums",
       };
     }
@@ -292,7 +292,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
                 : "bbq sim"
               : isEnglish
                 ? "bbq no"
-                : "bbq nÃ£o",
+                : "bbq não",
         ]
           .filter(Boolean)
           .join(" "),
@@ -332,7 +332,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
             ? actionError.message
             : isEnglish
               ? "The action failed."
-              : "A operaÃ§Ã£o falhou.",
+              : "A operação falhou.",
         );
       }
     });
@@ -345,7 +345,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
           <input
             value={String(form.name ?? "")}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            placeholder={isEnglish ? "Office name" : "Nome do escritÃ³rio"}
+            placeholder={isEnglish ? "Office name" : "Nome do escritório"}
             className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           />
           <input
@@ -357,7 +357,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
           <input
             value={String(form.address ?? "")}
             onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
-            placeholder={isEnglish ? "Office address" : "EndereÃ§o do escritÃ³rio"}
+            placeholder={isEnglish ? "Office address" : "Endereço do escritório"}
             className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           />
           <div className="grid gap-4 sm:grid-cols-3">
@@ -383,7 +383,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
           <textarea
             value={String(form.notes ?? "")}
             onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-            placeholder={isEnglish ? "Notes" : "ObservaÃ§Ãµes"}
+            placeholder={isEnglish ? "Notes" : "Observações"}
             className="min-h-28 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           />
         </>
@@ -419,7 +419,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
             className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           >
             <option value="">
-              {isEnglish ? "No office defined" : "Sem escritÃ³rio definido"}
+              {isEnglish ? "No office defined" : "Sem escritório definido"}
             </option>
             {sortedOffices.map((office) => (
               <option key={office.id} value={office.id}>
@@ -430,7 +430,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
           <textarea
             value={String(form.notes ?? "")}
             onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-            placeholder={isEnglish ? "Notes" : "ObservaÃ§Ãµes"}
+            placeholder={isEnglish ? "Notes" : "Observações"}
             className="min-h-28 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           />
           <label className="flex items-center gap-3 text-sm text-slate-200">
@@ -457,7 +457,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
           <input
             value={String(form.address ?? "")}
             onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
-            placeholder={isEnglish ? "Address" : "EndereÃ§o"}
+            placeholder={isEnglish ? "Address" : "Endereço"}
             className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           />
           <div className="grid gap-4 sm:grid-cols-2">
@@ -512,7 +512,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
           <textarea
             value={String(form.notes ?? "")}
             onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-            placeholder={isEnglish ? "Notes" : "ObservaÃ§Ãµes"}
+            placeholder={isEnglish ? "Notes" : "Observações"}
             className="min-h-28 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           />
         </>
@@ -530,7 +530,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
         <input
           value={String(form.address ?? "")}
           onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
-          placeholder={isEnglish ? "Address" : "EndereÃ§o"}
+          placeholder={isEnglish ? "Address" : "Endereço"}
           className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
         />
         <div className="grid gap-4 sm:grid-cols-3">
@@ -545,16 +545,16 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
             onChange={(event) => setForm((current) => ({ ...current, hasBbqGrill: event.target.value }))}
             className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           >
-            <option value="">{isEnglish ? "BBQ not informed" : "BBQ nÃ£o informado"}</option>
+            <option value="">{isEnglish ? "BBQ not informed" : "BBQ não informado"}</option>
             <option value="true">{isEnglish ? "BBQ yes" : "BBQ sim"}</option>
-            <option value="false">{isEnglish ? "BBQ no" : "BBQ nÃ£o"}</option>
+            <option value="false">{isEnglish ? "BBQ no" : "BBQ não"}</option>
           </select>
           <select
             value={String(form.condominiumId ?? "")}
             onChange={(event) => setForm((current) => ({ ...current, condominiumId: event.target.value }))}
             className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           >
-            <option value="">{isEnglish ? "No resort" : "Sem condomÃ­nio"}</option>
+            <option value="">{isEnglish ? "No resort" : "Sem condomínio"}</option>
             {sortedCondominiums.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.nameOriginal}
@@ -569,7 +569,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
             className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
           >
             <option value="">
-              {isEnglish ? "No default property manager" : "Sem gerente de propriedades padrÃ£o"}
+              {isEnglish ? "No default property manager" : "Sem gerente de propriedades padrão"}
             </option>
             {sortedPropertyManagers.map((item) => (
               <option key={item.id} value={item.id}>
@@ -581,7 +581,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
         <textarea
           value={String(form.notes ?? "")}
           onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-          placeholder={isEnglish ? "Notes" : "ObservaÃ§Ãµes"}
+          placeholder={isEnglish ? "Notes" : "Observações"}
           className="min-h-28 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
         />
       </>
@@ -599,19 +599,19 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
       const office = item as ResourcePanelProps["data"]["offices"][number];
       return `${office.name} | ${
         [office.address, office.city, office.state].filter(Boolean).join(" | ") ||
-        (isEnglish ? "No address" : "Sem endereÃ§o")
+        (isEnglish ? "No address" : "Sem endereço")
       }`;
     }
 
     if (kind === "propertyManagers") {
       const manager = item as ResourcePanelProps["data"]["propertyManagers"][number];
       return `${manager.name} | ${
-        manager.office?.name || (isEnglish ? "No office" : "Sem escritÃ³rio")
+        manager.office?.name || (isEnglish ? "No office" : "Sem escritório")
       } | ${
         manager.office?.address ||
-        (isEnglish ? "Office without address" : "EscritÃ³rio sem endereÃ§o")
+        (isEnglish ? "Office without address" : "Escritório sem endereço")
       } | ${isEnglish ? "Active" : "Ativo"}: ${
-        manager.isActive ? (isEnglish ? "Yes" : "Sim") : isEnglish ? "No" : "NÃ£o"
+        manager.isActive ? (isEnglish ? "Yes" : "Sim") : isEnglish ? "No" : "Não"
       }`;
     }
 
@@ -621,13 +621,13 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
         condominium.office?.name || (isEnglish ? "No office" : "Sem escritório")
       } | ${
         [condominium.address, condominium.city, condominium.state].filter(Boolean).join(" | ") ||
-        (isEnglish ? "No address" : "Sem endereÃ§o")
+        (isEnglish ? "No address" : "Sem endereço")
       }`;
     }
 
     const property = item as ResourcePanelProps["data"]["properties"][number];
     return `${property.nameOriginal} | ${
-      property.condominium?.nameOriginal || (isEnglish ? "No resort" : "Sem condomÃ­nio")
+      property.condominium?.nameOriginal || (isEnglish ? "No resort" : "Sem condomínio")
     } | ${isEnglish ? "Bedrooms" : "Quartos"}: ${property.bedrooms ?? "N/D"} | BBQ: ${
       property.hasBbqGrill == null
         ? "N/D"
@@ -637,7 +637,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
             : "Sim"
           : isEnglish
             ? "No"
-            : "NÃ£o"
+            : "Não"
     }`;
   }
 
