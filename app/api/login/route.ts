@@ -57,38 +57,43 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = await authenticateUser(validation.data.email, validation.data.password);
+  try {
+    const user = await authenticateUser(validation.data.email, validation.data.password);
 
-  if (!user) {
-    if (!expectsJson) {
-      return redirectResponse("/");
+    if (!user) {
+      if (!expectsJson) {
+        return redirectResponse("/");
+      }
+
+      return NextResponse.json(
+        { message: "E-mail ou senha invalidos." },
+        { status: 401 },
+      );
     }
 
+    const sessionCookie = createSessionCookie({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    });
+
+    const response = expectsJson
+      ? NextResponse.json({
+          ok: true,
+          redirectTo: "/dashboard",
+        })
+      : redirectResponse("/dashboard");
+
+    response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.options);
+
+    return response;
+  } catch (error) {
+    console.error("Login route failed", error);
+
     return NextResponse.json(
-      { message: "E-mail ou senha invalidos." },
-      { status: 401 },
+      { message: "Nao foi possivel concluir o login agora." },
+      { status: 500 },
     );
   }
-
-  const sessionCookie = createSessionCookie({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-  });
-
-  const response = expectsJson
-    ? NextResponse.json({
-        ok: true,
-        redirectTo: "/dashboard",
-      })
-    : redirectResponse("/dashboard");
-
-  response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.options);
-
-  if (!expectsJson) {
-    return response;
-  }
-
-  return response;
 }

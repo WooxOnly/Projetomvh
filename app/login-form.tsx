@@ -29,33 +29,51 @@ export function LoginForm() {
     setMessage("");
 
     startTransition(async () => {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
 
-      const data = (await response.json()) as {
-        message?: string;
-        redirectTo?: string;
-        errors?: FormErrors;
-      };
+        let data: {
+          message?: string;
+          redirectTo?: string;
+          errors?: FormErrors;
+        } = {};
 
-      if (!response.ok) {
-        setErrors(data.errors ?? {});
+        try {
+          data = (await response.json()) as {
+            message?: string;
+            redirectTo?: string;
+            errors?: FormErrors;
+          };
+        } catch {
+          data = {};
+        }
+
+        if (!response.ok) {
+          setErrors(data.errors ?? {});
+          setMessage(
+            data.message ??
+              (isEnglish
+                ? "Unable to sign in right now. Please try again in a moment."
+                : "Nao foi possivel entrar agora. Tente novamente em instantes."),
+          );
+          return;
+        }
+
+        router.push(data.redirectTo ?? "/dashboard");
+        router.refresh();
+      } catch {
         setMessage(
-          data.message ??
-            (isEnglish
-              ? "Unable to sign in. Check your email, password, and special characters."
-              : "Não foi possível entrar. Confira e-mail, senha e caracteres especiais."),
+          isEnglish
+            ? "Unable to sign in right now. Please try again in a moment."
+            : "Nao foi possivel entrar agora. Tente novamente em instantes.",
         );
-        return;
       }
-
-      router.push(data.redirectTo ?? "/dashboard");
-      router.refresh();
     });
   }
 
