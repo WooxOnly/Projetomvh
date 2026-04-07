@@ -36,6 +36,16 @@ function encode(payload: SessionPayload) {
   return `${body}.${signature}`;
 }
 
+function getSessionCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+  };
+}
+
 function decode(token?: string | null): SessionPayload | null {
   if (!token) {
     return null;
@@ -73,23 +83,37 @@ function decode(token?: string | null): SessionPayload | null {
 
 export async function createSession(input: Omit<SessionPayload, "exp">) {
   const store = await cookies();
-  const session = encode({
-    ...input,
-    exp: Date.now() + SESSION_MAX_AGE * 1000,
-  });
-
-  store.set(SESSION_COOKIE_NAME, session, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-  });
+  const { name, value, options } = createSessionCookie(input);
+  store.set(name, value, options);
 }
 
 export async function clearSession() {
   const store = await cookies();
   store.delete(SESSION_COOKIE_NAME);
+}
+
+export function createSessionCookie(input: Omit<SessionPayload, "exp">) {
+  const value = encode({
+    ...input,
+    exp: Date.now() + SESSION_MAX_AGE * 1000,
+  });
+
+  return {
+    name: SESSION_COOKIE_NAME,
+    value,
+    options: getSessionCookieOptions(),
+  };
+}
+
+export function clearSessionCookie() {
+  return {
+    name: SESSION_COOKIE_NAME,
+    value: "",
+    options: {
+      ...getSessionCookieOptions(),
+      maxAge: 0,
+    },
+  };
 }
 
 export async function getSession() {

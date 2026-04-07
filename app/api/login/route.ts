@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createSession } from "@/lib/auth/session";
+import { createSessionCookie } from "@/lib/auth/session";
 import { authenticateUser } from "@/lib/auth/user";
 import { validateLoginInput } from "@/lib/auth/validation";
 
@@ -70,19 +70,25 @@ export async function POST(request: Request) {
     );
   }
 
-  await createSession({
+  const sessionCookie = createSessionCookie({
     userId: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
   });
 
+  const response = expectsJson
+    ? NextResponse.json({
+        ok: true,
+        redirectTo: "/dashboard",
+      })
+    : redirectResponse("/dashboard");
+
+  response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.options);
+
   if (!expectsJson) {
-    return redirectResponse("/dashboard");
+    return response;
   }
 
-  return NextResponse.json({
-    ok: true,
-    redirectTo: "/dashboard",
-  });
+  return response;
 }
