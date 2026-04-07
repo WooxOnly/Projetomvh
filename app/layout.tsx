@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { LanguageProvider } from "@/app/language-provider";
 import { getRequestLanguage } from "@/lib/frontend-language-server";
+import { DEFAULT_FRONTEND_LANGUAGE } from "@/lib/frontend-language";
 
 import "./globals.css";
 
@@ -15,7 +16,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const language = await getRequestLanguage();
+  let language = DEFAULT_FRONTEND_LANGUAGE;
+
+  try {
+    language = await getRequestLanguage();
+  } catch {
+    language = DEFAULT_FRONTEND_LANGUAGE;
+  }
 
   return (
     <html lang={language === "en-US" ? "en" : "pt-BR"} className="h-full antialiased">

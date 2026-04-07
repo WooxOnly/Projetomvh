@@ -3,11 +3,19 @@ import { redirect } from "next/navigation";
 import { LanguageSwitcher } from "@/app/language-switcher";
 import { LoginForm } from "@/app/login-form";
 import { getSession } from "@/lib/auth/session";
-import { pickLanguage } from "@/lib/frontend-language";
+import { DEFAULT_FRONTEND_LANGUAGE, pickLanguage } from "@/lib/frontend-language";
 import { getRequestLanguage } from "@/lib/frontend-language-server";
 
 export default async function Home() {
-  const [session, language] = await Promise.all([getSession(), getRequestLanguage()]);
+  let session = null;
+  let language = DEFAULT_FRONTEND_LANGUAGE;
+
+  try {
+    [session, language] = await Promise.all([getSession(), getRequestLanguage()]);
+  } catch {
+    session = null;
+    language = DEFAULT_FRONTEND_LANGUAGE;
+  }
 
   if (session) {
     redirect("/dashboard");
