@@ -148,6 +148,27 @@ function ActionLoadingLabel({
   );
 }
 
+function PdfIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M7 3.75h7.5L19.25 8.5V20.25a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.75a1 1 0 0 1 1-1Z" />
+      <path d="M14 3.75v5h5" />
+      <path d="M8.5 14.25h2.25a1.75 1.75 0 0 1 0 3.5H8.5v-3.5Z" />
+      <path d="M13 17.75v-3.5h1.3a1.75 1.75 0 0 1 0 3.5H13Z" />
+      <path d="M18 14.25h-2.25v3.5" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M20 11.5A8.5 8.5 0 0 1 7.43 18.98L4 20l1.1-3.2A8.5 8.5 0 1 1 20 11.5Z" />
+      <path d="M9.55 8.95c.23-.52.48-.54.71-.55h.6c.1 0 .27.04.41.34.14.3.48 1.18.52 1.26.04.08.07.2.01.32-.06.12-.1.2-.2.31-.1.11-.2.25-.29.34-.1.1-.2.21-.08.42.12.2.52.85 1.12 1.38.77.67 1.42.88 1.63.98.21.1.33.08.45-.05.12-.13.52-.6.66-.8.14-.2.28-.17.47-.1.19.07 1.21.57 1.42.68.21.1.35.15.4.24.05.08.05.48-.11.94-.16.46-.95.88-1.3.92-.34.05-.77.07-1.24-.09-.28-.09-.63-.2-1.08-.39-.82-.35-1.36-.8-1.87-1.29-.51-.48-.94-1.05-1.32-1.68-.38-.63-.4-1.16-.4-1.58 0-.42.17-.62.38-.84.2-.22.44-.28.58-.28Z" />
+    </svg>
+  );
+}
+
 type RouteAnalysisData = {
   source: "heuristic" | "openai";
   model: string | null;
@@ -730,6 +751,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const searchParams = useSearchParams();
   const { isEnglish } = useLanguage();
   const locale = isEnglish ? "en-US" : "pt-BR";
+  const actionButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/16 disabled:cursor-not-allowed disabled:border-cyan-300/12 disabled:bg-slate-800 disabled:text-slate-500 disabled:opacity-100";
   const currentTab = searchParams.get("tab");
   const shouldHideSuccessModal = mode === "route" || currentTab === "route";
   const latestOperationRun = data.latestOperationRun;
@@ -1589,12 +1612,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
               </p>
             </div>
             {latestOperationRun ? (
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2.5">
                 <button
                   type="button"
                   onClick={() => void handleRebuildOperation(false)}
                   disabled={rebuildTarget !== null}
-                  className="min-w-[15rem] rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200 transition disabled:cursor-not-allowed disabled:border-cyan-300/20 disabled:bg-cyan-300/10 disabled:text-white disabled:opacity-100"
+                  className={`${actionButtonClass} min-w-[13rem]`}
                 >
                   {rebuildTarget === "local"
                     ? (
@@ -1611,7 +1634,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   type="button"
                   onClick={() => void handleRebuildOperation(true)}
                   disabled={rebuildTarget !== null}
-                  className="min-w-[12rem] rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-200 transition disabled:cursor-not-allowed disabled:border-cyan-300/20 disabled:bg-cyan-300/10 disabled:text-white disabled:opacity-100"
+                  className={`${actionButtonClass} min-w-[10rem]`}
                 >
                   {rebuildTarget === "here"
                     ? (
@@ -1624,67 +1647,47 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       ? "Use API"
                       : "Usar API"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void handlePdfDownload("global")}
-                  disabled={pdfPendingTarget === "global"}
-                  className="rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-slate-700 disabled:text-slate-300 disabled:opacity-100"
-                >
-                  {pdfPendingTarget === "global" ? (isEnglish ? "Generating PDF..." : "Gerando PDF...") : isEnglish ? "Generate printable PDF" : "Gerar PDF geral"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    whatsAppExport
-                      ? void handleWhatsAppCopy("global")
-                      : void refreshWhatsAppExport("global")
-                  }
-                  disabled={whatsAppPendingTarget === "global"}
-                  className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
-                >
-                  {whatsAppPendingTarget === "global" ? (isEnglish ? "Preparing WhatsApp..." : "Montando WhatsApp...") : isEnglish ? "Copy general WhatsApp" : "Copiar WhatsApp geral"}
-                </button>
               </div>
             ) : null}
           </div>
 
           {latestOperationRun ? (
             <>
-              <div className="mt-6 grid gap-4 lg:grid-cols-3">
-                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="mt-5 grid gap-3 lg:grid-cols-3">
+                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-3.5">
                   <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "File" : "Arquivo"}</p>
-                  <p className="mt-2 text-sm text-white">
+                  <p className="mt-1.5 text-sm text-white">
                     {formatUploadLabel(latestOperationRun.spreadsheetUpload)}
                   </p>
                 </div>
-                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-3.5">
                   <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
                     {isEnglish ? "Operation" : "Operação"}
                   </p>
-                  <p className="mt-2 text-sm text-white">
+                  <p className="mt-1.5 text-sm text-white">
                     {formatPanelDateOnly(latestOperationRun.operationDate)}
                   </p>
                 </div>
-                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-3.5">
                   <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Generated" : "Gerado"}</p>
-                  <p className="mt-2 text-sm text-white">
+                  <p className="mt-1.5 text-sm text-white">
                     {formatPanelDateTime(latestOperationRun.createdAt)}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full border border-cyan-400/20 bg-slate-950/80">
+              <div className="mt-3 grid gap-3 xl:grid-cols-[1.2fr_0.8fr]">
+                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full border border-cyan-400/20 bg-slate-950/80">
                       <div className="text-center">
                         <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Score</p>
-                        <p className={`text-3xl font-semibold ${getScoreStyle(displayedAnalysis?.overallScore ?? 0).text}`}>
+                        <p className={`text-2xl font-semibold ${getScoreStyle(displayedAnalysis?.overallScore ?? 0).text}`}>
                           {displayedAnalysis?.overallScore ?? "--"}
                         </p>
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <p className="text-sm text-slate-300">
                         {displayedAnalysis?.overallSummary ?? (isEnglish ? "Route AI is still loading. In the meantime, the local heuristic remains valid." : "A IA da rota ainda está carregando. Enquanto isso, a heurística local continua válida.")}
                       </p>
@@ -1701,21 +1704,21 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       </div>
                     </div>
                   </div>
-                  {analysisError ? <p className="mt-4 text-sm text-rose-200">{analysisError}</p> : null}
-                  {copyState ? <p className="mt-4 text-sm text-emerald-200">{copyState}</p> : null}
-                  {whatsAppError ? <p className="mt-4 text-sm text-rose-200">{whatsAppError}</p> : null}
+                  {analysisError ? <p className="mt-3 text-sm text-rose-200">{analysisError}</p> : null}
+                  {copyState ? <p className="mt-3 text-sm text-emerald-200">{copyState}</p> : null}
+                  {whatsAppError ? <p className="mt-3 text-sm text-rose-200">{whatsAppError}</p> : null}
                   {displayedAnalysis?.managers?.length ? (
                     <RouteOverviewMap managers={displayedAnalysis.managers} />
                   ) : null}
                 </div>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
                   <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{isEnglish ? "Final checklist" : "Checklist final"}</p>
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-3 space-y-2.5">
                     {(displayedAnalysis?.routeHighlights ?? []).map((highlight) => (
                       <div
                         key={highlight}
-                        className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-sm text-emerald-100"
+                        className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-2.5 text-sm text-emerald-100"
                       >
                         {highlight}
                       </div>
@@ -1723,7 +1726,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     {(displayedAnalysis?.routeRisks ?? []).map((risk) => (
                       <div
                         key={risk}
-                        className="rounded-2xl border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-amber-100"
+                        className="rounded-2xl border border-amber-400/20 bg-amber-400/5 px-4 py-2.5 text-sm text-amber-100"
                       >
                         {risk}
                       </div>
@@ -1732,25 +1735,28 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[1.5rem] border border-cyan-400/15 bg-cyan-400/5 p-5">
+              <div className="mt-3 rounded-[1.5rem] border border-cyan-400/15 bg-cyan-400/5 p-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
                       {isEnglish ? "Final exports" : "Exportações finais"}
                     </p>
-                    <h4 className="mt-2 text-lg font-semibold text-white">{isEnglish ? "Printable PDF and message for sending" : "PDF para imprimir e mensagem para envio"}</h4>
-                    <p className="mt-2 text-sm text-slate-300">
+                    <h4 className="mt-1.5 text-base font-semibold text-white">{isEnglish ? "Printable PDF and message for sending" : "PDF para imprimir e mensagem para envio"}</h4>
+                    <p className="mt-1.5 text-sm text-slate-300">
                       {isEnglish ? "Use these buttons to generate the final output of the operation. The PDF opens ready to download or print." : "Use estes botões para gerar a saída final da operação. O PDF abre pronto para baixar ou imprimir."}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2.5">
                     <button
                       type="button"
                       onClick={() => void handlePdfDownload("global")}
                       disabled={pdfPendingTarget === "global"}
-                      className="rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-slate-700 disabled:text-slate-300 disabled:opacity-100"
+                      className={actionButtonClass}
                     >
-                      {pdfPendingTarget === "global" ? (isEnglish ? "Generating PDF..." : "Gerando PDF...") : isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
+                      <PdfIcon />
+                      <span>
+                        {pdfPendingTarget === "global" ? (isEnglish ? "Generating PDF..." : "Gerando PDF...") : isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -1760,9 +1766,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           : void refreshWhatsAppExport("global")
                       }
                       disabled={whatsAppPendingTarget === "global"}
-                      className="rounded-2xl border border-white/10 px-5 py-3 text-sm text-slate-100 transition hover:bg-white/8 disabled:cursor-not-allowed disabled:border-white/6 disabled:bg-slate-800 disabled:text-slate-500 disabled:opacity-100"
+                      className={actionButtonClass}
                     >
-                      {whatsAppPendingTarget === "global" ? (isEnglish ? "Preparing message..." : "Montando mensagem...") : isEnglish ? "Copy general message" : "Copiar mensagem geral"}
+                      <WhatsAppIcon />
+                      <span>
+                        {whatsAppPendingTarget === "global" ? (isEnglish ? "Preparing message..." : "Montando mensagem...") : isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -1926,9 +1935,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 type="button"
                                 onClick={() => void handlePdfDownload(manager.id)}
                                 disabled={pdfPendingTarget === manager.id}
-                                className="rounded-2xl bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-slate-700 disabled:text-slate-300 disabled:opacity-100"
+                                className={actionButtonClass}
                               >
-                                {pdfPendingTarget === manager.id ? (isEnglish ? "Generating PDF..." : "Gerando PDF...") : isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
+                                <PdfIcon />
+                                <span>
+                                  {pdfPendingTarget === manager.id ? (isEnglish ? "Generating PDF..." : "Gerando PDF...") : isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
+                                </span>
                               </button>
                               <button
                                 type="button"
@@ -1939,18 +1951,22 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                     )
                                 }
                                 disabled={whatsAppPendingTarget === manager.id}
-                                className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-200 transition hover:bg-white/8"
+                                className={actionButtonClass}
                               >
-                                {whatsAppPendingTarget === manager.id ? (isEnglish ? "Preparing WhatsApp..." : "Montando WhatsApp...") : isEnglish ? "Copy manager WhatsApp" : "Copiar WhatsApp do gerente"}
+                                <WhatsAppIcon />
+                                <span>
+                                  {whatsAppPendingTarget === manager.id ? (isEnglish ? "Preparing WhatsApp..." : "Montando WhatsApp...") : isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
+                                </span>
                               </button>
                               {managerWhatsApp?.phone ? (
                                 <a
                                   href={`https://wa.me/${managerWhatsApp.phone.replace(/\D/g, "")}?text=${encodeURIComponent(managerWhatsApp.text)}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-100"
+                                  className={actionButtonClass}
                                 >
-                                  {isEnglish ? "Open in WhatsApp" : "Abrir no WhatsApp"}
+                                  <WhatsAppIcon />
+                                  <span>{isEnglish ? "Open in WhatsApp" : "Abrir no WhatsApp"}</span>
                                 </a>
                               ) : null}
                             </div>
@@ -1968,7 +1984,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 : [...current, manager.id],
                             )
                           }
-                          className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-200"
+                          className={actionButtonClass}
                         >
                           {isExpanded
                             ? isEnglish
