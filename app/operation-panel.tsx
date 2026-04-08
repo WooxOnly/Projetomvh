@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { createPortal } from "react-dom";
 
 import { useLanguage } from "@/app/language-provider";
 import { RouteLiveMap } from "@/app/route-live-map";
@@ -1254,45 +1255,57 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     void refreshWhatsAppExport("global");
   }, [latestOperationRun?.id, mode, refreshRouteIntelligence, refreshWhatsAppExport]);
 
+  function renderViewportOverlay(content: React.ReactNode) {
+    if (typeof document === "undefined") {
+      return null;
+    }
+
+    return createPortal(content, document.body);
+  }
+
   return (
     <div className="space-y-6">
-      {operationPending ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/72 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[1.75rem] border border-cyan-400/20 bg-slate-950/95 p-6 text-center shadow-2xl shadow-cyan-950/30">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-cyan-300" />
-            <h3 className="mt-5 text-lg font-semibold text-white">
-              {isEnglish ? "Running operation" : "Rodando operação"}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              {isEnglish
-                ? "We are distributing check-ins, preparing the routes, and updating the final reading."
-                : "Estamos distribuindo os check-ins, preparando as rotas e atualizando a leitura final."}
-            </p>
-          </div>
-        </div>
-      ) : null}
-      {!shouldHideSuccessModal && persistentSuccessMessage ? (
-        <div className="fixed inset-0 z-[121] flex items-center justify-center bg-slate-950/62 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[1.75rem] border border-emerald-300/20 bg-slate-950/96 p-6 text-center shadow-2xl shadow-emerald-950/30">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-300/25 bg-emerald-300/10 text-2xl text-emerald-200">
-              ✓
-            </div>
-            <h3 className="mt-5 text-lg font-semibold text-white">
-              {isEnglish ? "Operation completed" : "Operação concluída"}
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-slate-300">{persistentSuccessMessage}</p>
-            <div className="mt-6">
-              <button
-                type="button"
-                onClick={() => setPersistentSuccessMessage("")}
-                className="rounded-2xl bg-cyan-300 px-6 py-3 text-sm font-semibold text-slate-950"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {operationPending
+        ? renderViewportOverlay(
+            <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/72 px-6 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-[1.75rem] border border-cyan-400/20 bg-slate-950/95 p-6 text-center shadow-2xl shadow-cyan-950/30">
+                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-cyan-300" />
+                <h3 className="mt-5 text-lg font-semibold text-white">
+                  {isEnglish ? "Running operation" : "Rodando operação"}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                  {isEnglish
+                    ? "We are distributing check-ins, preparing the routes, and updating the final reading."
+                    : "Estamos distribuindo os check-ins, preparando as rotas e atualizando a leitura final."}
+                </p>
+              </div>
+            </div>,
+          )
+        : null}
+      {!shouldHideSuccessModal && persistentSuccessMessage
+        ? renderViewportOverlay(
+            <div className="fixed inset-0 z-[121] flex items-center justify-center bg-slate-950/62 px-6 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-[1.75rem] border border-emerald-300/20 bg-slate-950/96 p-6 text-center shadow-2xl shadow-emerald-950/30">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-300/25 bg-emerald-300/10 text-2xl text-emerald-200">
+                  ✓
+                </div>
+                <h3 className="mt-5 text-lg font-semibold text-white">
+                  {isEnglish ? "Operation completed" : "Operação concluída"}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-slate-300">{persistentSuccessMessage}</p>
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setPersistentSuccessMessage("")}
+                    className="rounded-2xl bg-cyan-300 px-6 py-3 text-sm font-semibold text-slate-950"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>,
+          )
+        : null}
       {mode !== "route" ? (
         <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
           <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
