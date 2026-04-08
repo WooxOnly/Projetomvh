@@ -1886,8 +1886,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       className={`content-safe flex h-full flex-col rounded-[1.5rem] border bg-white/5 p-5 ${scoreStyle.border}`}
                     >
                       <div className="flex flex-col gap-3">
-                      <div className="grid w-full gap-3 text-left xl:grid-cols-[minmax(0,1fr)_10rem] xl:grid-rows-[auto_auto] xl:items-start">
-                        <div className="xl:col-start-1 xl:row-start-1">
+                      <div className="grid w-full gap-3 text-left xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_10rem] xl:items-start">
+                        <div>
                           <p className="text-base font-semibold text-white">
                             {cleanPropertyManagerName(manager.name)}
                           </p>
@@ -1903,7 +1903,21 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             </p>
                           ) : null}
                         </div>
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-3 xl:col-start-2 xl:row-span-2 xl:row-start-1">
+                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+                          <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
+                            {isEnglish ? "Route AI" : "IA da rota"}
+                          </p>
+                          <p className="mt-2 text-sm text-slate-200">
+                            {managerAnalysis?.summary ?? (isEnglish ? "No additional AI reading for this property manager." : "Sem leitura de IA adicional para este gerente de propriedades.")}
+                          </p>
+                          <p className="mt-2 text-xs text-amber-200">
+                            {isEnglish ? "Risk" : "Risco"}: {managerAnalysis?.risk ?? (isEnglish ? "Not identified" : "Não identificado")}
+                          </p>
+                          <p className="mt-1.5 text-xs text-emerald-200">
+                            {isEnglish ? "Adjustment" : "Ajuste"}: {managerAnalysis?.hint ?? (isEnglish ? "No suggested adjustment" : "Sem ajuste sugerido")}
+                          </p>
+                        </div>
+                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-3">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Route score" : "Score da rota"}</p>
                           <p className={`mt-1.5 text-2xl font-semibold ${scoreStyle.text}`}>
                             {managerAnalysis?.routeScore ?? "--"}
@@ -1924,17 +1938,6 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p>{isEnglish ? "Office" : "Escritório"}: {effectiveOffice?.name ?? managerAnalysis?.officeName ?? (isEnglish ? "Not defined" : "Não definido")}</p>
                           </div>
                         </div>
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3 xl:col-start-1 xl:row-start-2">
-                          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
-                          <p className="mt-1.5 text-sm leading-5 text-white">{uniqueResorts.length}</p>
-                          <div className="mt-1 text-xs leading-4.5 text-slate-400">
-                            {uniqueResorts.map((resort) => (
-                              <p key={resort} className="break-normal whitespace-normal">
-                                {resort}
-                              </p>
-                            ))}
-                          </div>
-                        </div>
                       </div>
 
                       {isolatedStops.isolatedCount > 0 ? (
@@ -1948,25 +1951,22 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         </div>
                       ) : null}
 
-                      <div className="mt-3 grid gap-3 xl:grid-cols-[1.1fr_0.9fr]">
+                      <div className="mt-3 grid gap-3 xl:grid-cols-[1.08fr_0.92fr]">
                         <RouteLiveMap
                           title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
                           points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
                         />
                         <div className="space-y-3">
                           <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
-                            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
-                              {isEnglish ? "Route AI" : "IA da rota"}
-                            </p>
-                            <p className="mt-2 text-sm text-slate-200">
-                              {managerAnalysis?.summary ?? (isEnglish ? "No additional AI reading for this property manager." : "Sem leitura de IA adicional para este gerente de propriedades.")}
-                            </p>
-                            <p className="mt-2 text-xs text-amber-200">
-                              {isEnglish ? "Risk" : "Risco"}: {managerAnalysis?.risk ?? (isEnglish ? "Not identified" : "Não identificado")}
-                            </p>
-                            <p className="mt-1.5 text-xs text-emerald-200">
-                              {isEnglish ? "Adjustment" : "Ajuste"}: {managerAnalysis?.hint ?? (isEnglish ? "No suggested adjustment" : "Sem ajuste sugerido")}
-                            </p>
+                            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
+                            <p className="mt-1.5 text-sm leading-5 text-white">{uniqueResorts.length}</p>
+                            <div className="mt-1 text-xs leading-4.5 text-slate-400">
+                              {uniqueResorts.map((resort) => (
+                                <p key={resort} className="break-normal whitespace-normal">
+                                  {resort}
+                                </p>
+                              ))}
+                            </div>
                           </div>
                           <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
