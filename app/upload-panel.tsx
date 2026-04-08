@@ -58,6 +58,47 @@ function todayInputValue() {
   return `${year}-${month}-${day}`;
 }
 
+function readPersistedUploadFeedback() {
+  if (typeof window === "undefined") {
+    return {
+      message: "",
+      summary: null as UploadSummary | null,
+      missingBedrooms: [] as string[],
+    };
+  }
+
+  const storedFeedback = window.sessionStorage.getItem("upload-panel-feedback");
+  if (!storedFeedback) {
+    return {
+      message: "",
+      summary: null as UploadSummary | null,
+      missingBedrooms: [] as string[],
+    };
+  }
+
+  window.sessionStorage.removeItem("upload-panel-feedback");
+
+  try {
+    const parsed = JSON.parse(storedFeedback) as {
+      message?: string;
+      summary?: UploadSummary | null;
+      missingBedrooms?: string[];
+    };
+
+    return {
+      message: parsed.message ?? "",
+      summary: parsed.summary ?? null,
+      missingBedrooms: parsed.missingBedrooms ?? [],
+    };
+  } catch {
+    return {
+      message: "",
+      summary: null as UploadSummary | null,
+      missingBedrooms: [] as string[],
+    };
+  }
+}
+
 export function UploadPanel({
   offices,
   onReviewMissingBedrooms,
@@ -65,12 +106,13 @@ export function UploadPanel({
 }: UploadPanelProps) {
   const router = useRouter();
   const { isEnglish } = useLanguage();
+  const [initialFeedback] = useState(readPersistedUploadFeedback);
   const [pending, startTransition] = useTransition();
   const [assigningOffices, startAssigningOffices] = useTransition();
-  const [summary, setSummary] = useState<UploadSummary | null>(null);
-  const [message, setMessage] = useState("");
+  const [summary, setSummary] = useState<UploadSummary | null>(initialFeedback.summary);
+  const [message, setMessage] = useState(initialFeedback.message);
   const [error, setError] = useState("");
-  const [missingBedrooms, setMissingBedrooms] = useState<string[]>([]);
+  const [missingBedrooms, setMissingBedrooms] = useState<string[]>(initialFeedback.missingBedrooms);
   const [reviewState, setReviewState] = useState<{
     operationDate: string;
     file: File;
@@ -86,6 +128,18 @@ export function UploadPanel({
     condominiums: Array<{ id: string; name: string }>;
     values: Record<string, string>;
   } | null>(null);
+
+  function persistUploadFeedback(next: {
+    message: string;
+    summary: UploadSummary | null;
+    missingBedrooms: string[];
+  }) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.sessionStorage.setItem("upload-panel-feedback", JSON.stringify(next));
+  }
 
   async function submitUpload(formData: FormData) {
     const response = await fetch("/api/uploads", {
@@ -178,15 +232,23 @@ export function UploadPanel({
         return;
       }
 
-      setSummary(data.upload ?? null);
-      setMessage(
+      const nextSummary = data.upload ?? null;
+      const nextMessage =
         data.message ??
-          (isEnglish ? "Upload processed successfully." : "Upload processado com sucesso."),
-      );
-      setMissingBedrooms(data.missingBedrooms ?? []);
+        (isEnglish ? "Upload processed successfully." : "Upload processado com sucesso.");
+      const nextMissingBedrooms = data.missingBedrooms ?? [];
+
+      setSummary(nextSummary);
+      setMessage(nextMessage);
+      setMissingBedrooms(nextMissingBedrooms);
       setReviewState(null);
       openOfficeAssignmentModal(data);
       form.reset();
+      persistUploadFeedback({
+        message: nextMessage,
+        summary: nextSummary,
+        missingBedrooms: nextMissingBedrooms,
+      });
       router.refresh();
     });
   }
@@ -217,14 +279,22 @@ export function UploadPanel({
         return;
       }
 
-      setSummary(data.upload ?? null);
-      setMessage(
+      const nextSummary = data.upload ?? null;
+      const nextMessage =
         data.message ??
-          (isEnglish ? "Upload processed successfully." : "Upload processado com sucesso."),
-      );
-      setMissingBedrooms(data.missingBedrooms ?? []);
+        (isEnglish ? "Upload processed successfully." : "Upload processado com sucesso.");
+      const nextMissingBedrooms = data.missingBedrooms ?? [];
+
+      setSummary(nextSummary);
+      setMessage(nextMessage);
+      setMissingBedrooms(nextMissingBedrooms);
       setReviewState(null);
       openOfficeAssignmentModal(data);
+      persistUploadFeedback({
+        message: nextMessage,
+        summary: nextSummary,
+        missingBedrooms: nextMissingBedrooms,
+      });
       router.refresh();
     });
   }
