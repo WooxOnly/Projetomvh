@@ -85,11 +85,13 @@ async function loadPdfFonts(pdf: PDFDocument) {
   pdf.registerFontkit(fontkit);
 
   if (!cachedRegularFontBytesPromise) {
-    cachedRegularFontBytesPromise = readFile(path.join("C:", "Windows", "Fonts", "segoeui.ttf"));
+    cachedRegularFontBytesPromise = readFile(
+      path.join(process.cwd(), "node_modules", "next", "dist", "compiled", "@vercel", "og", "Geist-Regular.ttf"),
+    );
   }
 
   if (!cachedBoldFontBytesPromise) {
-    cachedBoldFontBytesPromise = readFile(path.join("C:", "Windows", "Fonts", "segoeuib.ttf"));
+    cachedBoldFontBytesPromise = cachedRegularFontBytesPromise;
   }
 
   const [regularFontBytes, boldFontBytes] = await Promise.all([
