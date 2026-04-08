@@ -127,21 +127,54 @@ function cleanPropertyManagerName(name: string) {
 
 function PdfIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-      <path d="M7 3.75h7.5L19.25 8.5V20.25a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.75a1 1 0 0 1 1-1Z" />
-      <path d="M14 3.75v5h5" />
-      <path d="M8.5 14.25h2.25a1.75 1.75 0 0 1 0 3.5H8.5v-3.5Z" />
-      <path d="M13 17.75v-3.5h1.3a1.75 1.75 0 0 1 0 3.5H13Z" />
-      <path d="M18 14.25h-2.25v3.5" />
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M16 6h26l12 12v34c0 3.314-2.686 6-6 6H16c-3.314 0-6-2.686-6-6V12c0-3.314 2.686-6 6-6Z"
+        fill="#FCFCFD"
+        stroke="#FF4D4F"
+        strokeWidth="2.8"
+      />
+      <path d="M42 6v12h12" fill="#FFF5F5" stroke="#FF4D4F" strokeWidth="2.8" strokeLinejoin="round" />
+      <path
+        d="M23.5 16.5c1.6 4.7 4.4 9.4 8.2 13.8 4.2 4.8 8.6 7.8 12.8 9.1"
+        stroke="#FF2D2F"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+      />
+      <path
+        d="M33.2 17.2c2.3 8-1 17-8 22.4-3.4 2.6-6.7 3.8-9.2 3.7"
+        stroke="#FF2D2F"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <path
+        d="M28.2 17.4c-3.1 7.7-.6 18.7 6.6 27 3.2 3.7 6.8 6.2 10.1 7.1"
+        stroke="#FF2D2F"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <text x="32" y="50" textAnchor="middle" fill="#2B2F38" fontSize="12" fontWeight="800" fontFamily="Arial, sans-serif">
+        PDF
+      </text>
     </svg>
   );
 }
 
 function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-      <path d="M20 11.5A8.5 8.5 0 0 1 7.43 18.98L4 20l1.1-3.2A8.5 8.5 0 1 1 20 11.5Z" />
-      <path d="M9.55 8.95c.23-.52.48-.54.71-.55h.6c.1 0 .27.04.41.34.14.3.48 1.18.52 1.26.04.08.07.2.01.32-.06.12-.1.2-.2.31-.1.11-.2.25-.29.34-.1.1-.2.21-.08.42.12.2.52.85 1.12 1.38.77.67 1.42.88 1.63.98.21.1.33.08.45-.05.12-.13.52-.6.66-.8.14-.2.28-.17.47-.1.19.07 1.21.57 1.42.68.21.1.35.15.4.24.05.08.05.48-.11.94-.16.46-.95.88-1.3.92-.34.05-.77.07-1.24-.09-.28-.09-.63-.2-1.08-.39-.82-.35-1.36-.8-1.87-1.29-.51-.48-.94-1.05-1.32-1.68-.38-.63-.4-1.16-.4-1.58 0-.42.17-.62.38-.84.2-.22.44-.28.58-.28Z" />
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <rect x="6" y="6" width="52" height="52" rx="10" fill="#FCFCFD" />
+      <path
+        d="M32 16c-8.8 0-16 7-16 15.6 0 3.1.9 6.1 2.6 8.6L16.5 48l7.9-2.1a16.4 16.4 0 0 0 7.6 1.8c8.8 0 16-7 16-15.6S40.8 16 32 16Z"
+        stroke="#22C55E"
+        strokeWidth="3.2"
+        fill="#F7FFF9"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M27.8 25.9c.5-1 1-1.1 1.5-1.1h1.1c.3 0 .6.2.9.8.3.6 1 2.3 1.1 2.5.1.2.1.4 0 .7-.1.2-.2.4-.4.6l-.6.7c-.2.2-.2.5 0 .8.2.4 1 1.7 2.2 2.7 1.5 1.3 2.8 1.8 3.1 2 .4.2.6.1.9-.1.2-.3 1-1.2 1.2-1.6.2-.4.5-.3.9-.2.4.2 2.4 1.1 2.7 1.3.4.2.7.3.8.5.1.2.1.9-.2 1.8-.3.9-1.8 1.7-2.5 1.8-.7.1-1.5.1-2.4-.1-.5-.1-1.2-.4-2.1-.8-1.6-.7-2.6-1.5-3.6-2.5-1-.9-1.8-2-2.6-3.3-.7-1.2-.8-2.2-.8-3 0-.8.3-1.2.7-1.6.4-.4.9-.6 1.1-.6Z"
+        fill="#22C55E"
+      />
     </svg>
   );
 }
