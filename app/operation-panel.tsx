@@ -809,6 +809,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const [copyState, setCopyState] = useState("");
   const [expandedStopManagers, setExpandedStopManagers] = useState<string[]>([]);
   const [operationPending, setOperationPending] = useState(false);
+  const [hasJustRunOperation, setHasJustRunOperation] = useState(false);
   const [hasManualSelectionChanges, setHasManualSelectionChanges] = useState(false);
   const [form, setForm] = useState({
     spreadsheetUploadId: data.activeUpload?.id ?? "",
@@ -1440,6 +1441,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   : "Operação rodada com sucesso.";
                 setPersistentSuccessMessage(successMessage);
                 persistFlashMessage(successMessage);
+                setHasJustRunOperation(true);
                 router.refresh();
               } catch (actionError) {
                 setError(
@@ -1463,6 +1465,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   value={form.spreadsheetUploadId}
                   onChange={(event) => {
                     setHasManualSelectionChanges(false);
+                    setHasJustRunOperation(false);
                     setForm((current) => ({
                       ...current,
                       spreadsheetUploadId: event.target.value,
@@ -1498,6 +1501,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   type="button"
                   onClick={() => {
                     setHasManualSelectionChanges(true);
+                    setHasJustRunOperation(false);
                     setForm((current) => ({
                       ...current,
                       availablePropertyManagerIds: allPropertyManagersSorted.map((item) => item.id),
@@ -1511,6 +1515,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   type="button"
                   onClick={() => {
                     setHasManualSelectionChanges(true);
+                    setHasJustRunOperation(false);
                     setForm((current) => ({
                       ...current,
                       availablePropertyManagerIds: [],
@@ -1541,6 +1546,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       checked={form.availablePropertyManagerIds.includes(item.id)}
                       onChange={(event) => {
                         setHasManualSelectionChanges(true);
+                        setHasJustRunOperation(false);
                         setForm((current) => ({
                           ...current,
                           availablePropertyManagerIds: event.target.checked
@@ -1571,6 +1577,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           value={form.temporaryOfficeByManagerId[item.id] ?? ""}
                           onChange={(event) => {
                             setHasManualSelectionChanges(true);
+                            setHasJustRunOperation(false);
                             setForm((current) => ({
                               ...current,
                               temporaryOfficeByManagerId: {
@@ -1620,6 +1627,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     checked={form.preventMixedCondominiumOffices}
                     onChange={(event) => {
                       setHasManualSelectionChanges(true);
+                      setHasJustRunOperation(false);
                       setForm((current) => ({
                         ...current,
                         preventMixedCondominiumOffices: event.target.checked,
@@ -1636,6 +1644,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     checked={form.forceEqualCheckins}
                     onChange={(event) => {
                       setHasManualSelectionChanges(true);
+                      setHasJustRunOperation(false);
                       setForm((current) => ({
                         ...current,
                         forceEqualCheckins: event.target.checked,
@@ -1650,8 +1659,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
               <div className="flex flex-wrap gap-3">
                 <button
                   type="submit"
-                  disabled={pending || operationPending || !form.spreadsheetUploadId}
-                  className="rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950"
+                  disabled={pending || operationPending || hasJustRunOperation || !form.spreadsheetUploadId}
+                  className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
+                    hasJustRunOperation
+                      ? "cursor-not-allowed border border-white/10 bg-white/5 text-slate-500"
+                      : "bg-cyan-300 text-slate-950"
+                  }`}
                 >
                   {isEnglish ? "Run operation" : "Rodar operação"}
                 </button>
@@ -1659,7 +1672,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   <button
                     type="button"
                     onClick={onOpenRouteTab}
-                    className="rounded-2xl border border-white/10 px-5 py-3 text-sm text-slate-200"
+                    className={`rounded-2xl px-5 py-3 text-sm font-medium transition ${
+                      hasJustRunOperation
+                        ? "bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30"
+                        : "border border-white/10 text-slate-200"
+                    }`}
                   >
                     {isEnglish ? "View best route" : "Ver melhor rota"}
                   </button>
