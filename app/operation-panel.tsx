@@ -1883,8 +1883,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   return (
                     <div
                       key={manager.id}
-                      className={`content-safe rounded-[1.5rem] border bg-white/5 p-5 ${scoreStyle.border}`}
+                      className={`content-safe flex h-full flex-col rounded-[1.5rem] border bg-white/5 p-5 ${scoreStyle.border}`}
                     >
+                      <div className="flex flex-col gap-3">
                       <div className="grid w-full gap-3 text-left xl:grid-cols-[minmax(0,1fr)_10rem] xl:grid-rows-[auto_auto] xl:items-start">
                         <div className="xl:col-start-1 xl:row-start-1">
                           <p className="text-base font-semibold text-white">
@@ -2013,8 +2014,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           </div>
                         </div>
                       </div>
+                      </div>
 
-                      <div className="mt-4">
+                      <div className="mt-auto pt-4">
                         <button
                           type="button"
                           onClick={() =>

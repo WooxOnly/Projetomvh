@@ -226,7 +226,7 @@ export function RouteLiveMap({ title, points }: RouteLiveMapProps) {
             : "Alguns pontos foram posicionados automaticamente para manter a rota visível enquanto a base real é enriquecida."}
         </p>
       ) : null}
-      <div ref={mapRef} className="h-60 w-full overflow-hidden rounded-2xl" />
+      <div ref={mapRef} className="h-72 w-full overflow-hidden rounded-2xl" />
       <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-300">
         <span className="inline-flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400" />
