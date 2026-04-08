@@ -198,7 +198,7 @@ export function RouteOverviewMap({ managers }: RouteOverviewMapProps) {
           {visibleManagers.length} {isEnglish ? "routes in view" : "rotas em visão"}
         </p>
       </div>
-      <div className="mb-2 flex max-h-16 flex-wrap gap-1.5 overflow-y-auto pr-1 text-[10px] text-slate-300">
+      <div className="mb-2 flex flex-wrap gap-1.5 text-[10px] text-slate-300">
         {visibleManagers.map((manager, index) => (
           <span
             key={manager.propertyManagerId}
