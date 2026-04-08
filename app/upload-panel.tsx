@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 
 import { useLanguage } from "@/app/language-provider";
 
@@ -139,6 +140,14 @@ export function UploadPanel({
     }
 
     window.sessionStorage.setItem("upload-panel-feedback", JSON.stringify(next));
+  }
+
+  function renderViewportOverlay(content: React.ReactNode) {
+    if (typeof document === "undefined") {
+      return null;
+    }
+
+    return createPortal(content, document.body);
   }
 
   async function submitUpload(formData: FormData) {
@@ -364,21 +373,23 @@ export function UploadPanel({
 
   return (
     <>
-      {pending ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/72 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[1.75rem] border border-cyan-400/20 bg-slate-950/95 p-6 text-center shadow-2xl shadow-cyan-950/30">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-cyan-300" />
-            <h3 className="mt-5 text-lg font-semibold text-white">
-              {isEnglish ? "Processing upload" : "Processando upload"}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              {isEnglish
-                ? "We are reading the spreadsheet, validating the rows, and updating the operational base."
-                : "Estamos lendo a planilha, validando as linhas e atualizando a base operacional."}
-            </p>
-          </div>
-        </div>
-      ) : null}
+      {pending
+        ? renderViewportOverlay(
+            <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/72 px-6 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-[1.75rem] border border-cyan-400/20 bg-slate-950/95 p-6 text-center shadow-2xl shadow-cyan-950/30">
+                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-cyan-300" />
+                <h3 className="mt-5 text-lg font-semibold text-white">
+                  {isEnglish ? "Processing upload" : "Processando upload"}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                  {isEnglish
+                    ? "We are reading the spreadsheet, validating the rows, and updating the operational base."
+                    : "Estamos lendo a planilha, validando as linhas e atualizando a base operacional."}
+                </p>
+              </div>
+            </div>,
+          )
+        : null}
       <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
         <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Upload</p>
         <h2 className="mt-4 text-2xl font-semibold text-white">
