@@ -1885,8 +1885,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       key={manager.id}
                       className={`content-safe rounded-[1.5rem] border bg-white/5 p-5 ${scoreStyle.border}`}
                     >
-                      <div className="flex w-full flex-col gap-3 text-left xl:flex-row xl:items-start xl:justify-between">
-                        <div>
+                      <div className="grid w-full gap-3 text-left xl:grid-cols-[minmax(0,1fr)_10rem] xl:grid-rows-[auto_auto] xl:items-start">
+                        <div className="xl:col-start-1 xl:row-start-1">
                           <p className="text-base font-semibold text-white">
                             {cleanPropertyManagerName(manager.name)}
                           </p>
@@ -1902,7 +1902,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             </p>
                           ) : null}
                         </div>
-                        <div className="content-safe min-w-40 rounded-2xl border border-white/10 bg-slate-950/70 p-3">
+                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-3 xl:col-start-2 xl:row-span-2 xl:row-start-1">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Route score" : "Score da rota"}</p>
                           <p className={`mt-1.5 text-2xl font-semibold ${scoreStyle.text}`}>
                             {managerAnalysis?.routeScore ?? "--"}
@@ -1923,10 +1923,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p>{isEnglish ? "Office" : "Escritório"}: {effectiveOffice?.name ?? managerAnalysis?.officeName ?? (isEnglish ? "Not defined" : "Não definido")}</p>
                           </div>
                         </div>
-                      </div>
-
-                      <div className="mt-3">
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3 xl:col-start-1 xl:row-start-2">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
                           <p className="mt-1.5 text-sm leading-5 text-white">{uniqueResorts.length}</p>
                           <div className="mt-1 text-xs leading-4.5 text-slate-400">
