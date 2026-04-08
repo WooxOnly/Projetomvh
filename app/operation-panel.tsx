@@ -125,29 +125,6 @@ function cleanPropertyManagerName(name: string) {
   return name.replace(/^Responsible\s+/i, "").trim() || name;
 }
 
-function ActionLoadingLabel({
-  primary,
-  secondary,
-}: {
-  primary: string;
-  secondary: string;
-}) {
-  return (
-    <span className="inline-flex items-center gap-3">
-      <span className="relative flex h-5 w-5 items-center justify-center">
-        <span className="absolute inline-flex h-5 w-5 rounded-full bg-cyan-300/20 animate-ping" />
-        <span className="inline-flex h-4 w-4 rounded-full border-2 border-cyan-200/40 border-t-cyan-300 animate-spin" />
-      </span>
-      <span className="flex flex-col items-start leading-tight">
-        <span>{primary}</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-200/80">
-          {secondary}
-        </span>
-      </span>
-    </span>
-  );
-}
-
 function PdfIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
@@ -165,6 +142,61 @@ function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
       <path d="M20 11.5A8.5 8.5 0 0 1 7.43 18.98L4 20l1.1-3.2A8.5 8.5 0 1 1 20 11.5Z" />
       <path d="M9.55 8.95c.23-.52.48-.54.71-.55h.6c.1 0 .27.04.41.34.14.3.48 1.18.52 1.26.04.08.07.2.01.32-.06.12-.1.2-.2.31-.1.11-.2.25-.29.34-.1.1-.2.21-.08.42.12.2.52.85 1.12 1.38.77.67 1.42.88 1.63.98.21.1.33.08.45-.05.12-.13.52-.6.66-.8.14-.2.28-.17.47-.1.19.07 1.21.57 1.42.68.21.1.35.15.4.24.05.08.05.48-.11.94-.16.46-.95.88-1.3.92-.34.05-.77.07-1.24-.09-.28-.09-.63-.2-1.08-.39-.82-.35-1.36-.8-1.87-1.29-.51-.48-.94-1.05-1.32-1.68-.38-.63-.4-1.16-.4-1.58 0-.42.17-.62.38-.84.2-.22.44-.28.58-.28Z" />
+    </svg>
+  );
+}
+
+function RefreshIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M20 11a8 8 0 1 0-2.34 5.66" />
+      <path d="M20 4v7h-7" />
+    </svg>
+  );
+}
+
+function RouteApiIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M4.75 8.75h14.5" />
+      <path d="M8.25 4.75v14.5" />
+      <path d="M5.75 5.75h12.5a1 1 0 0 1 1 1v10.5a1 1 0 0 1-1 1H5.75a1 1 0 0 1-1-1V6.75a1 1 0 0 1 1-1Z" />
+      <path d="m13 12 1.8 1.8L18 10.6" />
+    </svg>
+  );
+}
+
+function ListIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M8 6.5h11" />
+      <path d="M8 12h11" />
+      <path d="M8 17.5h11" />
+      <path d="M4.5 6.5h.01" />
+      <path d="M4.5 12h.01" />
+      <path d="M4.5 17.5h.01" />
+    </svg>
+  );
+}
+
+function CloseListIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M8 6.5h11" />
+      <path d="M8 17.5h11" />
+      <path d="M4.5 6.5h.01" />
+      <path d="M4.5 17.5h.01" />
+      <path d="m9.5 10 5 5" />
+      <path d="m14.5 10-5 5" />
+    </svg>
+  );
+}
+
+function SpinnerIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={`${className} animate-spin`} aria-hidden="true">
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" opacity="0.22" />
+      <path d="M12 4a8 8 0 0 1 8 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   );
 }
@@ -752,7 +784,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const { isEnglish } = useLanguage();
   const locale = isEnglish ? "en-US" : "pt-BR";
   const actionButtonClass =
-    "inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/16 disabled:cursor-not-allowed disabled:border-cyan-300/12 disabled:bg-slate-800 disabled:text-slate-500 disabled:opacity-100";
+    "inline-flex items-center justify-center rounded-2xl border border-cyan-300/40 bg-cyan-400/14 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.06),0_10px_30px_rgba(34,211,238,0.08)] transition hover:scale-[1.02] hover:border-cyan-200/70 hover:bg-cyan-300/26 hover:text-white disabled:cursor-not-allowed disabled:border-cyan-300/12 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none disabled:hover:scale-100";
+  const iconActionButtonClass = `${actionButtonClass} h-14 w-14`;
   const currentTab = searchParams.get("tab");
   const shouldHideSuccessModal = mode === "route" || currentTab === "route";
   const latestOperationRun = data.latestOperationRun;
@@ -1617,35 +1650,21 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   type="button"
                   onClick={() => void handleRebuildOperation(false)}
                   disabled={rebuildTarget !== null}
-                  className={`${actionButtonClass} min-w-[13rem]`}
+                  className={iconActionButtonClass}
+                  title={isEnglish ? "Recalculate route and distribution" : "Recalcular rota e distribuição"}
+                  aria-label={isEnglish ? "Recalculate route and distribution" : "Recalcular rota e distribuição"}
                 >
-                  {rebuildTarget === "local"
-                    ? (
-                        <ActionLoadingLabel
-                          primary={isEnglish ? "Recalculating route" : "Recalculando rota"}
-                          secondary={isEnglish ? "Optimizing distribution" : "Otimizando distribuição"}
-                        />
-                      )
-                    : isEnglish
-                      ? "Recalculate route and distribution"
-                      : "Recalcular rota e distribuição"}
+                  {rebuildTarget === "local" ? <SpinnerIcon className="h-7 w-7" /> : <RefreshIcon className="h-7 w-7" />}
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleRebuildOperation(true)}
                   disabled={rebuildTarget !== null}
-                  className={`${actionButtonClass} min-w-[10rem]`}
+                  className={iconActionButtonClass}
+                  title={isEnglish ? "Use HERE API" : "Usar API HERE"}
+                  aria-label={isEnglish ? "Use HERE API" : "Usar API HERE"}
                 >
-                  {rebuildTarget === "here"
-                    ? (
-                        <ActionLoadingLabel
-                          primary={isEnglish ? "Using HERE API" : "Usando API HERE"}
-                          secondary={isEnglish ? "Calculating live route" : "Calculando rota em tempo real"}
-                        />
-                      )
-                    : isEnglish
-                      ? "Use API"
-                      : "Usar API"}
+                  {rebuildTarget === "here" ? <SpinnerIcon className="h-7 w-7" /> : <RouteApiIcon className="h-7 w-7" />}
                 </button>
               </div>
             ) : null}
@@ -1746,17 +1765,16 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       {isEnglish ? "Use these buttons to generate the final output of the operation. The PDF opens ready to download or print." : "Use estes botões para gerar a saída final da operação. O PDF abre pronto para baixar ou imprimir."}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2.5">
+                  <div className="flex flex-wrap gap-3">
                     <button
                       type="button"
                       onClick={() => void handlePdfDownload("global")}
                       disabled={pdfPendingTarget === "global"}
-                      className={actionButtonClass}
+                      className={iconActionButtonClass}
+                      title={isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
+                      aria-label={isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
                     >
-                      <PdfIcon />
-                      <span>
-                        {pdfPendingTarget === "global" ? (isEnglish ? "Generating PDF..." : "Gerando PDF...") : isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
-                      </span>
+                      {pdfPendingTarget === "global" ? <SpinnerIcon className="h-8 w-8" /> : <PdfIcon className="h-8 w-8" />}
                     </button>
                     <button
                       type="button"
@@ -1766,12 +1784,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           : void refreshWhatsAppExport("global")
                       }
                       disabled={whatsAppPendingTarget === "global"}
-                      className={actionButtonClass}
+                      className={iconActionButtonClass}
+                      title={isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
+                      aria-label={isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
                     >
-                      <WhatsAppIcon />
-                      <span>
-                        {whatsAppPendingTarget === "global" ? (isEnglish ? "Preparing message..." : "Montando mensagem...") : isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
-                      </span>
+                      {whatsAppPendingTarget === "global" ? <SpinnerIcon className="h-8 w-8" /> : <WhatsAppIcon className="h-8 w-8" />}
                     </button>
                   </div>
                 </div>
@@ -1930,17 +1947,16 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
                               {isEnglish ? "Final output" : "Saída final"}
                             </p>
-                            <div className="mt-2.5 flex flex-wrap gap-2.5">
+                            <div className="mt-2.5 flex flex-wrap gap-3">
                               <button
                                 type="button"
                                 onClick={() => void handlePdfDownload(manager.id)}
                                 disabled={pdfPendingTarget === manager.id}
-                                className={actionButtonClass}
+                                className={iconActionButtonClass}
+                                title={isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
+                                aria-label={isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
                               >
-                                <PdfIcon />
-                                <span>
-                                  {pdfPendingTarget === manager.id ? (isEnglish ? "Generating PDF..." : "Gerando PDF...") : isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
-                                </span>
+                                {pdfPendingTarget === manager.id ? <SpinnerIcon className="h-8 w-8" /> : <PdfIcon className="h-8 w-8" />}
                               </button>
                               <button
                                 type="button"
@@ -1951,22 +1967,22 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                     )
                                 }
                                 disabled={whatsAppPendingTarget === manager.id}
-                                className={actionButtonClass}
+                                className={iconActionButtonClass}
+                                title={isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
+                                aria-label={isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
                               >
-                                <WhatsAppIcon />
-                                <span>
-                                  {whatsAppPendingTarget === manager.id ? (isEnglish ? "Preparing WhatsApp..." : "Montando WhatsApp...") : isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
-                                </span>
+                                {whatsAppPendingTarget === manager.id ? <SpinnerIcon className="h-8 w-8" /> : <WhatsAppIcon className="h-8 w-8" />}
                               </button>
                               {managerWhatsApp?.phone ? (
                                 <a
                                   href={`https://wa.me/${managerWhatsApp.phone.replace(/\D/g, "")}?text=${encodeURIComponent(managerWhatsApp.text)}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className={actionButtonClass}
+                                  className={iconActionButtonClass}
+                                  title={isEnglish ? "Open in WhatsApp" : "Abrir no WhatsApp"}
+                                  aria-label={isEnglish ? "Open in WhatsApp" : "Abrir no WhatsApp"}
                                 >
-                                  <WhatsAppIcon />
-                                  <span>{isEnglish ? "Open in WhatsApp" : "Abrir no WhatsApp"}</span>
+                                  <WhatsAppIcon className="h-8 w-8" />
                                 </a>
                               ) : null}
                             </div>
@@ -1984,15 +2000,27 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 : [...current, manager.id],
                             )
                           }
-                          className={actionButtonClass}
+                          className={iconActionButtonClass}
+                          title={
+                            isExpanded
+                              ? isEnglish
+                                ? "Hide stop list"
+                                : "Ocultar lista de paradas"
+                              : isEnglish
+                                ? "Show stop list"
+                                : "Mostrar lista de paradas"
+                          }
+                          aria-label={
+                            isExpanded
+                              ? isEnglish
+                                ? "Hide stop list"
+                                : "Ocultar lista de paradas"
+                              : isEnglish
+                                ? "Show stop list"
+                                : "Mostrar lista de paradas"
+                          }
                         >
-                          {isExpanded
-                            ? isEnglish
-                              ? "Hide stop list"
-                              : "Ocultar lista de paradas"
-                            : isEnglish
-                              ? "Show stop list"
-                              : "Mostrar lista de paradas"}
+                          {isExpanded ? <CloseListIcon className="h-7 w-7" /> : <ListIcon className="h-7 w-7" />}
                         </button>
                       </div>
 
