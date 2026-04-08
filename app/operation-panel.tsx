@@ -1886,38 +1886,40 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       className={`content-safe flex h-full flex-col rounded-[1.5rem] border bg-white/5 p-5 ${scoreStyle.border}`}
                     >
                       <div className="flex flex-col gap-3">
-                      <div className="grid w-full gap-3 text-left xl:grid-cols-[minmax(0,1fr)_10rem] xl:grid-rows-[auto_auto] xl:items-start">
-                        <div className="xl:col-start-1 xl:row-start-1">
-                          <p className="text-base font-semibold text-white">
-                            {cleanPropertyManagerName(manager.name)}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-300">
-                            {isEnglish ? "Route origin" : "Origem da rota"}: {getOfficeAddress(effectiveOffice)}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-300">
-                            {isEnglish ? "Stops" : "Paradas"}: {assignments.length}
-                          </p>
-                          {managerAnalysis?.phone ? (
-                            <p className="mt-1 text-xs text-slate-300">
-                              {isEnglish ? "Phone" : "Telefone"}: {managerAnalysis.phone}
+                      <div className="grid w-full gap-3 text-left xl:grid-cols-[minmax(0,1fr)_10rem] xl:items-end">
+                        <div className="flex flex-col gap-3">
+                          <div>
+                            <p className="text-base font-semibold text-white">
+                              {cleanPropertyManagerName(manager.name)}
                             </p>
-                          ) : null}
+                            <p className="mt-1 text-xs text-slate-300">
+                              {isEnglish ? "Route origin" : "Origem da rota"}: {getOfficeAddress(effectiveOffice)}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-300">
+                              {isEnglish ? "Stops" : "Paradas"}: {assignments.length}
+                            </p>
+                            {managerAnalysis?.phone ? (
+                              <p className="mt-1 text-xs text-slate-300">
+                                {isEnglish ? "Phone" : "Telefone"}: {managerAnalysis.phone}
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+                            <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
+                              {isEnglish ? "Route information" : "Informacoes da rota"}
+                            </p>
+                            <p className="mt-2 text-[13px] leading-5 text-slate-200">
+                              {managerAnalysis?.summary ?? (isEnglish ? "No additional AI reading for this property manager." : "Sem leitura de IA adicional para este gerente de propriedades.")}
+                            </p>
+                            <p className="mt-2 text-[11px] leading-4.5 text-amber-200">
+                              {isEnglish ? "Risk" : "Risco"}: {managerAnalysis?.risk ?? (isEnglish ? "Not identified" : "Não identificado")}
+                            </p>
+                            <p className="mt-1.5 text-[11px] leading-4.5 text-emerald-200">
+                              {isEnglish ? "Adjustment" : "Ajuste"}: {managerAnalysis?.hint ?? (isEnglish ? "No suggested adjustment" : "Sem ajuste sugerido")}
+                            </p>
+                          </div>
                         </div>
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3 xl:col-start-1 xl:row-start-2">
-                          <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
-                            {isEnglish ? "Route AI" : "IA da rota"}
-                          </p>
-                          <p className="mt-2 text-sm text-slate-200">
-                            {managerAnalysis?.summary ?? (isEnglish ? "No additional AI reading for this property manager." : "Sem leitura de IA adicional para este gerente de propriedades.")}
-                          </p>
-                          <p className="mt-2 text-xs leading-4.5 text-amber-200">
-                            {isEnglish ? "Risk" : "Risco"}: {managerAnalysis?.risk ?? (isEnglish ? "Not identified" : "Não identificado")}
-                          </p>
-                          <p className="mt-1.5 text-xs leading-4.5 text-emerald-200">
-                            {isEnglish ? "Adjustment" : "Ajuste"}: {managerAnalysis?.hint ?? (isEnglish ? "No suggested adjustment" : "Sem ajuste sugerido")}
-                          </p>
-                        </div>
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-3 xl:col-start-2 xl:row-span-2 xl:row-start-1">
+                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-3 xl:self-end">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Route score" : "Score da rota"}</p>
                           <p className={`mt-1.5 text-2xl font-semibold ${scoreStyle.text}`}>
                             {managerAnalysis?.routeScore ?? "--"}
