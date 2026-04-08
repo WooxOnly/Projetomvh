@@ -1,8 +1,5 @@
 ﻿import { readFile } from "node:fs/promises";
-import path from "node:path";
-
-import fontkit from "@pdf-lib/fontkit";
-import { PDFDocument, PDFFont, rgb } from "pdf-lib";
+import { PDFDocument, PDFFont, StandardFonts, rgb } from "pdf-lib";
 
 import {
   buildWhatsAppPayload,
@@ -18,9 +15,6 @@ type PdfColumn = {
   maxWidth: number;
   align?: "left" | "right";
 };
-
-let cachedRegularFontBytesPromise: Promise<Uint8Array> | null = null;
-let cachedBoldFontBytesPromise: Promise<Uint8Array> | null = null;
 
 function isEnglishLanguage(language: PdfLanguage) {
   return language === "en-US";
@@ -82,25 +76,12 @@ function cleanPropertyManagerName(name: string) {
 }
 
 async function loadPdfFonts(pdf: PDFDocument) {
-  pdf.registerFontkit(fontkit);
+  void readFile;
 
-  if (!cachedRegularFontBytesPromise) {
-    cachedRegularFontBytesPromise = readFile(
-      path.join(process.cwd(), "node_modules", "next", "dist", "compiled", "@vercel", "og", "Geist-Regular.ttf"),
-    );
-  }
-
-  if (!cachedBoldFontBytesPromise) {
-    cachedBoldFontBytesPromise = cachedRegularFontBytesPromise;
-  }
-
-  const [regularFontBytes, boldFontBytes] = await Promise.all([
-    cachedRegularFontBytesPromise,
-    cachedBoldFontBytesPromise,
+  const [regularFont, boldFont] = await Promise.all([
+    pdf.embedFont(StandardFonts.Helvetica),
+    pdf.embedFont(StandardFonts.HelveticaBold),
   ]);
-
-  const regularFont = await pdf.embedFont(regularFontBytes, { subset: true });
-  const boldFont = await pdf.embedFont(boldFontBytes, { subset: true });
 
   return { regularFont, boldFont };
 }
