@@ -212,22 +212,22 @@ export function RouteLiveMap({ title, points }: RouteLiveMapProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+      <div className="mb-2 flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
           {isEnglish ? "Live map" : "Mapa real"}
         </p>
         <p className="text-[11px] text-slate-400">{title}</p>
       </div>
       {points.some((point) => point.inferred) ? (
-        <p className="mb-3 text-xs text-amber-200">
+        <p className="mb-2 text-xs text-amber-200">
           {isEnglish
             ? "Some points were positioned automatically to keep the route visible while the real base is enriched."
             : "Alguns pontos foram posicionados automaticamente para manter a rota visível enquanto a base real é enriquecida."}
         </p>
       ) : null}
-      <div ref={mapRef} className="h-72 w-full overflow-hidden rounded-2xl" />
-      <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-slate-300">
+      <div ref={mapRef} className="h-60 w-full overflow-hidden rounded-2xl" />
+      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-300">
         <span className="inline-flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400" />
           {isEnglish ? "Origin" : "Origem"}

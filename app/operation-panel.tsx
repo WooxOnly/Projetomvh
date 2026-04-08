@@ -1807,20 +1807,20 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               : [...current, manager.id],
                           )
                         }
-                        className="flex w-full flex-col gap-4 text-left xl:flex-row xl:items-start xl:justify-between"
+                        className="flex w-full flex-col gap-3 text-left xl:flex-row xl:items-start xl:justify-between"
                       >
                         <div>
-                          <p className="text-lg font-semibold text-white">
+                          <p className="text-base font-semibold text-white">
                             {cleanPropertyManagerName(manager.name)}
                           </p>
-                          <p className="mt-1 text-sm text-slate-300">
+                          <p className="mt-1 text-xs text-slate-300">
                             {isEnglish ? "Route origin" : "Origem da rota"}: {getOfficeAddress(effectiveOffice)}
                           </p>
-                          <p className="mt-1 text-sm text-slate-300">
+                          <p className="mt-1 text-xs text-slate-300">
                             {isEnglish ? "Stops" : "Paradas"}: {assignments.length} |{" "}
                             {isEnglish ? "Workload" : "Carga"}: {totalWorkload}
                           </p>
-                          <p className="mt-1 text-sm text-slate-300">
+                          <p className="mt-1 text-xs text-slate-300">
                             {isEnglish ? "Phone" : "Telefone"}:{" "}
                             {managerAnalysis?.phone || (isEnglish ? "Not informed" : "Não informado")}
                           </p>
@@ -1837,18 +1837,18 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                   : "Ordem sugerida por agrupamento e endereço textual."))}
                           </p>
                         </div>
-                        <div className="content-safe min-w-44 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                        <div className="content-safe min-w-40 rounded-2xl border border-white/10 bg-slate-950/70 p-3">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Route score" : "Score da rota"}</p>
-                          <p className={`mt-2 text-3xl font-semibold ${scoreStyle.text}`}>
+                          <p className={`mt-1.5 text-2xl font-semibold ${scoreStyle.text}`}>
                             {managerAnalysis?.routeScore ?? "--"}
                           </p>
-                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
                             <div
                               className={`h-full rounded-full ${scoreStyle.progress}`}
                               style={{ width: `${managerAnalysis?.routeScore ?? 0}%` }}
                             />
                           </div>
-                          <div className="mt-3 space-y-1 text-xs text-slate-400">
+                          <div className="mt-2 space-y-1 text-[11px] text-slate-400">
                             <p>
                               {isEnglish ? "Estimated distance" : "Distância estimada"}: {managerAnalysis?.estimatedDistanceKm ?? 0} mi
                             </p>
@@ -1858,16 +1858,16 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p>{isEnglish ? "Office" : "Escritório"}: {effectiveOffice?.name ?? managerAnalysis?.officeName ?? (isEnglish ? "Not defined" : "Não definido")}</p>
                           </div>
                         </div>
-                        <div className="flex h-11 w-11 items-center justify-center self-end rounded-full border border-white/10 bg-slate-950/70 text-xl text-slate-300 xl:self-start">
+                        <div className="flex h-10 w-10 items-center justify-center self-end rounded-full border border-white/10 bg-slate-950/70 text-lg text-slate-300 xl:self-start">
                           {isExpanded ? "−" : "+"}
                         </div>
                       </button>
 
-                      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[1.8fr_1fr]">
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-[1.8fr_1fr]">
+                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
-                          <p className="mt-2 text-sm leading-6 text-white">{uniqueResorts.length}</p>
-                          <div className="mt-1 text-xs leading-5 text-slate-400">
+                          <p className="mt-1.5 text-sm leading-5 text-white">{uniqueResorts.length}</p>
+                          <div className="mt-1 text-xs leading-4.5 text-slate-400">
                             {uniqueResorts.map((resort) => (
                               <p key={resort} className="break-normal whitespace-normal">
                                 {resort}
@@ -1875,12 +1875,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             ))}
                           </div>
                         </div>
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Coordinates" : "Coordenadas"}</p>
-                          <p className="mt-2 text-sm leading-6 text-white">
+                          <p className="mt-1.5 text-sm leading-5 text-white">
                             {withCoordinates} {isEnglish ? "with" : "com"} | {withoutCoordinates} {isEnglish ? "without" : "sem"}
                           </p>
-                          <p className="mt-1 text-xs leading-5 text-slate-400">
+                          <p className="mt-1 text-xs leading-4.5 text-slate-400">
                             {isEnglish ? "Office" : "Escritório"}: {effectiveOffice?.lat != null && effectiveOffice.lng != null ? "ok" : isEnglish ? "without geolocation" : "sem geolocalização"}
                           </p>
                         </div>
@@ -1897,31 +1897,31 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         </div>
                       ) : null}
 
-                      <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+                      <div className="mt-3 grid gap-3 xl:grid-cols-[1.1fr_0.9fr]">
                         <RouteLiveMap
                           title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
                           points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
                         />
                         <div className="space-y-3">
-                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
                               {isEnglish ? "Route AI" : "IA da rota"}
                             </p>
-                            <p className="mt-3 text-sm text-slate-200">
+                            <p className="mt-2 text-sm text-slate-200">
                               {managerAnalysis?.summary ?? (isEnglish ? "No additional AI reading for this property manager." : "Sem leitura de IA adicional para este gerente de propriedades.")}
                             </p>
-                            <p className="mt-3 text-xs text-amber-200">
+                            <p className="mt-2 text-xs text-amber-200">
                               {isEnglish ? "Risk" : "Risco"}: {managerAnalysis?.risk ?? (isEnglish ? "Not identified" : "Não identificado")}
                             </p>
-                            <p className="mt-2 text-xs text-emerald-200">
+                            <p className="mt-1.5 text-xs text-emerald-200">
                               {isEnglish ? "Adjustment" : "Ajuste"}: {managerAnalysis?.hint ?? (isEnglish ? "No suggested adjustment" : "Sem ajuste sugerido")}
                             </p>
                           </div>
-                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
                               {isEnglish ? "Final output" : "Saída final"}
                             </p>
-                            <div className="mt-3 flex flex-wrap gap-3">
+                            <div className="mt-2.5 flex flex-wrap gap-2.5">
                               <button
                                 type="button"
                                 onClick={() => void handlePdfDownload(manager.id)}
