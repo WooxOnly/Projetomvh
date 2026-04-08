@@ -1914,188 +1914,189 @@ export function enforceEqualCheckinCounts(
       }))
       .sort((left, right) => right.assignments.length - left.assignments.length);
 
-    const overloaded = managerLoads[0];
-    if (!overloaded) {
-      break;
-    }
-
-    const underloadedCandidates = managerLoads
-      .slice(1)
-      .reverse()
-      .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > resolvedMaxGap);
-
-    if (underloadedCandidates.length === 0) {
-      break;
-    }
-
     let moveApplied = false;
 
-    for (const underloaded of underloadedCandidates) {
-      const currentGap = overloaded.assignments.length - underloaded.assignments.length;
-      const underloadedOfficeIds = getManagerAssignedCondominiumOfficeIds(underloaded.manager.id);
+    for (const overloaded of managerLoads) {
+      const underloadedCandidates = managerLoads
+        .filter((candidate) => candidate.manager.id !== overloaded.manager.id)
+        .reverse()
+        .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > resolvedMaxGap);
 
-      const groupedByResort = new Map<string, PlannedAssignment[]>();
-      for (const assignment of overloaded.assignments) {
-        const checkin = getAssignmentCheckin(assignment);
-        if (!checkin) {
-          continue;
-        }
-        const resortKey = getResortGroupKey(checkin);
-        const bucket = groupedByResort.get(resortKey) ?? [];
-        bucket.push(assignment);
-        groupedByResort.set(resortKey, bucket);
+      if (underloadedCandidates.length === 0) {
+        continue;
       }
 
-      const blockCandidate = [...groupedByResort.entries()]
-        .map(([resortKey, assignments]) => {
-          const sampleCheckin = getAssignmentCheckin(assignments[0]!);
-          if (!sampleCheckin) {
-            return null;
+      for (const underloaded of underloadedCandidates) {
+        const currentGap = overloaded.assignments.length - underloaded.assignments.length;
+        const underloadedOfficeIds = getManagerAssignedCondominiumOfficeIds(underloaded.manager.id);
+
+        const groupedByResort = new Map<string, PlannedAssignment[]>();
+        for (const assignment of overloaded.assignments) {
+          const checkin = getAssignmentCheckin(assignment);
+          if (!checkin) {
+            continue;
           }
+          const resortKey = getResortGroupKey(checkin);
+          const bucket = groupedByResort.get(resortKey) ?? [];
+          bucket.push(assignment);
+          groupedByResort.set(resortKey, bucket);
+        }
 
-          const resortCount = resortCheckinCounts.get(resortKey) ?? assignments.length;
-          if (resortCount >= SMALL_RESORT_LOCK_THRESHOLD) {
-            return null;
-          }
+        const blockCandidate = [...groupedByResort.entries()]
+          .map(([resortKey, assignments]) => {
+            const sampleCheckin = getAssignmentCheckin(assignments[0]!);
+            if (!sampleCheckin) {
+              return null;
+            }
 
-          const newGap = Math.abs(
-            overloaded.assignments.length - assignments.length - (underloaded.assignments.length + assignments.length),
-          );
+            const resortCount = resortCheckinCounts.get(resortKey) ?? assignments.length;
+            if (resortCount >= SMALL_RESORT_LOCK_THRESHOLD) {
+              return null;
+            }
 
-          if (newGap >= currentGap) {
-            return null;
-          }
-
-          const blockOfficeIds = new Set(
-            assignments
-              .map(getAssignmentCheckin)
-              .map((checkin) => checkin?.condominium?.officeId ?? null)
-              .filter((value): value is string => Boolean(value)),
-          );
-
-          if (
-            input.preventMixedCondominiumOffices &&
-            blockOfficeIds.size > 0 &&
-            underloadedOfficeIds.size > 0 &&
-            [...blockOfficeIds].some((officeId) => !underloadedOfficeIds.has(officeId))
-          ) {
-            return null;
-          }
-
-          const blockPoint = getPointsCentroid(
-            assignments
-              .map(getAssignmentCheckin)
-              .map((checkin) => (checkin ? getCheckinPoint(checkin) : null))
-              .filter((value): value is { lat: number; lng: number } => Boolean(value)),
-          );
-
-          const overloadedOrigin = getManagerOriginPoint(
-            overloaded.manager,
-            getManagerAssignedPoints(overloaded.manager.id, assignments[0]?.checkinId),
-          );
-          const underloadedOrigin = getManagerOriginPoint(
-            underloaded.manager,
-            getManagerAssignedPoints(underloaded.manager.id),
-          );
-
-          const score =
-            estimateInsertionCost(
-              blockPoint,
-              underloadedOrigin,
-              getManagerAssignedPoints(underloaded.manager.id),
-            ) -
-            estimateInsertionCost(
-              blockPoint,
-              overloadedOrigin,
-              getManagerAssignedPoints(overloaded.manager.id, assignments[0]?.checkinId),
+            const newGap = Math.abs(
+              overloaded.assignments.length - assignments.length - (underloaded.assignments.length + assignments.length),
             );
 
-          return { assignments, score };
-        })
-        .filter(
-          (
-            item,
-          ): item is {
-            assignments: PlannedAssignment[];
-            score: number;
-          } => Boolean(item),
-        )
-        .sort((left, right) => left.score - right.score)[0];
+            if (newGap >= currentGap) {
+              return null;
+            }
 
-      if (blockCandidate) {
-        moveAssignments(blockCandidate.assignments, underloaded.manager.id);
+            const blockOfficeIds = new Set(
+              assignments
+                .map(getAssignmentCheckin)
+                .map((checkin) => checkin?.condominium?.officeId ?? null)
+                .filter((value): value is string => Boolean(value)),
+            );
+
+            if (
+              input.preventMixedCondominiumOffices &&
+              blockOfficeIds.size > 0 &&
+              underloadedOfficeIds.size > 0 &&
+              [...blockOfficeIds].some((officeId) => !underloadedOfficeIds.has(officeId))
+            ) {
+              return null;
+            }
+
+            const blockPoint = getPointsCentroid(
+              assignments
+                .map(getAssignmentCheckin)
+                .map((checkin) => (checkin ? getCheckinPoint(checkin) : null))
+                .filter((value): value is { lat: number; lng: number } => Boolean(value)),
+            );
+
+            const overloadedOrigin = getManagerOriginPoint(
+              overloaded.manager,
+              getManagerAssignedPoints(overloaded.manager.id, assignments[0]?.checkinId),
+            );
+            const underloadedOrigin = getManagerOriginPoint(
+              underloaded.manager,
+              getManagerAssignedPoints(underloaded.manager.id),
+            );
+
+            const score =
+              estimateInsertionCost(
+                blockPoint,
+                underloadedOrigin,
+                getManagerAssignedPoints(underloaded.manager.id),
+              ) -
+              estimateInsertionCost(
+                blockPoint,
+                overloadedOrigin,
+                getManagerAssignedPoints(overloaded.manager.id, assignments[0]?.checkinId),
+              );
+
+            return { assignments, score };
+          })
+          .filter(
+            (
+              item,
+            ): item is {
+              assignments: PlannedAssignment[];
+              score: number;
+            } => Boolean(item),
+          )
+          .sort((left, right) => left.score - right.score)[0];
+
+        if (blockCandidate) {
+          moveAssignments(blockCandidate.assignments, underloaded.manager.id);
+          moveApplied = true;
+          break;
+        }
+
+        const singleCandidate = overloaded.assignments
+          .map((assignment) => {
+            const checkin = getAssignmentCheckin(assignment);
+            const point = checkin ? getCheckinPoint(checkin) : null;
+
+            if (!checkin || !point) {
+              return null;
+            }
+
+            const resortCount = resortCheckinCounts.get(getResortGroupKey(checkin)) ?? 0;
+            if (resortCount < SMALL_RESORT_LOCK_THRESHOLD) {
+              return null;
+            }
+
+            const checkinOfficeId = checkin.condominium?.officeId ?? null;
+            if (
+              input.preventMixedCondominiumOffices &&
+              checkinOfficeId &&
+              underloadedOfficeIds.size > 0 &&
+              !underloadedOfficeIds.has(checkinOfficeId)
+            ) {
+              return null;
+            }
+
+            const sourcePoints = getManagerAssignedPoints(overloaded.manager.id, assignment.checkinId);
+            const targetPoints = getManagerAssignedPoints(underloaded.manager.id);
+            const sourceCost = estimateInsertionCost(
+              point,
+              getManagerOriginPoint(overloaded.manager, sourcePoints),
+              sourcePoints,
+            );
+            const targetCost = estimateInsertionCost(
+              point,
+              getManagerOriginPoint(underloaded.manager, targetPoints),
+              targetPoints,
+            );
+            const sourceNearest = getNearestDistanceToAnyPoint(point, sourcePoints) ?? sourceCost;
+            const targetNearest = getNearestDistanceToAnyPoint(point, targetPoints) ?? targetCost;
+            const newGap = Math.abs(
+              overloaded.assignments.length - 1 - (underloaded.assignments.length + 1),
+            );
+
+            if (newGap >= currentGap) {
+              return null;
+            }
+
+            return {
+              assignment,
+              score: (targetCost - sourceCost) * 8 + (targetNearest - sourceNearest) * 10,
+            };
+          })
+          .filter(
+            (
+              item,
+            ): item is {
+              assignment: PlannedAssignment;
+              score: number;
+            } => Boolean(item),
+          )
+          .sort((left, right) => left.score - right.score)[0];
+
+        if (!singleCandidate) {
+          continue;
+        }
+
+        moveAssignment(singleCandidate.assignment, underloaded.manager.id);
         moveApplied = true;
         break;
       }
 
-      const singleCandidate = overloaded.assignments
-        .map((assignment) => {
-          const checkin = getAssignmentCheckin(assignment);
-          const point = checkin ? getCheckinPoint(checkin) : null;
-
-          if (!checkin || !point) {
-            return null;
-          }
-
-          const resortCount = resortCheckinCounts.get(getResortGroupKey(checkin)) ?? 0;
-          if (resortCount < SMALL_RESORT_LOCK_THRESHOLD) {
-            return null;
-          }
-
-          const checkinOfficeId = checkin.condominium?.officeId ?? null;
-          if (
-            input.preventMixedCondominiumOffices &&
-            checkinOfficeId &&
-            underloadedOfficeIds.size > 0 &&
-            !underloadedOfficeIds.has(checkinOfficeId)
-          ) {
-            return null;
-          }
-
-          const sourcePoints = getManagerAssignedPoints(overloaded.manager.id, assignment.checkinId);
-          const targetPoints = getManagerAssignedPoints(underloaded.manager.id);
-          const sourceCost = estimateInsertionCost(
-            point,
-            getManagerOriginPoint(overloaded.manager, sourcePoints),
-            sourcePoints,
-          );
-          const targetCost = estimateInsertionCost(
-            point,
-            getManagerOriginPoint(underloaded.manager, targetPoints),
-            targetPoints,
-          );
-          const sourceNearest = getNearestDistanceToAnyPoint(point, sourcePoints) ?? sourceCost;
-          const targetNearest = getNearestDistanceToAnyPoint(point, targetPoints) ?? targetCost;
-          const newGap = Math.abs(
-            overloaded.assignments.length - 1 - (underloaded.assignments.length + 1),
-          );
-
-          if (newGap >= currentGap) {
-            return null;
-          }
-
-          return {
-            assignment,
-            score: (targetCost - sourceCost) * 8 + (targetNearest - sourceNearest) * 10,
-          };
-        })
-        .filter(
-          (
-            item,
-          ): item is {
-            assignment: PlannedAssignment;
-            score: number;
-          } => Boolean(item),
-        )
-        .sort((left, right) => left.score - right.score)[0];
-
-      if (!singleCandidate) {
-        continue;
+      if (moveApplied) {
+        break;
       }
-
-      moveAssignment(singleCandidate.assignment, underloaded.manager.id);
-      moveApplied = true;
-      break;
     }
 
     if (!moveApplied) {
@@ -2111,86 +2112,87 @@ export function enforceEqualCheckinCounts(
       }))
       .sort((left, right) => right.assignments.length - left.assignments.length);
 
-    const overloaded = managerLoads[0];
-    if (!overloaded) {
-      break;
-    }
-
-    const underloadedCandidates = managerLoads
-      .slice(1)
-      .reverse()
-      .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > resolvedMaxGap);
-
-    if (underloadedCandidates.length === 0) {
-      break;
-    }
-
     let moveApplied = false;
 
-    for (const underloaded of underloadedCandidates) {
-      const underloadedOfficeIds = getManagerAssignedCondominiumOfficeIds(underloaded.manager.id);
+    for (const overloaded of managerLoads) {
+      const underloadedCandidates = managerLoads
+        .filter((candidate) => candidate.manager.id !== overloaded.manager.id)
+        .reverse()
+        .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > resolvedMaxGap);
 
-      const forcedCandidate = overloaded.assignments
-        .map((assignment) => {
-          const checkin = getAssignmentCheckin(assignment);
-          if (!checkin) {
-            return null;
-          }
-
-          const resortCount = resortCheckinCounts.get(getResortGroupKey(checkin)) ?? 0;
-          if (resortCount < SMALL_RESORT_LOCK_THRESHOLD) {
-            return null;
-          }
-
-          const checkinOfficeId = checkin.condominium?.officeId ?? null;
-          if (
-            input.preventMixedCondominiumOffices &&
-            checkinOfficeId &&
-            underloadedOfficeIds.size > 0 &&
-            !underloadedOfficeIds.has(checkinOfficeId)
-          ) {
-            return null;
-          }
-
-          const sameResortInSource = (assignmentsByManager.get(overloaded.manager.id) ?? []).filter((item) => {
-            const candidateCheckin = getAssignmentCheckin(item);
-            return candidateCheckin && getResortGroupKey(candidateCheckin) === getResortGroupKey(checkin);
-          }).length;
-
-          const sameResortInTarget = (assignmentsByManager.get(underloaded.manager.id) ?? []).filter((item) => {
-            const candidateCheckin = getAssignmentCheckin(item);
-            return candidateCheckin && getResortGroupKey(candidateCheckin) === getResortGroupKey(checkin);
-          }).length;
-
-          const point = getCheckinPoint(checkin);
-          const targetPoints = getManagerAssignedPoints(underloaded.manager.id);
-          const targetNearest = point ? getNearestDistanceToAnyPoint(point, targetPoints) ?? 0 : 0;
-
-          return {
-            assignment,
-            priority:
-              sameResortInTarget * 100 -
-              sameResortInSource * 10 -
-              targetNearest,
-          };
-        })
-        .filter(
-          (
-            item,
-          ): item is {
-            assignment: PlannedAssignment;
-            priority: number;
-          } => Boolean(item),
-        )
-        .sort((left, right) => right.priority - left.priority)[0];
-
-      if (!forcedCandidate) {
+      if (underloadedCandidates.length === 0) {
         continue;
       }
 
-      moveAssignment(forcedCandidate.assignment, underloaded.manager.id);
-      moveApplied = true;
-      break;
+      for (const underloaded of underloadedCandidates) {
+        const underloadedOfficeIds = getManagerAssignedCondominiumOfficeIds(underloaded.manager.id);
+
+        const forcedCandidate = overloaded.assignments
+          .map((assignment) => {
+            const checkin = getAssignmentCheckin(assignment);
+            if (!checkin) {
+              return null;
+            }
+
+            const resortCount = resortCheckinCounts.get(getResortGroupKey(checkin)) ?? 0;
+            if (resortCount < SMALL_RESORT_LOCK_THRESHOLD) {
+              return null;
+            }
+
+            const checkinOfficeId = checkin.condominium?.officeId ?? null;
+            if (
+              input.preventMixedCondominiumOffices &&
+              checkinOfficeId &&
+              underloadedOfficeIds.size > 0 &&
+              !underloadedOfficeIds.has(checkinOfficeId)
+            ) {
+              return null;
+            }
+
+            const sameResortInSource = (assignmentsByManager.get(overloaded.manager.id) ?? []).filter((item) => {
+              const candidateCheckin = getAssignmentCheckin(item);
+              return candidateCheckin && getResortGroupKey(candidateCheckin) === getResortGroupKey(checkin);
+            }).length;
+
+            const sameResortInTarget = (assignmentsByManager.get(underloaded.manager.id) ?? []).filter((item) => {
+              const candidateCheckin = getAssignmentCheckin(item);
+              return candidateCheckin && getResortGroupKey(candidateCheckin) === getResortGroupKey(checkin);
+            }).length;
+
+            const point = getCheckinPoint(checkin);
+            const targetPoints = getManagerAssignedPoints(underloaded.manager.id);
+            const targetNearest = point ? getNearestDistanceToAnyPoint(point, targetPoints) ?? 0 : 0;
+
+            return {
+              assignment,
+              priority:
+                sameResortInTarget * 100 -
+                sameResortInSource * 10 -
+                targetNearest,
+            };
+          })
+          .filter(
+            (
+              item,
+            ): item is {
+              assignment: PlannedAssignment;
+              priority: number;
+            } => Boolean(item),
+          )
+          .sort((left, right) => right.priority - left.priority)[0];
+
+        if (!forcedCandidate) {
+          continue;
+        }
+
+        moveAssignment(forcedCandidate.assignment, underloaded.manager.id);
+        moveApplied = true;
+        break;
+      }
+
+      if (moveApplied) {
+        break;
+      }
     }
 
     if (!moveApplied) {
