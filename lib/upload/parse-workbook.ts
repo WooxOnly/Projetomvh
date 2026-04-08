@@ -259,9 +259,11 @@ export function parseWorkbook(buffer: Buffer, fallbackOperationDate: Date) {
   const parsedRows: ParsedRow[] = rows
     .map((row, index) => {
       const condominiumName = cleanText(mapping.condominium ? row[mapping.condominium] : "");
-      const propertyIdentifier =
-        normalizeOperationalAddress(mapping.property ? row[mapping.property] : "") ||
-        normalizeOperationalAddress(mapping.address ? row[mapping.address] : "");
+      const rawPropertyValue = mapping.property ? row[mapping.property] : "";
+      const rawAddressValue = mapping.address ? row[mapping.address] : "";
+      const operationalPropertyIdentifier =
+        cleanText(rawPropertyValue) ||
+        cleanText(rawAddressValue);
       const propertyManagerName = cleanText(
         mapping.propertyManager ? row[mapping.propertyManager] : "",
       );
@@ -282,7 +284,7 @@ export function parseWorkbook(buffer: Buffer, fallbackOperationDate: Date) {
       const nonEmptyCells = getNonEmptyCellEntries(row);
       const looksLikeSummaryRow = isNumberOfNightsSummaryRow(nonEmptyCells, numberOfNights, {
         condominiumName,
-        propertyIdentifier,
+        propertyIdentifier: operationalPropertyIdentifier,
         guestName,
         doorCode,
         propertyManagerName: normalizedPropertyManagerName,
@@ -293,7 +295,7 @@ export function parseWorkbook(buffer: Buffer, fallbackOperationDate: Date) {
         nonEmptyCells.length > 0 &&
         !looksLikeSummaryRow &&
         !condominiumName &&
-        !propertyIdentifier &&
+        !operationalPropertyIdentifier &&
         !guestName &&
         !doorCode &&
         !normalizedPropertyManagerName &&
@@ -319,9 +321,9 @@ export function parseWorkbook(buffer: Buffer, fallbackOperationDate: Date) {
         condominiumAddress: normalizeOperationalAddress(
           mapping.condominiumAddress ? row[mapping.condominiumAddress] : "",
         ),
-        propertyName: propertyIdentifier || "Imovel sem identificador",
-        propertyNormalized: normalizeText(propertyIdentifier || "Imovel sem identificador"),
-        address: normalizeOperationalAddress(mapping.address ? row[mapping.address] : ""),
+        propertyName: operationalPropertyIdentifier || "Imovel sem identificador",
+        propertyNormalized: normalizeText(operationalPropertyIdentifier || "Imovel sem identificador"),
+        address: cleanText(rawAddressValue) || cleanText(rawPropertyValue),
         bedrooms: parseOptionalInt(mapping.bedrooms ? row[mapping.bedrooms] : ""),
         propertyManagerName: normalizedPropertyManagerName,
         propertyManagerNormalized: normalizeText(normalizedPropertyManagerName),
