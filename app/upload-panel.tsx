@@ -417,9 +417,9 @@ export function UploadPanel({
             </div>,
           )
         : null}
-      <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+      <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
         <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Upload</p>
-        <h2 className="mt-4 text-2xl font-semibold text-white">
+        <h2 className="mt-4 text-xl font-semibold text-white sm:text-2xl">
           {isEnglish ? "Import operational base" : "Importar base operacional"}
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
@@ -459,7 +459,7 @@ export function UploadPanel({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-70"
+              className="min-h-11 rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {pending
                 ? isEnglish
@@ -485,7 +485,7 @@ export function UploadPanel({
               <button
                 type="button"
                 onClick={onOpenDetailsTab}
-                className="mt-3 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950"
+                className="mt-3 min-h-11 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950"
               >
                 {isEnglish ? "Open details" : "Abrir detalhamento"}
               </button>
@@ -532,14 +532,14 @@ export function UploadPanel({
                 type="button"
                 onClick={handleConfirmImport}
                 disabled={pending}
-                className="rounded-2xl bg-amber-200 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-100 disabled:opacity-70"
+                className="min-h-11 rounded-2xl bg-amber-200 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-100 disabled:opacity-70"
               >
                 {isEnglish ? "Import anyway" : "Importar mesmo assim"}
               </button>
               <button
                 type="button"
                 onClick={() => setReviewState(null)}
-                className="rounded-2xl border border-amber-200/30 bg-transparent px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-200/10"
+                className="min-h-11 rounded-2xl border border-amber-200/30 bg-transparent px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-200/10"
               >
                 {isEnglish ? "Cancel and review file" : "Cancelar e revisar planilha"}
               </button>
@@ -564,7 +564,7 @@ export function UploadPanel({
                 <button
                   type="button"
                   onClick={onReviewMissingBedrooms}
-                  className="rounded-2xl border border-amber-200/30 bg-amber-200/10 px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-200/20"
+                  className="min-h-11 rounded-2xl border border-amber-200/30 bg-amber-200/10 px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-200/20"
                 >
                   {isEnglish ? "Review on Homes page" : "Revisar na página Casas"}
                 </button>
@@ -610,7 +610,7 @@ export function UploadPanel({
 
       {officeAssignmentState ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-[1.75rem] border border-cyan-300/20 bg-slate-950 p-6 shadow-2xl shadow-cyan-950/30">
+          <div className="w-full max-w-3xl rounded-[1.75rem] border border-cyan-300/20 bg-slate-950 p-4 shadow-2xl shadow-cyan-950/30 sm:p-6">
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
               {isEnglish ? "Office assignment" : "Vincular escritório"}
             </p>
@@ -708,11 +708,11 @@ export function UploadPanel({
               ) : null}
             </div>
 
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
               <button
                 type="button"
                 onClick={() => setOfficeAssignmentState(null)}
-                className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
+                className="min-h-11 rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
               >
                 {isEnglish ? "Later" : "Depois"}
               </button>
@@ -720,7 +720,7 @@ export function UploadPanel({
                 type="button"
                 disabled={!canSaveOfficeAssignments || assigningOffices}
                 onClick={handleSaveOfficeAssignments}
-                className="rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-70"
+                className="min-h-11 rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {assigningOffices
                   ? isEnglish

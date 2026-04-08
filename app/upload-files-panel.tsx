@@ -21,11 +21,11 @@ export function UploadFilesPanel({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+      <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
         <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
           {isEnglish ? "Import file" : "Importar Arquivo"}
         </p>
-        <h3 className="mt-3 text-2xl font-semibold text-white">
+        <h3 className="mt-3 text-xl font-semibold text-white sm:text-2xl">
           {isEnglish ? "Upload operational spreadsheet" : "Enviar planilha operacional"}
         </h3>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">

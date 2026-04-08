@@ -82,13 +82,13 @@ function TabGroup({
   onSelect: (tab: CadastroTabKey) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="mobile-tab-row md:flex md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
       {items.map((tab) => (
         <button
           key={tab.key}
           type="button"
           onClick={() => onSelect(tab.key)}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+          className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition ${
             activeTab === tab.key
               ? "bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30"
               : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
@@ -176,13 +176,13 @@ export function CadastrosShell({ data }: CadastrosShellProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-5">
+      <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
         <div className="space-y-4">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
               {isEnglish ? "Records" : "Cadastros"}
             </p>
-            <h2 className="mt-3 text-xl font-semibold text-white">
+            <h2 className="mt-3 text-lg font-semibold text-white sm:text-xl">
               {isEnglish ? "System records" : "Base do sistema"}
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
@@ -196,7 +196,7 @@ export function CadastrosShell({ data }: CadastrosShellProps) {
         </div>
       </section>
 
-      <section className="dashboard-panel-enter rounded-[1.5rem] border border-white/10 bg-slate-950/25 p-4">
+      <section className="dashboard-panel-enter rounded-[1.5rem] border border-white/10 bg-slate-950/25 p-3 sm:p-4">
         <div className="mb-4 rounded-[1.25rem] border border-white/8 bg-slate-950/45 px-4 py-3">
           <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
             {isEnglish ? "Record" : "Cadastro"}

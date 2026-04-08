@@ -176,13 +176,13 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-5">
+      <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
               {isEnglish ? "History" : "Histórico"}
             </p>
-            <h3 className="mt-2 text-xl font-semibold text-white">
+            <h3 className="mt-2 text-lg font-semibold text-white sm:text-xl">
               {isEnglish ? "Processed uploads" : "Uploads processados"}
             </h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
@@ -192,8 +192,8 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-              <div className="content-safe rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+          <div className="flex flex-col gap-3 self-stretch sm:flex-row sm:flex-wrap">
+              <div className="content-safe rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 sm:min-w-64">
                 {isEnglish ? "Active base" : "Base ativa"}:{" "}
                 <span className="font-medium text-white">
                   {data.activeUpload
@@ -207,7 +207,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
               type="button"
               onClick={handleClearActiveUpload}
               disabled={pending}
-              className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-100"
+              className="min-h-11 rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-100"
             >
               {pendingId === "clear"
                 ? isEnglish
@@ -271,7 +271,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
             <div className="flex items-end">
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 md:w-auto"
+                className="min-h-11 w-full rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 md:w-auto"
               >
                 {isEnglish ? "Load" : "Carregar"}
               </button>
@@ -300,7 +300,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
             return (
               <article
                 key={upload.id}
-                className={`content-safe rounded-[1.5rem] border px-5 py-4 ${
+                className={`content-safe rounded-[1.5rem] border px-4 py-4 sm:px-5 ${
                   isActive
                     ? "border-cyan-300/30 bg-cyan-300/8"
                     : "border-white/10 bg-slate-950/40"
@@ -328,7 +328,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
                     type="button"
                     onClick={() => handleActivate(upload.id)}
                     disabled={pending && pendingId === upload.id}
-                    className={`rounded-2xl px-4 py-2.5 text-sm font-medium ${
+                    className={`min-h-11 rounded-2xl px-4 py-2.5 text-sm font-medium ${
                       isActive
                         ? "border border-cyan-300/30 bg-cyan-300/15 text-cyan-100"
                         : "border border-white/10 bg-white/5 text-slate-100"

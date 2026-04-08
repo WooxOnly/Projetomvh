@@ -26,6 +26,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  overflow-x: hidden;
 }
 
 button {
@@ -43,26 +44,9 @@ button:not(:disabled) {
   cursor: pointer;
 }
 
-button:not(:disabled):hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 10px 24px rgba(8, 15, 35, 0.22);
-}
-
 button:not(:disabled):active {
   transform: translateY(0);
   filter: brightness(0.98);
-}
-
-button:not(:disabled)[class*="border"]:not([class*="bg-cyan-300"]):not([class*="bg-amber-200"]):hover {
-  border-color: rgba(103, 232, 249, 0.35);
-  background-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 24px rgba(8, 15, 35, 0.18);
-}
-
-button:not(:disabled)[class*="bg-cyan-300"]:hover,
-button:not(:disabled)[class*="bg-amber-200"]:hover {
-  box-shadow: 0 12px 28px rgba(34, 211, 238, 0.22);
 }
 
 input[type="file"]::file-selector-button,
@@ -77,17 +61,36 @@ input[type="file"]::-webkit-file-upload-button {
   cursor: pointer;
 }
 
-input[type="file"]:hover::file-selector-button,
-input[type="file"]:hover::-webkit-file-upload-button {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 12px 28px rgba(34, 211, 238, 0.22);
-}
-
 input[type="file"]:active::file-selector-button,
 input[type="file"]:active::-webkit-file-upload-button {
   transform: translateY(0);
   filter: brightness(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 10px 24px rgba(8, 15, 35, 0.22);
+  }
+
+  button:not(:disabled)[class*="border"]:not([class*="bg-cyan-300"]):not([class*="bg-amber-200"]):hover {
+    border-color: rgba(103, 232, 249, 0.35);
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 24px rgba(8, 15, 35, 0.18);
+  }
+
+  button:not(:disabled)[class*="bg-cyan-300"]:hover,
+  button:not(:disabled)[class*="bg-amber-200"]:hover {
+    box-shadow: 0 12px 28px rgba(34, 211, 238, 0.22);
+  }
+
+  input[type="file"]:hover::file-selector-button,
+  input[type="file"]:hover::-webkit-file-upload-button {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 12px 28px rgba(34, 211, 238, 0.22);
+  }
 }
 
 .leaflet-container {
@@ -119,4 +122,26 @@ input[type="file"]:active::-webkit-file-upload-button {
 .content-safe * {
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.mobile-tab-row {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-tab-row::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-tab-row > * {
+  flex: 0 0 auto;
+}
+
+.mobile-safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
 }

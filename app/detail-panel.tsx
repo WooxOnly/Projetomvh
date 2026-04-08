@@ -269,11 +269,11 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+      <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
         <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
           {isEnglish ? "Details" : "Detalhamento"}
         </p>
-        <h3 className="mt-3 text-2xl font-semibold text-white">
+        <h3 className="mt-3 text-xl font-semibold text-white sm:text-2xl">
           {isEnglish ? "Visual analysis of the imported file" : "Análise visual do arquivo importado"}
         </h3>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
@@ -305,7 +305,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
 
       {data.activeUploadOfficeBreakdown ? (
         <>
-          <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+          <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-3xl">
                 <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
@@ -333,7 +333,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                   <button
                     type="button"
                     onClick={onOpenAvailabilityTab}
-                    className="rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950"
+                    className="min-h-11 rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950"
                   >
                     {isEnglish ? "Go to managers of the day" : "Avançar para os gerentes do dia"}
                   </button>
@@ -342,13 +342,13 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
             </div>
           </section>
 
-          <section className="grid gap-4 rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="grid gap-4 rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => setBreakdownMode("resorts")}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition ${
                     breakdownMode === "resorts"
                       ? "bg-cyan-300 text-slate-950"
                       : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
@@ -359,7 +359,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 <button
                   type="button"
                   onClick={() => setBreakdownMode("offices")}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition ${
                     breakdownMode === "offices"
                       ? "bg-cyan-300 text-slate-950"
                       : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
@@ -391,13 +391,13 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 </div>
               ) : null}
 
-              <div className="mt-6 flex flex-col items-center justify-center rounded-[1.75rem] border border-white/10 bg-white/5 p-6">
+              <div className="mt-6 flex flex-col items-center justify-center rounded-[1.75rem] border border-white/10 bg-white/5 p-4 sm:p-6">
                 {chartData.slices.length > 0 ? (
                   <div
                     className="relative flex items-center justify-center"
                     onMouseLeave={() => setActiveSliceId(null)}
                   >
-                    <svg viewBox="0 0 320 320" className="h-80 w-80">
+                    <svg viewBox="0 0 320 320" className="h-[17.5rem] w-[17.5rem] sm:h-80 sm:w-80">
                       {(() => {
                         let startAngle = 0;
 
@@ -416,6 +416,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                               strokeWidth={activeSlice?.id === slice.id ? 4 : 2}
                               className="cursor-pointer transition-opacity duration-200 hover:opacity-90"
                               onMouseEnter={() => setActiveSliceId(slice.id)}
+                              onClick={() => setActiveSliceId(slice.id)}
                             >
                               <title>
                                 {slice.label} | Check-ins: {slice.metricValue}
@@ -473,12 +474,12 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
             </div>
 
             <div className="space-y-4">
-              <div className="h-[10.75rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+              <div className="min-h-[10.75rem] rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5">
                 <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
-                  {isEnglish ? "Hover / focus" : "Hover / foco"}
+                  {isEnglish ? "Tap / focus" : "Toque / foco"}
                 </p>
                 {activeSlice ? (
-                  <div className="mt-3 flex h-[7.25rem] flex-col overflow-hidden">
+                  <div className="mt-3 flex min-h-[7.25rem] flex-col">
                     <h4 className="line-clamp-2 min-h-[3.5rem] overflow-hidden text-xl font-semibold leading-7 text-white">
                       {activeSlice.label}
                     </h4>
@@ -493,10 +494,10 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                     </p>
                   </div>
                 ) : (
-                  <p className="mt-3 h-[7.25rem] overflow-hidden text-sm text-slate-300">
+                  <p className="mt-3 min-h-[7.25rem] text-sm text-slate-300">
                     {isEnglish
-                      ? "Move the mouse over a slice to see the details."
-                      : "Passe o mouse sobre uma fatia para ver os detalhes."}
+                      ? "Tap a slice or legend item to see the details."
+                      : "Toque em uma fatia ou item da legenda para ver os detalhes."}
                   </p>
                 )}
               </div>
@@ -515,6 +516,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                       type="button"
                       onMouseEnter={() => setActiveSliceId(slice.id)}
                       onFocus={() => setActiveSliceId(slice.id)}
+                      onClick={() => setActiveSliceId(slice.id)}
                       className={`flex w-full items-start gap-2 rounded-lg border px-2.5 py-2 text-left transition ${
                         activeSlice?.id === slice.id
                           ? "border-cyan-300/50 bg-cyan-300/10"
@@ -545,7 +547,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+          <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
               {isEnglish ? "Details by office" : "Detalhamento por escritório"}
             </p>
@@ -602,7 +604,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                       </div>
                     </div>
 
-                    <div className="mt-5 overflow-x-auto">
+                    <div className="mt-5 hidden overflow-x-auto md:block">
                       <table className="min-w-full text-left text-sm text-slate-300">
                         <thead>
                           <tr className="border-b border-white/10 text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -632,6 +634,36 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                           )}
                         </tbody>
                       </table>
+                    </div>
+
+                    <div className="mt-5 space-y-3 md:hidden">
+                      {office.regions.flatMap((region) =>
+                        region.condominiums.map((condominium) => (
+                          <div
+                            key={`${office.officeId ?? office.officeName}-${condominium.condominiumId}`}
+                            className="rounded-2xl border border-white/10 bg-slate-950/45 p-4"
+                          >
+                            <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
+                              {regionLabelMap[region.region]?.[isEnglish ? "en" : "pt"] ?? region.region}
+                            </p>
+                            <p className="mt-2 text-sm font-semibold text-white">
+                              {condominium.condominiumName}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+                              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+                                {condominium.houseCount} {isEnglish ? "houses" : "casas"}
+                              </span>
+                              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+                                {condominium.checkinCount} check-ins
+                              </span>
+                            </div>
+                            <p className="mt-3 text-xs leading-5 text-slate-400">
+                              {condominium.houseNames.slice(0, 4).join(", ")}
+                              {condominium.houseNames.length > 4 ? "..." : ""}
+                            </p>
+                          </div>
+                        )),
+                      )}
                     </div>
                   </div>
                 );
