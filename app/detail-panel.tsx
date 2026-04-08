@@ -578,7 +578,13 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                         </p>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
-                        {office.regions.map((region) => (
+                        {office.regions.map((region) => {
+                          const regionCheckins = region.condominiums.reduce(
+                            (total, condominium) => total + condominium.checkinCount,
+                            0,
+                          );
+
+                          return (
                           <div
                             key={`${office.officeId ?? office.officeName}-${region.region}`}
                             className="rounded-2xl border border-cyan-400/10 bg-slate-950/50 p-4"
@@ -586,12 +592,13 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                             <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
                               {regionLabelMap[region.region]?.[isEnglish ? "en" : "pt"] ?? region.region}
                             </p>
-                            <p className="mt-2 text-lg font-semibold text-white">{region.houseCount}</p>
+                            <p className="mt-2 text-lg font-semibold text-white">{regionCheckins}</p>
                             <p className="text-xs text-slate-400">
                               {region.condominiumCount} {isEnglish ? "resorts" : "condomínios"}
                             </p>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
