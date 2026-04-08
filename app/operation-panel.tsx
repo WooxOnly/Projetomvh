@@ -12,6 +12,7 @@ type OperationPanelProps = {
   mode?: "availability" | "route" | "full";
   onOpenRouteTab?: () => void;
   data: {
+    hereApiLockedUntil?: Date | string | null;
     activeUpload: {
       id: string;
       sequenceNumber: number | null;
@@ -175,26 +176,6 @@ function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
         d="M27.8 25.9c.5-1 1-1.1 1.5-1.1h1.1c.3 0 .6.2.9.8.3.6 1 2.3 1.1 2.5.1.2.1.4 0 .7-.1.2-.2.4-.4.6l-.6.7c-.2.2-.2.5 0 .8.2.4 1 1.7 2.2 2.7 1.5 1.3 2.8 1.8 3.1 2 .4.2.6.1.9-.1.2-.3 1-1.2 1.2-1.6.2-.4.5-.3.9-.2.4.2 2.4 1.1 2.7 1.3.4.2.7.3.8.5.1.2.1.9-.2 1.8-.3.9-1.8 1.7-2.5 1.8-.7.1-1.5.1-2.4-.1-.5-.1-1.2-.4-2.1-.8-1.6-.7-2.6-1.5-3.6-2.5-1-.9-1.8-2-2.6-3.3-.7-1.2-.8-2.2-.8-3 0-.8.3-1.2.7-1.6.4-.4.9-.6 1.1-.6Z"
         fill="#22C55E"
       />
-    </svg>
-  );
-}
-
-function RefreshIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-      <path d="M20 11a8 8 0 1 0-2.34 5.66" />
-      <path d="M20 4v7h-7" />
-    </svg>
-  );
-}
-
-function RouteApiIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-      <path d="M4.75 8.75h14.5" />
-      <path d="M8.25 4.75v14.5" />
-      <path d="M5.75 5.75h12.5a1 1 0 0 1 1 1v10.5a1 1 0 0 1-1 1H5.75a1 1 0 0 1-1-1V6.75a1 1 0 0 1 1-1Z" />
-      <path d="m13 12 1.8 1.8L18 10.6" />
     </svg>
   );
 }
@@ -368,6 +349,20 @@ function haversineDistanceKm(
 
 function kmToMiles(value: number) {
   return Math.round(value * 0.621371 * 10) / 10;
+}
+
+function formatCooldownLabel(lockedUntil: Date | null, isEnglish: boolean) {
+  if (!lockedUntil) {
+    return isEnglish ? "Use API" : "Usar API";
+  }
+
+  const remainingMs = lockedUntil.getTime() - Date.now();
+  if (remainingMs <= 0) {
+    return isEnglish ? "Use API" : "Usar API";
+  }
+
+  const remainingMinutes = Math.max(1, Math.ceil(remainingMs / 60000));
+  return isEnglish ? `Use API (${remainingMinutes}m)` : `Usar API (${remainingMinutes}m)`;
 }
 
 function analyzeIsolatedStops(
@@ -749,7 +744,7 @@ async function rebuildLatestOperation(useHereRouting = false) {
     body: JSON.stringify({ useHereRouting }),
   });
 
-  return readJsonResponse<{ ok: true }>(response);
+  return readJsonResponse<{ ok: true; hereRoutingLockedUntil?: string | null }>(response);
 }
 
 async function runOperation(body: {
@@ -819,6 +814,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const actionButtonClass =
     "inline-flex items-center justify-center rounded-2xl border border-cyan-300/40 bg-cyan-400/14 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.06),0_10px_30px_rgba(34,211,238,0.08)] transition hover:scale-[1.02] hover:border-cyan-200/70 hover:bg-cyan-300/26 hover:text-white disabled:cursor-not-allowed disabled:border-cyan-300/12 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none disabled:hover:scale-100";
   const iconActionButtonClass = `${actionButtonClass} h-14 w-14`;
+  const topActionButtonClass = `${actionButtonClass} px-5 py-3 text-sm font-medium`;
   const currentTab = searchParams.get("tab");
   const shouldHideSuccessModal = mode === "route" || currentTab === "route";
   const latestOperationRun = data.latestOperationRun;
@@ -829,6 +825,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const [rebuildTarget, setRebuildTarget] = useState<"local" | "here" | null>(null);
   const [analysisError, setAnalysisError] = useState("");
   const [analysis, setAnalysis] = useState<RouteAnalysisData | null>(null);
+  const [hereApiLockedUntil, setHereApiLockedUntil] = useState<Date | null>(
+    data.hereApiLockedUntil ? new Date(data.hereApiLockedUntil) : null,
+  );
   const [whatsAppPendingTarget, setWhatsAppPendingTarget] = useState<string | null>(null);
   const [pdfPendingTarget, setPdfPendingTarget] = useState<string | null>(null);
   const [whatsAppError, setWhatsAppError] = useState("");
@@ -845,6 +844,22 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     forceEqualCheckins: false,
     temporaryOfficeByManagerId: {} as Record<string, string>,
   });
+  const [cooldownNow, setCooldownNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    setHereApiLockedUntil(data.hereApiLockedUntil ? new Date(data.hereApiLockedUntil) : null);
+  }, [data.hereApiLockedUntil]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCooldownNow(Date.now());
+    }, 30000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+  const normalizedHereApiLockedUntil =
+    hereApiLockedUntil && hereApiLockedUntil.getTime() > cooldownNow ? hereApiLockedUntil : null;
+  const isHereApiLocked = normalizedHereApiLockedUntil !== null;
 
   function persistFlashMessage(nextMessage: string) {
     if (typeof window === "undefined") {
@@ -1303,13 +1318,31 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   }
 
   const handleRebuildOperation = useCallback(async (useHereRouting = false) => {
+    if (useHereRouting && isHereApiLocked) {
+      setError(
+        isEnglish
+          ? `HERE API will be available again at ${normalizedHereApiLockedUntil?.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+            })}.`
+          : `A API HERE ficará disponível novamente às ${normalizedHereApiLockedUntil?.toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}.`,
+      );
+      return;
+    }
+
     setRebuildTarget(useHereRouting ? "here" : "local");
     setAnalysisError("");
     setError("");
     setMessage("");
 
     try {
-      await rebuildLatestOperation(useHereRouting);
+      const payload = await rebuildLatestOperation(useHereRouting);
+      if (payload.hereRoutingLockedUntil) {
+        setHereApiLockedUntil(new Date(payload.hereRoutingLockedUntil));
+      }
       setAnalysis(null);
       setWhatsAppExport(null);
       router.refresh();
@@ -1333,7 +1366,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     } finally {
       setRebuildTarget(null);
     }
-  }, [isEnglish, router]);
+  }, [isEnglish, isHereApiLocked, normalizedHereApiLockedUntil, router]);
 
   useEffect(() => {
     if (mode !== "route" || !latestOperationRun?.id) {
@@ -1678,27 +1711,56 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
               </p>
             </div>
             {latestOperationRun ? (
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-col items-start gap-2">
+                <div className="flex flex-wrap gap-2.5">
                 <button
                   type="button"
                   onClick={() => void handleRebuildOperation(false)}
                   disabled={rebuildTarget !== null}
-                  className={iconActionButtonClass}
-                  title={isEnglish ? "Recalculate route and distribution" : "Recalcular rota e distribuição"}
-                  aria-label={isEnglish ? "Recalculate route and distribution" : "Recalcular rota e distribuição"}
+                  className={topActionButtonClass}
                 >
-                  {rebuildTarget === "local" ? <SpinnerIcon className="h-7 w-7" /> : <RefreshIcon className="h-7 w-7" />}
+                  {rebuildTarget === "local" ? <SpinnerIcon className="mr-2 h-5 w-5" /> : null}
+                  <span>{isEnglish ? "Recalculate route" : "Recalcular rota"}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleRebuildOperation(true)}
-                  disabled={rebuildTarget !== null}
-                  className={iconActionButtonClass}
-                  title={isEnglish ? "Use HERE API" : "Usar API HERE"}
+                  disabled={rebuildTarget !== null || isHereApiLocked}
+                  className={topActionButtonClass}
+                  title={
+                    isHereApiLocked
+                      ? isEnglish
+                        ? `HERE API available again at ${normalizedHereApiLockedUntil?.toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}`
+                        : `API HERE disponível novamente às ${normalizedHereApiLockedUntil?.toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}`
+                      : isEnglish
+                        ? "Use HERE API"
+                        : "Usar API HERE"
+                  }
                   aria-label={isEnglish ? "Use HERE API" : "Usar API HERE"}
                 >
-                  {rebuildTarget === "here" ? <SpinnerIcon className="h-7 w-7" /> : <RouteApiIcon className="h-7 w-7" />}
+                  {rebuildTarget === "here" ? <SpinnerIcon className="mr-2 h-5 w-5" /> : null}
+                  <span>{formatCooldownLabel(normalizedHereApiLockedUntil, isEnglish)}</span>
                 </button>
+              </div>
+                {isHereApiLocked ? (
+                  <p className="text-[11px] text-amber-200">
+                    {isEnglish
+                      ? `HERE API locked until ${normalizedHereApiLockedUntil?.toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}.`
+                      : `API HERE bloqueada até ${normalizedHereApiLockedUntil?.toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}.`}
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>

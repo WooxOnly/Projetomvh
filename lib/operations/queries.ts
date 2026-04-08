@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { HERE_ROUTING_NOTE, getHereRoutingLockedUntil } from "@/lib/operations/here-usage";
 import { countPendingLocationReviews } from "@/lib/location-review";
 import { listOffices } from "@/lib/offices";
 import { cleanupExpiredOperationalData } from "@/lib/operations/cleanup";
@@ -216,6 +217,7 @@ export async function getDashboardSnapshot() {
     activeUploadOfficeBreakdown,
     uploadHistory,
     latestOperationRun,
+    latestHereRoutingRun,
     pendingLocationReviews,
     weeklyLocationMaintenance,
   ] = await Promise.all([
@@ -227,6 +229,17 @@ export async function getDashboardSnapshot() {
     getActiveUploadOfficeBreakdown(),
     getUploadHistory(),
     getLatestOperationRunForExport(),
+    prisma.operationRun.findFirst({
+      where: {
+        notes: HERE_ROUTING_NOTE,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        createdAt: true,
+      },
+    }),
     countPendingLocationReviews(),
     getWeeklyLocationMaintenanceSummary(),
   ]);
@@ -241,6 +254,7 @@ export async function getDashboardSnapshot() {
     activeUpload,
     activeUploadOfficeBreakdown,
     uploadHistory,
+    hereApiLockedUntil: getHereRoutingLockedUntil(latestHereRoutingRun?.createdAt ?? null),
     latestOperationRun: latestOperationRun
       ? {
           ...latestOperationRun,

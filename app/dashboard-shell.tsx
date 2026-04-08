@@ -10,6 +10,7 @@ import { UploadFilesPanel } from "@/app/upload-files-panel";
 
 type DashboardShellProps = {
   data: {
+    hereApiLockedUntil?: Date | string | null;
     propertyManagers: Array<{
       id: string;
       name: string;

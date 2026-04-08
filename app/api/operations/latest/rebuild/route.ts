@@ -2,6 +2,8 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
+import { HERE_ROUTING_NOTE, getHereRoutingLockedUntil } from "@/lib/operations/here-usage";
 import { getLatestOperationRun } from "@/lib/operations/queries";
 import { runDailyOperation } from "@/lib/operations/run-operation";
 
@@ -16,6 +18,37 @@ export async function POST(request: Request) {
     const payload = (await request.json().catch(() => ({}))) as {
       useHereRouting?: boolean;
     };
+
+    if (payload.useHereRouting === true) {
+      const latestHereRoutingRun = await prisma.operationRun.findFirst({
+        where: {
+          notes: HERE_ROUTING_NOTE,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          createdAt: true,
+        },
+      });
+
+      const lockedUntil = getHereRoutingLockedUntil(latestHereRoutingRun?.createdAt ?? null);
+
+      if (lockedUntil) {
+        return NextResponse.json(
+          {
+            message: `A API HERE já foi usada recentemente. Tente novamente após ${lockedUntil.toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "America/New_York",
+            })}.`,
+            hereRoutingLockedUntil: lockedUntil.toISOString(),
+          },
+          { status: 429 },
+        );
+      }
+    }
+
     const latestOperationRun = await getLatestOperationRun();
 
     if (!latestOperationRun) {
@@ -50,7 +83,13 @@ export async function POST(request: Request) {
 
     revalidatePath("/dashboard");
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      hereRoutingLockedUntil:
+        payload.useHereRouting === true
+          ? new Date(Date.now() + 60 * 60 * 1000).toISOString()
+          : null,
+    });
   } catch (error) {
     return NextResponse.json(
       {

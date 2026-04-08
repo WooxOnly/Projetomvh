@@ -12,6 +12,7 @@ import {
   optimizePlanWithHere,
   resequenceOperationRunWithHere,
 } from "@/lib/operations/here-routing";
+import { HERE_ROUTING_NOTE, LOCAL_ROUTING_NOTE } from "@/lib/operations/here-usage";
 import { ensureOperationRouteCoordinates } from "@/lib/operations/route-geocoding";
 
 type RunOperationInput = {
@@ -218,6 +219,7 @@ export async function runDailyOperation(input: RunOperationInput) {
       preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
       forceEqualCheckins: input.forceEqualCheckins ?? false,
       status: "ready",
+      notes: input.useHereRouting ? HERE_ROUTING_NOTE : LOCAL_ROUTING_NOTE,
       routeAnalysisJson: null,
       routeAnalysisSource: null,
       routeAnalysisModel: null,
