@@ -180,32 +180,6 @@ function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
-function ListIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-      <path d="M8 6.5h11" />
-      <path d="M8 12h11" />
-      <path d="M8 17.5h11" />
-      <path d="M4.5 6.5h.01" />
-      <path d="M4.5 12h.01" />
-      <path d="M4.5 17.5h.01" />
-    </svg>
-  );
-}
-
-function CloseListIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
-      <path d="M8 6.5h11" />
-      <path d="M8 17.5h11" />
-      <path d="M4.5 6.5h.01" />
-      <path d="M4.5 17.5h.01" />
-      <path d="m9.5 10 5 5" />
-      <path d="m14.5 10-5 5" />
-    </svg>
-  );
-}
-
 function SpinnerIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={`${className} animate-spin`} aria-hidden="true">
@@ -1919,17 +1893,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       key={manager.id}
                       className={`content-safe rounded-[1.5rem] border bg-white/5 p-5 ${scoreStyle.border}`}
                     >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setExpandedStopManagers((current) =>
-                            current.includes(manager.id)
-                              ? current.filter((item) => item !== manager.id)
-                              : [...current, manager.id],
-                          )
-                        }
-                        className="flex w-full flex-col gap-3 text-left xl:flex-row xl:items-start xl:justify-between"
-                      >
+                      <div className="flex w-full flex-col gap-3 text-left xl:flex-row xl:items-start xl:justify-between">
                         <div>
                           <p className="text-base font-semibold text-white">
                             {cleanPropertyManagerName(manager.name)}
@@ -1979,10 +1943,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p>{isEnglish ? "Office" : "Escritório"}: {effectiveOffice?.name ?? managerAnalysis?.officeName ?? (isEnglish ? "Not defined" : "Não definido")}</p>
                           </div>
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center self-end rounded-full border border-white/10 bg-slate-950/70 text-lg text-slate-300 xl:self-start">
-                          {isExpanded ? "−" : "+"}
-                        </div>
-                      </button>
+                      </div>
 
                       <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-[1.8fr_1fr]">
                         <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
@@ -2095,27 +2056,17 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 : [...current, manager.id],
                             )
                           }
-                          className={iconActionButtonClass}
-                          title={
-                            isExpanded
-                              ? isEnglish
-                                ? "Hide stop list"
-                                : "Ocultar lista de paradas"
-                              : isEnglish
-                                ? "Show stop list"
-                                : "Mostrar lista de paradas"
-                          }
-                          aria-label={
-                            isExpanded
-                              ? isEnglish
-                                ? "Hide stop list"
-                                : "Ocultar lista de paradas"
-                              : isEnglish
-                                ? "Show stop list"
-                                : "Mostrar lista de paradas"
-                          }
+                          className={topActionButtonClass}
                         >
-                          {isExpanded ? <CloseListIcon className="h-7 w-7" /> : <ListIcon className="h-7 w-7" />}
+                          <span>
+                            {isExpanded
+                              ? isEnglish
+                                ? "Hide Stops"
+                                : "Ocultar Paradas"
+                              : isEnglish
+                                ? "Show Stops"
+                                : "Mostrar Paradas"}
+                          </span>
                         </button>
                       </div>
 
