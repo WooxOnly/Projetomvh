@@ -1984,40 +1984,23 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         {assignments.map((assignment) => (
                           <div
                             key={assignment.id}
-                            className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-4"
+                            className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3"
                           >
-                            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                              <div>
-                                <p className="text-sm uppercase tracking-[0.25em] text-cyan-300">
+                            <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+                              <div className="min-w-0">
+                                <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
                                   Stop {assignment.routeOrder}
                                 </p>
-                                <p className="mt-2 text-base font-medium text-white">
-                                  {assignment.checkin.propertyName ??
-                                    (isEnglish ? "Check-in without property" : "Check-in sem imóvel")}
+                                <p className="mt-1 truncate text-sm font-medium text-white">
+                                  {assignment.checkin.condominiumName ||
+                                    (isEnglish ? "Condominium not informed" : "Condomínio não informado")}
                                 </p>
-                                <p className="mt-2 text-sm text-slate-300">
-                                  {[
-                                    assignment.checkin.condominiumName,
-                                    assignment.checkin.address,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(" | ") ||
+                                <p className="mt-1 truncate text-sm text-slate-300">
+                                  {assignment.checkin.address ||
                                   (isEnglish ? "Address not informed" : "Endereço não informado")}
                                 </p>
-                                <p className="mt-2 text-sm text-slate-400">
-                                  {isEnglish ? "Bedrooms" : "Quartos"}: {assignment.checkin.bedroomsSnapshot ?? "N/D"} | {isEnglish ? "Source" : "Origem"}:{" "}
-                                  {assignment.source}
-                                </p>
-                                <p className="mt-2 text-xs text-slate-400">
-                                  {isEnglish ? "Guest" : "Hóspede"}:{" "}
-                                  {assignment.checkin.guestName ||
-                                    (isEnglish ? "Not informed" : "Não informado")}{" "}
-                                  | {isEnglish ? "Door code" : "Código da porta"}:{" "}
-                                  {assignment.checkin.doorCode ||
-                                    (isEnglish ? "Not informed" : "Não informado")}
-                                </p>
                               </div>
-                              <div className="w-full max-w-xs">
+                              <div className="w-full max-w-xs xl:flex-shrink-0">
                                 <select
                                   defaultValue={assignment.propertyManager.id}
                                   onChange={(event) =>
@@ -2029,7 +2012,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                       isEnglish ? "Assignment updated successfully." : "Atribuição atualizada com sucesso.",
                                     )
                                   }
-                                  className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none"
+                                  className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-2.5 text-sm text-white outline-none"
                                 >
                                   {data.propertyManagers
                                     .filter((item) => item.isActive)
