@@ -189,8 +189,8 @@ export function RouteOverviewMap({ managers }: RouteOverviewMapProps) {
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/50 p-3">
+      <div className="mb-2 flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
           {isEnglish ? "Overview map" : "Mapa geral"}
         </p>
@@ -198,11 +198,11 @@ export function RouteOverviewMap({ managers }: RouteOverviewMapProps) {
           {visibleManagers.length} {isEnglish ? "routes in view" : "rotas em visão"}
         </p>
       </div>
-      <div className="mb-3 flex max-h-24 flex-wrap gap-2 overflow-y-auto pr-1 text-[11px] text-slate-300">
+      <div className="mb-2 flex max-h-16 flex-wrap gap-1.5 overflow-y-auto pr-1 text-[10px] text-slate-300">
         {visibleManagers.map((manager, index) => (
           <span
             key={manager.propertyManagerId}
-            className="rounded-full border border-white/10 bg-white/5 px-2 py-1"
+            className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5"
             style={{ boxShadow: `inset 0 0 0 1px ${routeColors[index % routeColors.length]}33` }}
           >
             <span
@@ -213,7 +213,7 @@ export function RouteOverviewMap({ managers }: RouteOverviewMapProps) {
           </span>
         ))}
       </div>
-      <div ref={mapRef} className="h-72 w-full overflow-hidden rounded-2xl" />
+      <div ref={mapRef} className="h-56 w-full overflow-hidden rounded-xl" />
     </div>
   );
 }

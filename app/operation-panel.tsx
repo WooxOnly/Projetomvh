@@ -1633,12 +1633,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       ) : null}
 
       {mode !== "availability" ? (
-        <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{isEnglish ? "Best route" : "Melhor rota"}</p>
-              <h3 className="mt-3 text-xl font-semibold text-white">{isEnglish ? "Operation finalization" : "Finalização da operação"}</h3>
-              <p className="mt-2 max-w-3xl text-sm text-slate-300">
+              <h3 className="mt-2 text-lg font-semibold text-white">{isEnglish ? "Operation finalization" : "Finalização da operação"}</h3>
+              <p className="mt-1 max-w-2xl text-xs text-slate-300">
                 {isEnglish
                   ? "Review the final route here with a visual score, live map, AI reading, and output ready for PDF and WhatsApp."
                   : "Aqui você revisa a rota final com score visual, mapa ao vivo, leitura de IA e saída pronta para PDF e WhatsApp."}
@@ -1672,72 +1672,72 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
 
           {latestOperationRun ? (
             <>
-              <div className="mt-5 grid gap-3 lg:grid-cols-3">
-                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-3.5">
+              <div className="mt-3 grid gap-2 lg:grid-cols-3">
+                <div className="content-safe rounded-xl border border-white/10 bg-white/5 p-2.5">
                   <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "File" : "Arquivo"}</p>
-                  <p className="mt-1.5 text-sm text-white">
+                  <p className="mt-1 text-sm text-white">
                     {formatUploadLabel(latestOperationRun.spreadsheetUpload)}
                   </p>
                 </div>
-                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                <div className="content-safe rounded-xl border border-white/10 bg-white/5 p-2.5">
                   <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
                     {isEnglish ? "Operation" : "Operação"}
                   </p>
-                  <p className="mt-1.5 text-sm text-white">
+                  <p className="mt-1 text-sm text-white">
                     {formatPanelDateOnly(latestOperationRun.operationDate)}
                   </p>
                 </div>
-                <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                <div className="content-safe rounded-xl border border-white/10 bg-white/5 p-2.5">
                   <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Generated" : "Gerado"}</p>
-                  <p className="mt-1.5 text-sm text-white">
+                  <p className="mt-1 text-sm text-white">
                     {formatPanelDateTime(latestOperationRun.createdAt)}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-3 grid gap-3 xl:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full border border-cyan-400/20 bg-slate-950/80">
+              <div className="mt-2 grid gap-2 xl:grid-cols-[1.25fr_0.75fr]">
+                <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-cyan-400/20 bg-slate-950/80">
                       <div className="text-center">
                         <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Score</p>
-                        <p className={`text-2xl font-semibold ${getScoreStyle(displayedAnalysis?.overallScore ?? 0).text}`}>
+                        <p className={`text-xl font-semibold ${getScoreStyle(displayedAnalysis?.overallScore ?? 0).text}`}>
                           {displayedAnalysis?.overallScore ?? "--"}
                         </p>
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <p className="text-sm text-slate-300">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className="text-xs text-slate-300">
                         {displayedAnalysis?.overallSummary ?? (isEnglish ? "Route AI is still loading. In the meantime, the local heuristic remains valid." : "A IA da rota ainda está carregando. Enquanto isso, a heurística local continua válida.")}
                       </p>
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-300">
-                        <span className="rounded-full border border-white/10 px-3 py-1">
+                      <div className="flex flex-wrap gap-1.5 text-[11px] text-slate-300">
+                        <span className="rounded-full border border-white/10 px-2.5 py-1">
                           {isEnglish ? "Source" : "Fonte"}: {displayedAnalysis?.source === "openai" ? "OpenAI" : isEnglish ? "Local AI" : "IA local"}
                         </span>
-                        <span className="rounded-full border border-white/10 px-3 py-1">
+                        <span className="rounded-full border border-white/10 px-2.5 py-1">
                           {isEnglish ? "Coordinates" : "Coordenadas"}: {displayedAnalysis?.coordinateCoveragePercent ?? 0}%
                         </span>
-                        <span className="rounded-full border border-white/10 px-3 py-1">
+                        <span className="rounded-full border border-white/10 px-2.5 py-1">
                           {isEnglish ? "Estimated distance" : "Distância estimada"}: {displayedAnalysis?.totalEstimatedDistanceKm ?? 0} mi
                         </span>
                       </div>
                     </div>
                   </div>
-                  {analysisError ? <p className="mt-3 text-sm text-rose-200">{analysisError}</p> : null}
-                  {copyState ? <p className="mt-3 text-sm text-emerald-200">{copyState}</p> : null}
-                  {whatsAppError ? <p className="mt-3 text-sm text-rose-200">{whatsAppError}</p> : null}
+                  {analysisError ? <p className="mt-2 text-xs text-rose-200">{analysisError}</p> : null}
+                  {copyState ? <p className="mt-2 text-xs text-emerald-200">{copyState}</p> : null}
+                  {whatsAppError ? <p className="mt-2 text-xs text-rose-200">{whatsAppError}</p> : null}
                   {displayedAnalysis?.managers?.length ? (
                     <RouteOverviewMap managers={displayedAnalysis.managers} />
                   ) : null}
                 </div>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-3">
                   <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{isEnglish ? "Final checklist" : "Checklist final"}</p>
-                  <div className="mt-3 space-y-2.5">
+                  <div className="mt-2 space-y-2">
                     {(displayedAnalysis?.routeHighlights ?? []).map((highlight) => (
                       <div
                         key={highlight}
-                        className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-2.5 text-sm text-emerald-100"
+                        className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-xs text-emerald-100"
                       >
                         {highlight}
                       </div>
@@ -1745,7 +1745,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     {(displayedAnalysis?.routeRisks ?? []).map((risk) => (
                       <div
                         key={risk}
-                        className="rounded-2xl border border-amber-400/20 bg-amber-400/5 px-4 py-2.5 text-sm text-amber-100"
+                        className="rounded-xl border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-xs text-amber-100"
                       >
                         {risk}
                       </div>
@@ -1754,14 +1754,14 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                 </div>
               </div>
 
-              <div className="mt-3 rounded-[1.5rem] border border-cyan-400/15 bg-cyan-400/5 p-4">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="mt-2 rounded-[1.25rem] border border-cyan-400/15 bg-cyan-400/5 p-3">
+                <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
                       {isEnglish ? "Final exports" : "Exportações finais"}
                     </p>
-                    <h4 className="mt-1.5 text-base font-semibold text-white">{isEnglish ? "Printable PDF and message for sending" : "PDF para imprimir e mensagem para envio"}</h4>
-                    <p className="mt-1.5 text-sm text-slate-300">
+                    <h4 className="mt-1 text-sm font-semibold text-white">{isEnglish ? "Printable PDF and message for sending" : "PDF para imprimir e mensagem para envio"}</h4>
+                    <p className="mt-1 text-xs text-slate-300">
                       {isEnglish ? "Use these buttons to generate the final output of the operation. The PDF opens ready to download or print." : "Use estes botões para gerar a saída final da operação. O PDF abre pronto para baixar ou imprimir."}
                     </p>
                   </div>
