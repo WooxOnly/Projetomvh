@@ -1038,7 +1038,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
             (item) => item.propertyManagerId,
           ),
           preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
-          forceEqualCheckins: false,
+          forceEqualCheckins: latestOperationRun.forceEqualCheckins,
           temporaryOfficeByManagerId: Object.fromEntries(
             latestOperationRun.availablePMs
               .filter((item) => item.temporaryOfficeId)
