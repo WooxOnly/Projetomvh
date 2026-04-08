@@ -288,6 +288,9 @@ export function DashboardShell({ data }: DashboardShellProps) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    if (tab === "route" || tab === "availability") {
+      router.refresh();
+    }
   }
 
   const activeTabMeta = tabMeta[activeTab];
