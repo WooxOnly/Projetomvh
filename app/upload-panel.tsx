@@ -24,10 +24,20 @@ type UploadSummary = {
   totalUniquePMs: number;
 };
 
+type DuplicateUploadCheckin = {
+  operationDate: string;
+  condominiumName: string;
+  propertyName: string;
+  address: string;
+  sourceRowNumbers: number[];
+  totalOccurrences: number;
+};
+
 type UploadResponse = {
   ok?: boolean;
   message?: string;
   missingBedrooms?: string[];
+  duplicateCheckins?: DuplicateUploadCheckin[];
   upload?: UploadSummary;
   newPropertyManagersWithoutOffice?: Array<{ id: string; name: string }>;
   newCondominiumsWithoutOffice?: Array<{ id: string; name: string }>;
@@ -65,6 +75,7 @@ function readPersistedUploadFeedback() {
       message: "",
       summary: null as UploadSummary | null,
       missingBedrooms: [] as string[],
+      duplicateCheckins: [] as DuplicateUploadCheckin[],
     };
   }
 
@@ -74,6 +85,7 @@ function readPersistedUploadFeedback() {
       message: "",
       summary: null as UploadSummary | null,
       missingBedrooms: [] as string[],
+      duplicateCheckins: [] as DuplicateUploadCheckin[],
     };
   }
 
@@ -84,18 +96,21 @@ function readPersistedUploadFeedback() {
       message?: string;
       summary?: UploadSummary | null;
       missingBedrooms?: string[];
+      duplicateCheckins?: DuplicateUploadCheckin[];
     };
 
     return {
       message: parsed.message ?? "",
       summary: parsed.summary ?? null,
       missingBedrooms: parsed.missingBedrooms ?? [],
+      duplicateCheckins: parsed.duplicateCheckins ?? [],
     };
   } catch {
     return {
       message: "",
       summary: null as UploadSummary | null,
       missingBedrooms: [] as string[],
+      duplicateCheckins: [] as DuplicateUploadCheckin[],
     };
   }
 }
@@ -114,6 +129,9 @@ export function UploadPanel({
   const [message, setMessage] = useState(initialFeedback.message);
   const [error, setError] = useState("");
   const [missingBedrooms, setMissingBedrooms] = useState<string[]>(initialFeedback.missingBedrooms);
+  const [duplicateCheckins, setDuplicateCheckins] = useState<DuplicateUploadCheckin[]>(
+    initialFeedback.duplicateCheckins,
+  );
   const [reviewState, setReviewState] = useState<{
     operationDate: string;
     file: File;
@@ -134,6 +152,7 @@ export function UploadPanel({
     message: string;
     summary: UploadSummary | null;
     missingBedrooms: string[];
+    duplicateCheckins: DuplicateUploadCheckin[];
   }) {
     if (typeof window === "undefined") {
       return;
@@ -214,6 +233,7 @@ export function UploadPanel({
     setMessage("");
     setError("");
     setMissingBedrooms([]);
+    setDuplicateCheckins([]);
     setReviewState(null);
 
     startTransition(async () => {
@@ -246,10 +266,12 @@ export function UploadPanel({
         data.message ??
         (isEnglish ? "Upload processed successfully." : "Upload processado com sucesso.");
       const nextMissingBedrooms = data.missingBedrooms ?? [];
+      const nextDuplicateCheckins = data.duplicateCheckins ?? [];
 
       setSummary(nextSummary);
       setMessage(nextMessage);
       setMissingBedrooms(nextMissingBedrooms);
+      setDuplicateCheckins(nextDuplicateCheckins);
       setReviewState(null);
       openOfficeAssignmentModal(data);
       form.reset();
@@ -257,6 +279,7 @@ export function UploadPanel({
         message: nextMessage,
         summary: nextSummary,
         missingBedrooms: nextMissingBedrooms,
+        duplicateCheckins: nextDuplicateCheckins,
       });
       router.refresh();
     });
@@ -269,6 +292,7 @@ export function UploadPanel({
 
     setMessage("");
     setError("");
+    setDuplicateCheckins([]);
 
     startTransition(async () => {
       const formData = new FormData();
@@ -293,16 +317,19 @@ export function UploadPanel({
         data.message ??
         (isEnglish ? "Upload processed successfully." : "Upload processado com sucesso.");
       const nextMissingBedrooms = data.missingBedrooms ?? [];
+      const nextDuplicateCheckins = data.duplicateCheckins ?? [];
 
       setSummary(nextSummary);
       setMessage(nextMessage);
       setMissingBedrooms(nextMissingBedrooms);
+      setDuplicateCheckins(nextDuplicateCheckins);
       setReviewState(null);
       openOfficeAssignmentModal(data);
       persistUploadFeedback({
         message: nextMessage,
         summary: nextSummary,
         missingBedrooms: nextMissingBedrooms,
+        duplicateCheckins: nextDuplicateCheckins,
       });
       router.refresh();
     });
@@ -543,6 +570,40 @@ export function UploadPanel({
                 </button>
               </div>
             ) : null}
+          </div>
+        ) : null}
+
+        {duplicateCheckins.length > 0 ? (
+          <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/8 p-4 text-sm text-rose-100">
+            <p className="font-medium">
+              {isEnglish
+                ? `We found ${duplicateCheckins.length} possible duplicate ${duplicateCheckins.length === 1 ? "check-in" : "check-ins"} in the imported file.`
+                : `Encontramos ${duplicateCheckins.length} poss${duplicateCheckins.length === 1 ? "ível check-in duplicado" : "íveis check-ins duplicados"} no arquivo importado.`}
+            </p>
+            <p className="mt-2 text-rose-50/90">
+              {isEnglish
+                ? "The upload was completed, but these rows deserve review in the source spreadsheet."
+                : "O upload foi concluído, mas estas linhas merecem revisão na planilha de origem."}
+            </p>
+            <div className="mt-4 space-y-2">
+              {duplicateCheckins.map((item) => (
+                <div
+                  key={`${item.operationDate}-${item.condominiumName}-${item.propertyName}-${item.address}`}
+                  className="rounded-2xl border border-rose-100/15 bg-slate-950/30 p-3"
+                >
+                  <p className="font-medium text-rose-50">
+                    {item.condominiumName || (isEnglish ? "Condominium not informed" : "Condomínio não informado")} |{" "}
+                    {item.propertyName || (isEnglish ? "Property not informed" : "Imóvel não informado")}
+                  </p>
+                  <p className="mt-1 text-rose-50/90">
+                    {item.address || (isEnglish ? "Address not informed" : "Endereço não informado")}
+                  </p>
+                  <p className="mt-1 text-xs text-rose-50/80">
+                    {isEnglish ? "Spreadsheet rows" : "Linhas da planilha"}: {item.sourceRowNumbers.join(", ")}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         ) : null}
       </section>

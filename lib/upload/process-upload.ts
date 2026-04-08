@@ -25,6 +25,15 @@ type ProcessUploadInput = {
   allowSuspiciousRows?: boolean;
 };
 
+type DuplicateUploadCheckin = {
+  operationDate: string;
+  condominiumName: string;
+  propertyName: string;
+  address: string;
+  sourceRowNumbers: number[];
+  totalOccurrences: number;
+};
+
 export class UploadReviewRequiredError extends Error {
   suspiciousRows: SuspiciousUploadRow[];
 
@@ -81,6 +90,65 @@ function shouldReplaceFloat(currentValue: number | null | undefined, incomingVal
   }
 
   return Math.abs(currentValue - incomingValue) < 0.000001;
+}
+
+function detectDuplicateCheckins(rows: ReturnType<typeof parseWorkbook>["rows"]) {
+  const duplicates = new Map<
+    string,
+    {
+      operationDate: string;
+      condominiumName: string;
+      propertyName: string;
+      address: string;
+      sourceRowNumbers: number[];
+      totalOccurrences: number;
+    }
+  >();
+
+  for (const row of rows) {
+    const operationDateKey = row.operationDate.toISOString().slice(0, 10);
+    const condominiumName = row.condominiumName.trim();
+    const propertyName = row.propertyName.trim();
+    const address = row.address.trim();
+    const duplicateKey = [
+      operationDateKey,
+      row.condominiumNormalized,
+      row.propertyNormalized,
+      address.toLowerCase(),
+    ].join("||");
+
+    const current = duplicates.get(duplicateKey) ?? {
+      operationDate: operationDateKey,
+      condominiumName,
+      propertyName,
+      address,
+      sourceRowNumbers: [],
+      totalOccurrences: 0,
+    };
+
+    current.sourceRowNumbers.push(row.sourceRowNumber);
+    current.totalOccurrences += 1;
+    duplicates.set(duplicateKey, current);
+  }
+
+  return Array.from(duplicates.values())
+    .filter((entry) => entry.totalOccurrences > 1)
+    .sort(
+      (left, right) =>
+        left.operationDate.localeCompare(right.operationDate) ||
+        left.condominiumName.localeCompare(right.condominiumName) ||
+        left.propertyName.localeCompare(right.propertyName),
+    )
+    .map(
+      (entry): DuplicateUploadCheckin => ({
+        operationDate: entry.operationDate,
+        condominiumName: entry.condominiumName,
+        propertyName: entry.propertyName,
+        address: entry.address,
+        sourceRowNumbers: entry.sourceRowNumbers.sort((left, right) => left - right),
+        totalOccurrences: entry.totalOccurrences,
+      }),
+    );
 }
 
 async function getOrCreateCondominium(row: ReturnType<typeof parseWorkbook>["rows"][number]) {
@@ -435,6 +503,7 @@ export async function processUpload(input: ProcessUploadInput) {
   await cleanupExpiredOperationalData();
 
   const parsed = parseWorkbook(input.bytes, input.operationDate);
+  const duplicateCheckins = detectDuplicateCheckins(parsed.rows);
 
   if (parsed.suspiciousRows.length > 0 && !input.allowSuspiciousRows) {
     throw new UploadReviewRequiredError(parsed.suspiciousRows);
@@ -593,6 +662,7 @@ export async function processUpload(input: ProcessUploadInput) {
   return {
     upload: attachUploadSequenceNumber(updatedUpload, sequenceMap),
     missingBedrooms: Array.from(new Set(missingBedrooms)),
+    duplicateCheckins,
     newPropertyManagersWithoutOffice: Array.from(newPropertyManagersWithoutOffice.values()),
     newCondominiumsWithoutOffice: Array.from(newCondominiumsWithoutOffice.values()),
   };
