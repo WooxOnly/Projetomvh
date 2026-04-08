@@ -2,6 +2,7 @@ import "server-only";
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { prisma } from "@/lib/prisma";
@@ -32,6 +33,18 @@ export class UploadReviewRequiredError extends Error {
     this.name = "UploadReviewRequiredError";
     this.suspiciousRows = suspiciousRows;
   }
+}
+
+function getUploadStorageDirectory() {
+  if (process.env.UPLOAD_STORAGE_DIR?.trim()) {
+    return process.env.UPLOAD_STORAGE_DIR.trim();
+  }
+
+  if (process.env.VERCEL) {
+    return join(tmpdir(), "projetomvh", "uploads");
+  }
+
+  return join(process.cwd(), "storage", "uploads");
 }
 
 function shouldReplaceString(currentValue: string | null | undefined, incomingValue: string) {
@@ -431,7 +444,7 @@ export async function processUpload(input: ProcessUploadInput) {
     throw new Error("Nao foi possivel encontrar linhas validas no arquivo.");
   }
 
-  const storageDirectory = join(process.cwd(), "storage", "uploads");
+  const storageDirectory = getUploadStorageDirectory();
   await mkdir(storageDirectory, { recursive: true });
 
   const sanitizedFileName = input.fileName.replace(/[^\w.-]+/g, "_");
