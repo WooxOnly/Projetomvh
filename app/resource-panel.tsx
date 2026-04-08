@@ -706,7 +706,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
   return (
     <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
       <form
-        className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6"
+        className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6"
         onSubmit={(event) => {
           event.preventDefault();
           handleAction(
@@ -728,11 +728,11 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
       >
         <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{config.title}</p>
         <div className="mt-5 grid gap-4">{renderFormFields()}</div>
-        <div className="mt-5 flex gap-3">
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <button
             type="submit"
             disabled={pending}
-            className="rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950"
+            className="min-h-11 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950"
           >
             {String(form.id)
               ? isEnglish
@@ -745,7 +745,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
           {String(form.id) ? (
             <button
               type="button"
-              className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
+              className="min-h-11 rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
               onClick={() => setForm(emptyForm(kind))}
             >
               {isEnglish ? "Cancel" : "Cancelar"}
@@ -756,7 +756,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
         {error ? <p className="mt-4 text-sm text-rose-200">{error}</p> : null}
       </form>
 
-      <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+      <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
         <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
           {isEnglish ? "List" : "Lista"}
         </p>
@@ -806,22 +806,22 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
             </select>
           ) : null}
         </div>
-        <div className="mt-4 max-h-[70vh] space-y-3 overflow-y-auto pr-2">
+        <div className="mt-4 max-h-[70vh] space-y-3 overflow-y-auto pr-0 sm:pr-2">
           {filteredItems.length > 0 ? (
             filteredItems.map((item) => (
               <div key={item.id} className="content-safe rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-sm text-white">{itemLabel(item as never)}</p>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                   <button
                     type="button"
-                    className="rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-200"
+                    className="min-h-11 rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-200"
                     onClick={() => setForm(itemToForm(item as never))}
                   >
                     {isEnglish ? "Edit" : "Editar"}
                   </button>
                   <button
                     type="button"
-                    className="rounded-xl border border-rose-400/20 px-3 py-2 text-sm text-rose-200"
+                    className="min-h-11 rounded-xl border border-rose-400/20 px-3 py-2 text-sm text-rose-200"
                     onClick={() =>
                       handleAction(
                         () => sendJson(`${config.route}/${item.id}`, "DELETE"),

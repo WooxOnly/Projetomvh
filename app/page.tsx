@@ -22,7 +22,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(135deg,_#020617,_#0f172a_45%,_#164e63)] px-4 py-10 text-white">
+    <main className="min-h-screen bg-[linear-gradient(135deg,_#020617,_#0f172a_45%,_#164e63)] px-3 py-4 text-white sm:px-4 sm:py-8 lg:py-10">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center justify-center">
         <div className="grid w-full overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/75 shadow-2xl shadow-cyan-950/30 backdrop-blur lg:grid-cols-[1.15fr_0.85fr]">
           <section className="hidden border-r border-white/10 bg-[radial-gradient(circle_at_top,_rgba(103,232,249,0.18),_transparent_50%),linear-gradient(180deg,_rgba(15,23,42,0.88),_rgba(2,6,23,0.98))] p-10 lg:block">
@@ -46,7 +46,7 @@ export default async function Home() {
             </p>
           </section>
 
-          <section className="p-8 sm:p-10">
+          <section className="p-5 sm:p-8 lg:p-10">
             <div className="mx-auto w-full max-w-md">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -56,7 +56,7 @@ export default async function Home() {
                       en: "Login",
                     })}
                   </p>
-                  <h2 className="mt-4 text-3xl font-semibold">
+                  <h2 className="mt-4 text-2xl font-semibold sm:text-3xl">
                     {pickLanguage(language, {
                       pt: "Acesse o painel",
                       en: "Access the dashboard",
@@ -72,7 +72,7 @@ export default async function Home() {
                 })}
               </p>
 
-              <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-xl shadow-black/20">
+              <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20 sm:p-6">
                 <LoginForm />
               </div>
             </div>

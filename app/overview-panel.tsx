@@ -100,11 +100,11 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[1.5rem] border border-cyan-400/10 bg-slate-950/40 p-5">
+      <section className="rounded-[1.5rem] border border-cyan-400/10 bg-slate-950/40 p-4 sm:p-5">
         <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
           {isEnglish ? "Welcome" : "Bem-vindo"}
         </p>
-        <h2 className="mt-3 text-2xl font-semibold text-white">
+        <h2 className="mt-3 text-xl font-semibold text-white sm:text-2xl">
           {isEnglish ? `Hello, ${session.name}` : `Olá, ${session.name}`}
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
@@ -141,7 +141,7 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-5">
+        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
           <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
             {isEnglish ? "Current base" : "Base atual"}
           </p>
@@ -205,7 +205,7 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
           )}
         </div>
 
-        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-5">
+        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
           <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
             {isEnglish ? "Current status" : "Situação atual"}
           </p>

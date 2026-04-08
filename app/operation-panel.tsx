@@ -787,8 +787,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const locale = isEnglish ? "en-US" : "pt-BR";
   const actionButtonClass =
     "inline-flex items-center justify-center rounded-2xl border border-cyan-300/40 bg-cyan-400/14 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.06),0_10px_30px_rgba(34,211,238,0.08)] transition hover:scale-[1.02] hover:border-cyan-200/70 hover:bg-cyan-300/26 hover:text-white disabled:cursor-not-allowed disabled:border-cyan-300/12 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none disabled:hover:scale-100";
-  const iconActionButtonClass = `${actionButtonClass} h-16 w-16`;
-  const topActionButtonClass = `${actionButtonClass} px-5 py-3 text-sm font-medium`;
+  const iconActionButtonClass = `${actionButtonClass} h-14 w-14 sm:h-16 sm:w-16`;
+  const topActionButtonClass = `${actionButtonClass} min-h-11 w-full px-5 py-3 text-sm font-medium sm:w-auto`;
   const currentTab = searchParams.get("tab");
   const shouldHideSuccessModal = mode === "route" || currentTab === "route";
   const latestOperationRun = data.latestOperationRun;
@@ -1404,11 +1404,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
           )
         : null}
       {mode !== "route" ? (
-        <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+        <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
           <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
             {isEnglish ? "Operational decision" : "Decisão operacional"}
           </p>
-          <h3 className="mt-3 text-xl font-semibold text-white">
+          <h3 className="mt-3 text-lg font-semibold text-white sm:text-xl">
             {isEnglish ? "Property Managers available today" : "Gerentes de Propriedades disponíveis no dia"}
           </h3>
           <p className="mt-2 text-sm text-slate-300">
@@ -1507,7 +1507,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       availablePropertyManagerIds: allPropertyManagersSorted.map((item) => item.id),
                     }));
                   }}
-                  className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-200"
+                  className="min-h-11 rounded-2xl border border-white/10 px-4 py-2.5 text-sm text-slate-200"
                 >
                   {isEnglish ? "Select all" : "Selecionar todos"}
                 </button>
@@ -1521,7 +1521,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       availablePropertyManagerIds: [],
                     }));
                   }}
-                  className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-200"
+                  className="min-h-11 rounded-2xl border border-white/10 px-4 py-2.5 text-sm text-slate-200"
                 >
                   {isEnglish ? "Clear selection" : "Tirar seleção"}
                 </button>
@@ -1535,7 +1535,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                 {allPropertyManagersSorted.map((item) => (
                   <label
                     key={item.id}
-                    className={`flex min-h-[4.3rem] items-start gap-3 rounded-2xl border px-4 py-2.5 text-sm transition ${
+                    className={`flex min-h-[4.75rem] items-start gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
                       importedManagerIdsForUploadSet.has(item.id)
                         ? "border-cyan-300/30 bg-cyan-300/10 text-slate-100"
                         : "border-white/10 bg-white/5 text-slate-200"
@@ -1619,7 +1619,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
               ) : null}
             </div>
 
-            <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex flex-col items-start gap-2">
                 <label className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/8 px-3 py-2 text-xs text-slate-100">
                   <input
@@ -1656,11 +1656,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   </span>
                 </label>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
                 <button
                   type="submit"
                   disabled={pending || operationPending || hasJustRunOperation || !form.spreadsheetUploadId}
-                  className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
+                  className={`min-h-11 rounded-2xl px-5 py-3 text-sm font-semibold transition ${
                     hasJustRunOperation
                       ? "cursor-not-allowed border border-white/10 bg-white/5 text-slate-500"
                       : "bg-cyan-300 text-slate-950"
@@ -1672,7 +1672,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   <button
                     type="button"
                     onClick={onOpenRouteTab}
-                    className={`rounded-2xl px-5 py-3 text-sm font-medium transition ${
+                    className={`min-h-11 rounded-2xl px-5 py-3 text-sm font-medium transition ${
                       hasJustRunOperation
                         ? "bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30"
                         : "border border-white/10 text-slate-200"
@@ -1690,7 +1690,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       ) : null}
 
       {mode !== "availability" ? (
-        <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4">
+        <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{isEnglish ? "Best route" : "Melhor rota"}</p>
@@ -1703,7 +1703,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
             </div>
             {latestOperationRun ? (
               <div className="flex flex-col items-start gap-2">
-                <div className="flex flex-wrap gap-2.5">
+              <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => void handleRebuildOperation(false)}
@@ -1900,7 +1900,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   return (
                     <div
                       key={manager.id}
-                      className={`content-safe flex h-full flex-col rounded-[1.5rem] border bg-white/5 p-5 ${scoreStyle.border}`}
+                      className={`content-safe flex h-full flex-col rounded-[1.5rem] border bg-white/5 p-4 sm:p-5 ${scoreStyle.border}`}
                     >
                       <div className="flex flex-col gap-3">
                       <div className="grid w-full gap-3 text-left xl:grid-cols-[minmax(0,1fr)_10rem] xl:items-end">
@@ -2070,11 +2070,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
                                   Stop {assignment.routeOrder}
                                 </p>
-                                <p className="mt-1 truncate text-sm font-medium text-white">
+                                <p className="mt-1 text-sm font-medium text-white">
                                   {assignment.checkin.condominiumName ||
                                     (isEnglish ? "Condominium not informed" : "Condomínio não informado")}
                                 </p>
-                                <p className="mt-1 truncate text-sm text-slate-300">
+                                <p className="mt-1 text-sm text-slate-300">
                                   {assignment.checkin.address ||
                                   (isEnglish ? "Address not informed" : "Endereço não informado")}
                                 </p>

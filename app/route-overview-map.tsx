@@ -190,7 +190,7 @@ export function RouteOverviewMap({ managers }: RouteOverviewMapProps) {
 
   return (
     <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/50 p-3">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
           {isEnglish ? "Overview map" : "Mapa geral"}
         </p>
@@ -213,7 +213,7 @@ export function RouteOverviewMap({ managers }: RouteOverviewMapProps) {
           </span>
         ))}
       </div>
-      <div ref={mapRef} className="h-56 w-full overflow-hidden rounded-xl" />
+      <div ref={mapRef} className="h-48 w-full overflow-hidden rounded-xl sm:h-56" />
     </div>
   );
 }

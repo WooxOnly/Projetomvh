@@ -213,7 +213,7 @@ export function RouteLiveMap({ title, points }: RouteLiveMapProps) {
 
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
           {isEnglish ? "Live map" : "Mapa real"}
         </p>
@@ -226,7 +226,7 @@ export function RouteLiveMap({ title, points }: RouteLiveMapProps) {
             : "Alguns pontos foram posicionados automaticamente para manter a rota visível enquanto a base real é enriquecida."}
         </p>
       ) : null}
-      <div ref={mapRef} className="h-72 w-full overflow-hidden rounded-2xl" />
+      <div ref={mapRef} className="h-56 w-full overflow-hidden rounded-2xl sm:h-72" />
       <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-300">
         <span className="inline-flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400" />
