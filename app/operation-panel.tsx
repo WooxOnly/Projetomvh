@@ -1876,10 +1876,6 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     (total, assignment) => total + assignment.workload,
                     0,
                   );
-                  const withCoordinates = assignments.filter(
-                    (assignment) => assignment.checkin.lat != null && assignment.checkin.lng != null,
-                  ).length;
-                  const withoutCoordinates = assignments.length - withCoordinates;
                   const uniqueResorts = Array.from(
                     new Set(
                       assignments
@@ -1945,7 +1941,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         </div>
                       </div>
 
-                      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-[1.8fr_1fr]">
+                      <div className="mt-3">
                         <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
                           <p className="mt-1.5 text-sm leading-5 text-white">{uniqueResorts.length}</p>
@@ -1956,15 +1952,6 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               </p>
                             ))}
                           </div>
-                        </div>
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
-                          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Coordinates" : "Coordenadas"}</p>
-                          <p className="mt-1.5 text-sm leading-5 text-white">
-                            {withCoordinates} {isEnglish ? "with" : "com"} | {withoutCoordinates} {isEnglish ? "without" : "sem"}
-                          </p>
-                          <p className="mt-1 text-xs leading-4.5 text-slate-400">
-                            {isEnglish ? "Office" : "Escritório"}: {effectiveOffice?.lat != null && effectiveOffice.lng != null ? "ok" : isEnglish ? "without geolocation" : "sem geolocalização"}
-                          </p>
                         </div>
                       </div>
 
