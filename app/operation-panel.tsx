@@ -173,7 +173,7 @@ function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
         strokeLinejoin="round"
       />
       <path
-        d="M27.8 25.9c.5-1 1-1.1 1.5-1.1h1.1c.3 0 .6.2.9.8.3.6 1 2.3 1.1 2.5.1.2.1.4 0 .7-.1.2-.2.4-.4.6l-.6.7c-.2.2-.2.5 0 .8.2.4 1 1.7 2.2 2.7 1.5 1.3 2.8 1.8 3.1 2 .4.2.6.1.9-.1.2-.3 1-1.2 1.2-1.6.2-.4.5-.3.9-.2.4.2 2.4 1.1 2.7 1.3.4.2.7.3.8.5.1.2.1.9-.2 1.8-.3.9-1.8 1.7-2.5 1.8-.7.1-1.5.1-2.4-.1-.5-.1-1.2-.4-2.1-.8-1.6-.7-2.6-1.5-3.6-2.5-1-.9-1.8-2-2.6-3.3-.7-1.2-.8-2.2-.8-3 0-.8.3-1.2.7-1.6.4-.4.9-.6 1.1-.6Z"
+        d="M38.2 37.4c-.5.8-1.1 1.7-2 1.9-.8.2-2 .1-4-.8-1.7-.8-3.1-1.9-4.5-3.3-1.3-1.4-2.5-2.9-3.2-4.4-.8-1.8-.7-3.1-.5-3.9.2-.8 1-1.5 1.7-1.9.3-.2.7-.1 1 .1.4.2 1.4 2.1 1.5 2.4.2.3.1.7-.1 1l-.8 1c-.2.3-.2.7 0 1 .5 1 1.3 2.1 2.5 3.3 1.2 1.1 2.3 2 3.3 2.5.3.1.7.1 1 0l1-.8c.3-.2.7-.3 1-.1.4.2 2.3 1.2 2.5 1.5.2.3.3.7.1 1Z"
         fill="#22C55E"
       />
     </svg>
@@ -813,7 +813,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const locale = isEnglish ? "en-US" : "pt-BR";
   const actionButtonClass =
     "inline-flex items-center justify-center rounded-2xl border border-cyan-300/40 bg-cyan-400/14 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.06),0_10px_30px_rgba(34,211,238,0.08)] transition hover:scale-[1.02] hover:border-cyan-200/70 hover:bg-cyan-300/26 hover:text-white disabled:cursor-not-allowed disabled:border-cyan-300/12 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none disabled:hover:scale-100";
-  const iconActionButtonClass = `${actionButtonClass} h-14 w-14`;
+  const iconActionButtonClass = `${actionButtonClass} h-16 w-16`;
   const topActionButtonClass = `${actionButtonClass} px-5 py-3 text-sm font-medium`;
   const currentTab = searchParams.get("tab");
   const shouldHideSuccessModal = mode === "route" || currentTab === "route";
@@ -1869,7 +1869,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       title={isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
                       aria-label={isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
                     >
-                      {pdfPendingTarget === "global" ? <SpinnerIcon className="h-8 w-8" /> : <PdfIcon className="h-8 w-8" />}
+                      {pdfPendingTarget === "global" ? <SpinnerIcon className="h-10 w-10" /> : <PdfIcon className="h-10 w-10" />}
                     </button>
                     <button
                       type="button"
@@ -1883,7 +1883,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       title={isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
                       aria-label={isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
                     >
-                      {whatsAppPendingTarget === "global" ? <SpinnerIcon className="h-8 w-8" /> : <WhatsAppIcon className="h-8 w-8" />}
+                      {whatsAppPendingTarget === "global" ? <SpinnerIcon className="h-10 w-10" /> : <WhatsAppIcon className="h-10 w-10" />}
                     </button>
                   </div>
                 </div>
@@ -2040,7 +2040,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           </div>
                           <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
-                              {isEnglish ? "Final output" : "Saída final"}
+                              {isEnglish ? "Export" : "Exportar"}
                             </p>
                             <div className="mt-2.5 flex flex-wrap gap-3">
                               <button
@@ -2051,7 +2051,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 title={isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
                                 aria-label={isEnglish ? "Generate printable PDF" : "Gerar PDF para imprimir"}
                               >
-                                {pdfPendingTarget === manager.id ? <SpinnerIcon className="h-8 w-8" /> : <PdfIcon className="h-8 w-8" />}
+                                {pdfPendingTarget === manager.id ? <SpinnerIcon className="h-10 w-10" /> : <PdfIcon className="h-10 w-10" />}
                               </button>
                               <button
                                 type="button"
@@ -2066,7 +2066,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 title={isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
                                 aria-label={isEnglish ? "Copy to WhatsApp" : "Copiar para WhatsApp"}
                               >
-                                {whatsAppPendingTarget === manager.id ? <SpinnerIcon className="h-8 w-8" /> : <WhatsAppIcon className="h-8 w-8" />}
+                                {whatsAppPendingTarget === manager.id ? <SpinnerIcon className="h-10 w-10" /> : <WhatsAppIcon className="h-10 w-10" />}
                               </button>
                               {managerWhatsApp?.phone ? (
                                 <a
@@ -2077,7 +2077,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                   title={isEnglish ? "Open in WhatsApp" : "Abrir no WhatsApp"}
                                   aria-label={isEnglish ? "Open in WhatsApp" : "Abrir no WhatsApp"}
                                 >
-                                  <WhatsAppIcon className="h-8 w-8" />
+                                  <WhatsAppIcon className="h-10 w-10" />
                                 </a>
                               ) : null}
                             </div>
