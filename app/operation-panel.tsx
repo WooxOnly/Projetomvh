@@ -874,7 +874,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       return fallback;
     }
 
-    return [office.address, office.city, office.state, office.zipCode].filter(Boolean).join(" | ") || fallback;
+    return office.address?.trim() || fallback;
   }
 
   function getEffectiveManagerOffice(
@@ -1872,10 +1872,6 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   const effectiveOffice = getEffectiveManagerOffice(manager);
                   const isolatedStops = analyzeIsolatedStops(assignments, effectiveOffice);
                   const isExpanded = expandedStopManagers.includes(manager.id);
-                  const totalWorkload = assignments.reduce(
-                    (total, assignment) => total + assignment.workload,
-                    0,
-                  );
                   const uniqueResorts = Array.from(
                     new Set(
                       assignments
@@ -1898,25 +1894,13 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             {isEnglish ? "Route origin" : "Origem da rota"}: {getOfficeAddress(effectiveOffice)}
                           </p>
                           <p className="mt-1 text-xs text-slate-300">
-                            {isEnglish ? "Stops" : "Paradas"}: {assignments.length} |{" "}
-                            {isEnglish ? "Workload" : "Carga"}: {totalWorkload}
+                            {isEnglish ? "Stops" : "Paradas"}: {assignments.length}
                           </p>
-                          <p className="mt-1 text-xs text-slate-300">
-                            {isEnglish ? "Phone" : "Telefone"}:{" "}
-                            {managerAnalysis?.phone || (isEnglish ? "Not informed" : "Não informado")}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-400">
-                            {managerAnalysis?.summary ??
-                              (assignments.some(
-                                (item) => item.checkin.lat != null && item.checkin.lng != null,
-                              )
-                                ? (isEnglish
-                                  ? "Suggested order with geolocation when available."
-                                  : "Ordem sugerida com geolocalização quando disponível.")
-                                : (isEnglish
-                                  ? "Suggested order by grouping and textual address."
-                                  : "Ordem sugerida por agrupamento e endereço textual."))}
-                          </p>
+                          {managerAnalysis?.phone ? (
+                            <p className="mt-1 text-xs text-slate-300">
+                              {isEnglish ? "Phone" : "Telefone"}: {managerAnalysis.phone}
+                            </p>
+                          ) : null}
                         </div>
                         <div className="content-safe min-w-40 rounded-2xl border border-white/10 bg-slate-950/70 p-3">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Route score" : "Score da rota"}</p>
