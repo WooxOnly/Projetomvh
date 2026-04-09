@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -1513,11 +1514,20 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     });
   }
 
-  const refreshRouteIntelligence = useCallback(async () => {
+  const postRebuildRefreshTimeoutsRef = useRef<number[]>([]);
+
+  const clearPostRebuildRefreshes = useCallback(() => {
+    for (const timeoutId of postRebuildRefreshTimeoutsRef.current) {
+      window.clearTimeout(timeoutId);
+    }
+    postRebuildRefreshTimeoutsRef.current = [];
+  }, []);
+
+  const refreshRouteIntelligence = useCallback(async (forceRefresh = false) => {
     setAnalysisError("");
 
     try {
-      const payload = await fetchRouteAnalysis();
+      const payload = await fetchRouteAnalysis(forceRefresh);
       setAnalysis(payload.analysis);
     } catch (fetchError) {
       setAnalysisError(
@@ -1529,6 +1539,16 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       );
     }
   }, [isEnglish]);
+
+  const schedulePostRebuildAnalysisRefreshes = useCallback(() => {
+    clearPostRebuildRefreshes();
+
+    postRebuildRefreshTimeoutsRef.current = [6000, 15000, 30000, 60000].map((delayMs) =>
+      window.setTimeout(() => {
+        void refreshRouteIntelligence(true);
+      }, delayMs),
+    );
+  }, [clearPostRebuildRefreshes, refreshRouteIntelligence]);
 
   const refreshWhatsAppExport = useCallback(async (target: string = "global") => {
     setWhatsAppPendingTarget(target);
@@ -1633,6 +1653,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       }
       setAnalysis(null);
       setWhatsAppExport(null);
+      clearPostRebuildRefreshes();
       router.refresh();
       setMessage(
         useHereRouting
@@ -1643,6 +1664,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
             ? "Operation recalculated successfully."
             : "Operação recalculada com sucesso.",
       );
+      schedulePostRebuildAnalysisRefreshes();
     } catch (rebuildError) {
       setError(
         rebuildError instanceof Error
@@ -1654,7 +1676,14 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     } finally {
       setRebuildTarget(null);
     }
-  }, [isEnglish, isHereApiLocked, normalizedHereApiLockedUntil, router]);
+  }, [
+    clearPostRebuildRefreshes,
+    isEnglish,
+    isHereApiLocked,
+    normalizedHereApiLockedUntil,
+    router,
+    schedulePostRebuildAnalysisRefreshes,
+  ]);
 
   useEffect(() => {
     if (mode !== "route" || !latestOperationRun?.id) {
@@ -1674,6 +1703,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     refreshRouteIntelligence,
     refreshWhatsAppExport,
   ]);
+
+  useEffect(() => {
+    return () => {
+      clearPostRebuildRefreshes();
+    };
+  }, [clearPostRebuildRefreshes]);
 
   function renderViewportOverlay(content: ReactNode) {
     if (typeof document === "undefined") {

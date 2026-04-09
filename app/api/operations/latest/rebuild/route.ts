@@ -6,6 +6,7 @@ import { ensureActiveUploadLocationMaintenance } from "@/lib/operations/location
 import { prisma } from "@/lib/prisma";
 import { HERE_ROUTING_NOTE, getHereRoutingLockedUntil } from "@/lib/operations/here-usage";
 import { getLatestOperationRun } from "@/lib/operations/queries";
+import { ensureOperationRouteCoordinates } from "@/lib/operations/route-geocoding";
 import { refreshOperationRunRouting, runDailyOperation } from "@/lib/operations/run-operation";
 
 export async function POST(request: Request) {
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
 
     after(async () => {
       try {
+        await ensureOperationRouteCoordinates(operationRun.id);
         await ensureActiveUploadLocationMaintenance({
           uploadId: latestOperationRun.spreadsheetUpload.id,
           force: true,

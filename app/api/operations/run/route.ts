@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
 import { ensureActiveUploadLocationMaintenance } from "@/lib/operations/location-maintenance";
+import { ensureOperationRouteCoordinates } from "@/lib/operations/route-geocoding";
 import { refreshOperationRunRouting, runDailyOperation } from "@/lib/operations/run-operation";
 
 export async function POST(request: Request) {
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
 
     after(async () => {
       try {
+        await ensureOperationRouteCoordinates(operationRun.id);
         await ensureActiveUploadLocationMaintenance({
           uploadId: payload.spreadsheetUploadId,
           force: true,
