@@ -2637,7 +2637,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       className={`content-safe flex h-full flex-col rounded-[1.5rem] border bg-white/5 p-4 sm:p-5 ${scoreStyle.border}`}
                     >
                       <div className="flex flex-col gap-3">
-                      <div className="grid w-full gap-3 text-left xl:grid-cols-[minmax(0,1fr)_10rem] xl:items-end">
+                      <div className="grid w-full gap-2.5 text-left xl:grid-cols-[minmax(0,1fr)_9rem] xl:items-start">
                         <div className="flex flex-col gap-3">
                           <div>
                             <p className="text-base font-semibold text-white">
@@ -2655,21 +2655,21 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               </p>
                             ) : null}
                           </div>
-                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-2.5">
                             <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
                               {isEnglish ? "Route information" : "Informacoes da rota"}
                             </p>
-                            <p className="mt-1.5 text-[12px] leading-5 text-slate-200">
+                            <p className="mt-1 text-[11px] leading-4.5 text-slate-200">
                               {managerAnalysis?.summary ?? (isEnglish ? "No additional AI reading for this property manager." : "Sem leitura de IA adicional para este gerente de propriedades.")}
                             </p>
-                            <p className="mt-2 text-[11px] leading-4.5 text-amber-200">
+                            <p className="mt-1.5 text-[10px] leading-4 text-amber-200">
                               {isEnglish ? "Risk" : "Risco"}: {managerAnalysis?.risk ?? (isEnglish ? "Not identified" : "Não identificado")}
                             </p>
-                            <p className="mt-1.5 text-[11px] leading-4.5 text-emerald-200">
+                            <p className="mt-1 text-[10px] leading-4 text-emerald-200">
                               {isEnglish ? "Adjustment" : "Ajuste"}: {managerAnalysis?.hint ?? (isEnglish ? "No suggested adjustment" : "Sem ajuste sugerido")}
                             </p>
                             {hasInferredMapPoints ? (
-                              <p className="mt-1.5 text-[10px] leading-4 text-slate-400">
+                              <p className="mt-1 text-[9px] leading-3.5 text-slate-400">
                                 {isEnglish
                                   ? "Map view includes automatically positioned points while the real coordinate base is still being enriched."
                                   : "A visualização do mapa inclui pontos posicionados automaticamente enquanto a base real de coordenadas ainda está sendo enriquecida."}
@@ -2677,18 +2677,18 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             ) : null}
                           </div>
                         </div>
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-3 xl:self-end">
+                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-2.5">
                           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Route score" : "Score da rota"}</p>
-                          <p className={`mt-1.5 text-2xl font-semibold ${scoreStyle.text}`}>
+                          <p className={`mt-1 text-[1.65rem] font-semibold leading-none ${scoreStyle.text}`}>
                             {managerAnalysis?.routeScore ?? "--"}
                           </p>
-                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/10">
                             <div
                               className={`h-full rounded-full ${scoreStyle.progress}`}
                               style={{ width: `${managerAnalysis?.routeScore ?? 0}%` }}
                             />
                           </div>
-                          <div className="mt-2 space-y-1 text-[11px] text-slate-400">
+                          <div className="mt-1.5 space-y-1 text-[10px] leading-4 text-slate-400">
                             <p>
                               {isEnglish ? "Estimated distance" : "Distância estimada"}: {managerAnalysis?.estimatedDistanceKm ?? 0} mi
                             </p>
@@ -2711,16 +2711,16 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         </div>
                       ) : null}
 
-                      <div className="mt-3 grid gap-3 xl:grid-cols-[1.04fr_0.96fr] xl:items-stretch">
+                      <div className="mt-3 grid gap-2.5 xl:grid-cols-[1.12fr_0.88fr] xl:items-start">
                         <RouteLiveMap
                           title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
                           points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
                         />
-                        <div className="flex h-full min-h-full flex-col gap-3">
-                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+                        <div className="flex flex-col gap-2.5">
+                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-2.5">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
-                            <p className="mt-1.5 text-sm leading-5 text-white">{uniqueResorts.length}</p>
-                            <div className="mt-1 text-xs leading-4.5 text-slate-400">
+                            <p className="mt-1 text-sm leading-5 text-white">{uniqueResorts.length}</p>
+                            <div className="mt-1 text-[11px] leading-4 text-slate-400">
                               {uniqueResorts.map((resort) => (
                                 <p key={resort} className="break-normal whitespace-normal">
                                   {resort}
@@ -2728,11 +2728,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               ))}
                             </div>
                           </div>
-                          <div className="content-safe mt-auto rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-2.5">
                             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
                               {isEnglish ? "Export" : "Exportar"}
                             </p>
-                            <div className="mt-2 flex flex-wrap gap-3">
+                            <div className="mt-1.5 flex flex-wrap gap-3">
                               <button
                                 type="button"
                                 onClick={() => void handlePdfDownload(manager.id)}

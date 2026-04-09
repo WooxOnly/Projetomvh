@@ -212,15 +212,15 @@ export function RouteLiveMap({ title, points }: RouteLiveMapProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
-      <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+    <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-2.5">
+      <div className="mb-1.5 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
           {isEnglish ? "Live map" : "Mapa real"}
         </p>
         <p className="text-[11px] text-slate-400">{title}</p>
       </div>
-      <div ref={mapRef} className="h-44 w-full overflow-hidden rounded-2xl sm:h-56" />
-      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-slate-300">
+      <div ref={mapRef} className="h-36 w-full overflow-hidden rounded-2xl sm:h-48" />
+      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-300">
         <span className="inline-flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400" />
           {isEnglish ? "Origin" : "Origem"}
