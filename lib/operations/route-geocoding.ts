@@ -55,6 +55,21 @@ function hasCoordinates(value: { lat: number | null; lng: number | null } | null
   return isWithinCentralFloridaServiceArea(value ?? { lat: null, lng: null });
 }
 
+function getKnownRoutePoint(
+  ...candidates: Array<{ lat: number | null; lng: number | null } | null | undefined>
+) {
+  for (const candidate of candidates) {
+    if (hasCoordinates(candidate)) {
+      return {
+        lat: candidate!.lat!,
+        lng: candidate!.lng!,
+      };
+    }
+  }
+
+  return null;
+}
+
 function cleanGeocodeString(value: string | null | undefined) {
   const normalized = value?.trim();
   return normalized ? normalized : null;
@@ -817,6 +832,12 @@ async function geocodeCheckin(checkinId: string) {
       condominiumName: true,
       propertyId: true,
       condominiumId: true,
+      property: {
+        select: {
+          lat: true,
+          lng: true,
+        },
+      },
       condominium: {
         select: {
           address: true,
@@ -844,16 +865,16 @@ async function geocodeCheckin(checkinId: string) {
   let propertyPoint: { lat: number; lng: number } | null = null;
   if (checkin.propertyId) {
     const property = await geocodeProperty(checkin.propertyId);
-    if (property && hasCoordinates(property)) {
-      propertyPoint = { lat: property.lat!, lng: property.lng! };
-    }
+    propertyPoint = getKnownRoutePoint(property, checkin.property);
   }
 
+  let condominiumPoint: { lat: number; lng: number } | null = null;
   if (checkin.condominiumId) {
-    await geocodeCondominium(checkin.condominiumId);
+    const condominium = await geocodeCondominium(checkin.condominiumId);
+    condominiumPoint = getKnownRoutePoint(condominium, checkin.condominium);
   }
 
-  let point = propertyPoint;
+  let point = propertyPoint ?? condominiumPoint ?? getKnownRoutePoint(checkin.property, checkin.condominium);
 
   if (!point) {
     const query =
@@ -916,6 +937,62 @@ async function geocodeCheckin(checkinId: string) {
 }
 
 export async function ensureOperationRouteCoordinates(operationRunId: string) {
+  const inheritedUpdates = await prisma.operationAssignment.findMany({
+    where: {
+      operationRunId,
+    },
+    select: {
+      checkinId: true,
+      checkin: {
+        select: {
+          lat: true,
+          lng: true,
+          property: {
+            select: {
+              lat: true,
+              lng: true,
+            },
+          },
+          condominium: {
+            select: {
+              lat: true,
+              lng: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const syncOperations = inheritedUpdates
+    .map((assignment) => {
+      if (hasCoordinates(assignment.checkin)) {
+        return null;
+      }
+
+      const point = getKnownRoutePoint(assignment.checkin.property, assignment.checkin.condominium);
+      if (!point) {
+        return null;
+      }
+
+      return prisma.checkin.update({
+        where: {
+          id: assignment.checkinId,
+        },
+        data: {
+          lat: point.lat,
+          lng: point.lng,
+        },
+      });
+    })
+    .filter(
+      (operation): operation is ReturnType<typeof prisma.checkin.update> => operation != null,
+    );
+
+  if (syncOperations.length > 0) {
+    await prisma.$transaction(syncOperations);
+  }
+
   const assignments = await prisma.operationAssignment.findMany({
     where: {
       operationRunId,
@@ -1053,6 +1130,54 @@ export async function enrichUploadLocationData(
   const reviewCooldownMinutes = options.reviewCooldownMinutes ?? 180;
   const candidateWindowMultiplier = Math.max(1, options.candidateWindowMultiplier ?? 4);
   const reviewCooldownDate = getReviewCooldownDate(reviewCooldownMinutes);
+
+  const uploadSyncCandidates = await prisma.checkin.findMany({
+    where: {
+      spreadsheetUploadId: uploadId,
+      OR: [{ lat: null }, { lng: null }],
+    },
+    select: {
+      id: true,
+      property: {
+        select: {
+          lat: true,
+          lng: true,
+        },
+      },
+      condominium: {
+        select: {
+          lat: true,
+          lng: true,
+        },
+      },
+    },
+    take: checkinLimit * candidateWindowMultiplier,
+  });
+
+  const uploadSyncOperations = uploadSyncCandidates
+    .map((checkin) => {
+      const point = getKnownRoutePoint(checkin.property, checkin.condominium);
+      if (!point) {
+        return null;
+      }
+
+      return prisma.checkin.update({
+        where: {
+          id: checkin.id,
+        },
+        data: {
+          lat: point.lat,
+          lng: point.lng,
+        },
+      });
+    })
+    .filter(
+      (operation): operation is ReturnType<typeof prisma.checkin.update> => operation != null,
+    );
+
+  if (uploadSyncOperations.length > 0) {
+    await prisma.$transaction(uploadSyncOperations);
+  }
 
   const [recentCondominiumReviewIds, recentPropertyReviewIds, recentCheckinReviewIds] =
     await Promise.all([
