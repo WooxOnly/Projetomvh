@@ -4,7 +4,10 @@ import { DashboardSectionNav } from "@/app/dashboard-section-nav";
 import { requireSession } from "@/lib/auth/session";
 import { pickLanguage } from "@/lib/frontend-language";
 import { getRequestLanguage } from "@/lib/frontend-language-server";
-import { triggerDailyLocationMaintenanceIfDue } from "@/lib/operations/location-maintenance";
+import {
+  triggerActiveUploadLocationMaintenance,
+  triggerDailyLocationMaintenanceIfDue,
+} from "@/lib/operations/location-maintenance";
 
 export default async function DashboardLayout({
   children,
@@ -13,6 +16,7 @@ export default async function DashboardLayout({
 }>) {
   const [session, language] = await Promise.all([requireSession(), getRequestLanguage()]);
   triggerDailyLocationMaintenanceIfDue();
+  triggerActiveUploadLocationMaintenance();
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#1f2937,_#020617_55%)] px-3 py-4 text-white sm:px-4 sm:py-6 lg:py-10">

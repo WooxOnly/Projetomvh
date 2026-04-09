@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
+import { ensureActiveUploadLocationMaintenance } from "@/lib/operations/location-maintenance";
 import { prisma } from "@/lib/prisma";
 import {
   getRouteAnalysis,
@@ -24,6 +25,16 @@ export async function GET(request: Request) {
         { status: 404 },
       );
     }
+
+    after(async () => {
+      try {
+        await ensureActiveUploadLocationMaintenance({
+          uploadId: latestOperationRun.spreadsheetUpload.id,
+        });
+      } catch (error) {
+        console.error("Active upload maintenance from analysis failed", error);
+      }
+    });
 
     const url = new URL(request.url);
     const forceRefresh = url.searchParams.get("refresh") === "1";

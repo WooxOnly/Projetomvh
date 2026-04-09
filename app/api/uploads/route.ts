@@ -1,7 +1,7 @@
 import { after, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
-import { enrichUploadLocationData } from "@/lib/operations/route-geocoding";
+import { ensureActiveUploadLocationMaintenance } from "@/lib/operations/location-maintenance";
 import { processUpload, UploadReviewRequiredError } from "@/lib/upload/process-upload";
 
 export async function POST(request: Request) {
@@ -53,10 +53,9 @@ export async function POST(request: Request) {
     if (uploadId) {
       after(async () => {
         try {
-          await enrichUploadLocationData(uploadId, {
-            condominiumLimit: 24,
-            propertyLimit: 80,
-            checkinLimit: 240,
+          await ensureActiveUploadLocationMaintenance({
+            uploadId,
+            force: true,
           });
         } catch (error) {
           console.error("Upload location enrichment failed", error);

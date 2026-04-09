@@ -112,3 +112,31 @@ export async function countPendingLocationReviews() {
     },
   });
 }
+
+export async function getPendingLocationReviewEntityIds(
+  entityType: LocationReviewEntityType,
+  options?: { updatedSince?: Date; limit?: number },
+) {
+  const reviews = await prisma.locationReview.findMany({
+    where: {
+      entityType,
+      status: LOCATION_REVIEW_STATUS.PENDING,
+      ...(options?.updatedSince
+        ? {
+            updatedAt: {
+              gte: options.updatedSince,
+            },
+          }
+        : {}),
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+    take: options?.limit,
+    select: {
+      entityId: true,
+    },
+  });
+
+  return new Set(reviews.map((review) => review.entityId));
+}

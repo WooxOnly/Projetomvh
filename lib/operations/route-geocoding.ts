@@ -3,6 +3,7 @@ import "server-only";
 import OpenAI from "openai";
 
 import {
+  getPendingLocationReviewEntityIds,
   LOCATION_REVIEW_ENTITY_TYPE,
   type LocationReviewEntityType,
   resolveLocationReview,
@@ -973,7 +974,74 @@ type UploadLocationEnrichmentOptions = {
   condominiumLimit?: number;
   propertyLimit?: number;
   checkinLimit?: number;
+  reviewCooldownMinutes?: number;
+  candidateWindowMultiplier?: number;
 };
+
+type UploadLocationCoverageSnapshot = {
+  condominiumsMissing: number;
+  propertiesMissing: number;
+  checkinsMissing: number;
+};
+
+function getReviewCooldownDate(reviewCooldownMinutes: number) {
+  return new Date(Date.now() - reviewCooldownMinutes * 60 * 1000);
+}
+
+export async function getUploadLocationCoverageSnapshot(
+  uploadId: string,
+): Promise<UploadLocationCoverageSnapshot> {
+  const [condominiumsMissing, propertiesMissing, checkinsMissing] = await Promise.all([
+    prisma.condominium.count({
+      where: {
+        checkins: {
+          some: {
+            spreadsheetUploadId: uploadId,
+          },
+        },
+        OR: [
+          { address: null },
+          { city: null },
+          { state: null },
+          { zipCode: null },
+          { lat: null },
+          { lng: null },
+        ],
+      },
+    }),
+    prisma.property.count({
+      where: {
+        checkins: {
+          some: {
+            spreadsheetUploadId: uploadId,
+          },
+        },
+        OR: [{ lat: null }, { lng: null }],
+      },
+    }),
+    prisma.checkin.count({
+      where: {
+        spreadsheetUploadId: uploadId,
+        OR: [{ lat: null }, { lng: null }],
+      },
+    }),
+  ]);
+
+  return {
+    condominiumsMissing,
+    propertiesMissing,
+    checkinsMissing,
+  };
+}
+
+export async function hasUploadLocationBacklog(uploadId: string) {
+  const snapshot = await getUploadLocationCoverageSnapshot(uploadId);
+  return (
+    snapshot.condominiumsMissing > 0 ||
+    snapshot.propertiesMissing > 0 ||
+    snapshot.checkinsMissing > 0
+  );
+}
 
 export async function enrichUploadLocationData(
   uploadId: string,
@@ -982,6 +1050,25 @@ export async function enrichUploadLocationData(
   const condominiumLimit = options.condominiumLimit ?? 24;
   const propertyLimit = options.propertyLimit ?? 80;
   const checkinLimit = options.checkinLimit ?? 240;
+  const reviewCooldownMinutes = options.reviewCooldownMinutes ?? 180;
+  const candidateWindowMultiplier = Math.max(1, options.candidateWindowMultiplier ?? 4);
+  const reviewCooldownDate = getReviewCooldownDate(reviewCooldownMinutes);
+
+  const [recentCondominiumReviewIds, recentPropertyReviewIds, recentCheckinReviewIds] =
+    await Promise.all([
+      getPendingLocationReviewEntityIds(LOCATION_REVIEW_ENTITY_TYPE.CONDOMINIUM, {
+        updatedSince: reviewCooldownDate,
+        limit: condominiumLimit * candidateWindowMultiplier * 8,
+      }),
+      getPendingLocationReviewEntityIds(LOCATION_REVIEW_ENTITY_TYPE.PROPERTY, {
+        updatedSince: reviewCooldownDate,
+        limit: propertyLimit * candidateWindowMultiplier * 8,
+      }),
+      getPendingLocationReviewEntityIds(LOCATION_REVIEW_ENTITY_TYPE.CHECKIN, {
+        updatedSince: reviewCooldownDate,
+        limit: checkinLimit * candidateWindowMultiplier * 8,
+      }),
+    ]);
 
   const [condominiums, properties, checkins] = await Promise.all([
     prisma.condominium.findMany({
@@ -1006,7 +1093,7 @@ export async function enrichUploadLocationData(
       orderBy: {
         updatedAt: "asc",
       },
-      take: condominiumLimit,
+      take: condominiumLimit * candidateWindowMultiplier,
     }),
     prisma.property.findMany({
       where: {
@@ -1019,11 +1106,15 @@ export async function enrichUploadLocationData(
       },
       select: {
         id: true,
+        address: true,
+        condominiumId: true,
+        defaultPropertyManagerId: true,
+        updatedAt: true,
       },
       orderBy: {
         updatedAt: "asc",
       },
-      take: propertyLimit,
+      take: propertyLimit * candidateWindowMultiplier,
     }),
     prisma.checkin.findMany({
       where: {
@@ -1032,23 +1123,53 @@ export async function enrichUploadLocationData(
       },
       select: {
         id: true,
+        address: true,
+        propertyId: true,
+        condominiumId: true,
+        createdAt: true,
       },
       orderBy: {
         createdAt: "desc",
       },
-      take: checkinLimit,
+      take: checkinLimit * candidateWindowMultiplier,
     }),
   ]);
 
-  for (const condominium of condominiums) {
+  const prioritizedCondominiums = condominiums
+    .filter((condominium) => !recentCondominiumReviewIds.has(condominium.id))
+    .slice(0, condominiumLimit);
+
+  const prioritizedProperties = [...properties]
+    .filter((property) => !recentPropertyReviewIds.has(property.id))
+    .sort((left, right) => {
+      const leftScore =
+        (left.address ? 3 : 0) + (left.condominiumId ? 2 : 0) + (left.defaultPropertyManagerId ? 1 : 0);
+      const rightScore =
+        (right.address ? 3 : 0) + (right.condominiumId ? 2 : 0) + (right.defaultPropertyManagerId ? 1 : 0);
+
+      return rightScore - leftScore || left.updatedAt.getTime() - right.updatedAt.getTime();
+    })
+    .slice(0, propertyLimit);
+
+  const prioritizedCheckins = [...checkins]
+    .filter((checkin) => !recentCheckinReviewIds.has(checkin.id))
+    .sort((left, right) => {
+      const leftScore = (left.propertyId ? 5 : 0) + (left.condominiumId ? 3 : 0) + (left.address ? 1 : 0);
+      const rightScore = (right.propertyId ? 5 : 0) + (right.condominiumId ? 3 : 0) + (right.address ? 1 : 0);
+
+      return rightScore - leftScore || right.createdAt.getTime() - left.createdAt.getTime();
+    })
+    .slice(0, checkinLimit);
+
+  for (const condominium of prioritizedCondominiums) {
     await geocodeCondominium(condominium.id);
   }
 
-  for (const property of properties) {
+  for (const property of prioritizedProperties) {
     await geocodeProperty(property.id);
   }
 
-  for (const checkin of checkins) {
+  for (const checkin of prioritizedCheckins) {
     await geocodeCheckin(checkin.id);
   }
 }
