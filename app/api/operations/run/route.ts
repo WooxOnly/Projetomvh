@@ -1,8 +1,10 @@
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
-import { runDailyOperation } from "@/lib/operations/run-operation";
+import { ensureActiveUploadLocationMaintenance } from "@/lib/operations/location-maintenance";
+import { refreshOperationRunRouting, runDailyOperation } from "@/lib/operations/run-operation";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -24,7 +26,7 @@ export async function POST(request: Request) {
       throw new Error("Selecione um upload para rodar a operacao.");
     }
 
-    await runDailyOperation({
+    const operationRun = await runDailyOperation({
       spreadsheetUploadId: payload.spreadsheetUploadId,
       decisionMode: payload.decisionMode === "override" ? "override" : "default",
       availablePropertyManagerIds: payload.availablePropertyManagerIds ?? [],
@@ -34,6 +36,19 @@ export async function POST(request: Request) {
       useHereRouting: payload.useHereRouting === true,
       temporaryOfficeByManagerId: payload.temporaryOfficeByManagerId ?? {},
     });
+
+    after(async () => {
+      try {
+        await ensureActiveUploadLocationMaintenance({
+          uploadId: payload.spreadsheetUploadId,
+          force: true,
+        });
+        await refreshOperationRunRouting(operationRun.id);
+      } catch (error) {
+        console.error("Post-operation route enrichment failed", error);
+      }
+    });
+
     revalidatePath("/dashboard");
     return NextResponse.json({ ok: true });
   } catch (error) {

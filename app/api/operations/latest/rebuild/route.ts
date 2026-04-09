@@ -1,11 +1,12 @@
 import { revalidatePath } from "next/cache";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
+import { ensureActiveUploadLocationMaintenance } from "@/lib/operations/location-maintenance";
 import { prisma } from "@/lib/prisma";
 import { HERE_ROUTING_NOTE, getHereRoutingLockedUntil } from "@/lib/operations/here-usage";
 import { getLatestOperationRun } from "@/lib/operations/queries";
-import { runDailyOperation } from "@/lib/operations/run-operation";
+import { refreshOperationRunRouting, runDailyOperation } from "@/lib/operations/run-operation";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
       availablePropertyManagerIds.push(availablePm.propertyManagerId);
     }
 
-    await runDailyOperation({
+    const operationRun = await runDailyOperation({
       spreadsheetUploadId: latestOperationRun.spreadsheetUpload.id,
       decisionMode: latestOperationRun.decisionMode === "override" ? "override" : "default",
       availablePropertyManagerIds,
@@ -80,6 +81,18 @@ export async function POST(request: Request) {
         }
         return entries;
       })(),
+    });
+
+    after(async () => {
+      try {
+        await ensureActiveUploadLocationMaintenance({
+          uploadId: latestOperationRun.spreadsheetUpload.id,
+          force: true,
+        });
+        await refreshOperationRunRouting(operationRun.id);
+      } catch (error) {
+        console.error("Post-rebuild route enrichment failed", error);
+      }
     });
 
     revalidatePath("/dashboard");

@@ -13,7 +13,6 @@ import {
   resequenceOperationRunWithHere,
 } from "@/lib/operations/here-routing";
 import { HERE_ROUTING_NOTE, LOCAL_ROUTING_NOTE } from "@/lib/operations/here-usage";
-import { ensureOperationRouteCoordinates } from "@/lib/operations/route-geocoding";
 
 type RunOperationInput = {
   spreadsheetUploadId: string;
@@ -289,8 +288,6 @@ export async function runDailyOperation(input: RunOperationInput) {
     },
   });
 
-  await ensureOperationRouteCoordinates(operationRun.id);
-
   if (input.useHereRouting && hasHereRoutingApiKey()) {
     const usedHereResequencing = await resequenceOperationRunWithHere(operationRun.id);
 
@@ -302,6 +299,22 @@ export async function runDailyOperation(input: RunOperationInput) {
   }
 
   return operationRun;
+}
+
+export async function refreshOperationRunRouting(operationRunId: string) {
+  await prisma.operationRun.update({
+    where: {
+      id: operationRunId,
+    },
+    data: {
+      routeAnalysisJson: null,
+      routeAnalysisSource: null,
+      routeAnalysisModel: null,
+      routeAnalysisGeneratedAt: null,
+    },
+  });
+
+  await resequenceOperationRun(operationRunId);
 }
 
 function alphabeticalSort<T extends RouteSortableAssignment>(assignments: T[]) {
