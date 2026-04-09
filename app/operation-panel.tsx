@@ -61,6 +61,10 @@ type OperationPanelProps = {
       preventMixedCondominiumOffices: boolean;
       forceEqualCheckins: boolean;
       endRouteNearOffice: boolean;
+      routeAnalysisJson?: string | null;
+      routeAnalysisSource?: string | null;
+      routeAnalysisModel?: string | null;
+      routeAnalysisGeneratedAt?: Date | string | null;
       status: string;
       totalAssignments: number;
       createdAt: Date | string;
@@ -712,6 +716,36 @@ async function fetchRouteAnalysis(refresh = false) {
   return readJsonResponse<{ ok: true; analysis: RouteAnalysisData }>(response);
 }
 
+function parseStoredRouteAnalysis(
+  latestOperationRun: OperationPanelProps["data"]["latestOperationRun"],
+) {
+  if (!latestOperationRun?.routeAnalysisJson) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(latestOperationRun.routeAnalysisJson) as RouteAnalysisData;
+    if (!parsed.managers?.length) {
+      return null;
+    }
+
+    return {
+      ...parsed,
+      source:
+        latestOperationRun.routeAnalysisSource === "openai"
+          ? "openai"
+          : parsed.source ?? "heuristic",
+      model: latestOperationRun.routeAnalysisModel ?? parsed.model ?? null,
+      generatedAt:
+        typeof latestOperationRun.routeAnalysisGeneratedAt === "string"
+          ? latestOperationRun.routeAnalysisGeneratedAt
+          : latestOperationRun.routeAnalysisGeneratedAt?.toISOString() ?? parsed.generatedAt,
+    } satisfies RouteAnalysisData;
+  } catch {
+    return null;
+  }
+}
+
 async function rebuildLatestOperation(useHereRouting = false) {
   const response = await fetch("/api/operations/latest/rebuild", {
     method: "POST",
@@ -800,7 +834,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const [error, setError] = useState("");
   const [rebuildTarget, setRebuildTarget] = useState<"local" | "here" | null>(null);
   const [analysisError, setAnalysisError] = useState("");
-  const [analysis, setAnalysis] = useState<RouteAnalysisData | null>(null);
+  const [analysis, setAnalysis] = useState<RouteAnalysisData | null>(() =>
+    parseStoredRouteAnalysis(data.latestOperationRun),
+  );
   const [hereApiLockedUntil, setHereApiLockedUntil] = useState<Date | null>(
     data.hereApiLockedUntil ? new Date(data.hereApiLockedUntil) : null,
   );
@@ -827,6 +863,10 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   useEffect(() => {
     setHereApiLockedUntil(data.hereApiLockedUntil ? new Date(data.hereApiLockedUntil) : null);
   }, [data.hereApiLockedUntil]);
+
+  useEffect(() => {
+    setAnalysis(parseStoredRouteAnalysis(data.latestOperationRun));
+  }, [data.latestOperationRun]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -1352,9 +1392,19 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       return;
     }
 
-    void refreshRouteIntelligence();
+    const cachedAnalysis = parseStoredRouteAnalysis(latestOperationRun);
+    if (!cachedAnalysis) {
+      void refreshRouteIntelligence();
+    }
     void refreshWhatsAppExport("global");
-  }, [latestOperationRun?.id, mode, refreshRouteIntelligence, refreshWhatsAppExport]);
+  }, [
+    latestOperationRun,
+    latestOperationRun?.id,
+    latestOperationRun?.routeAnalysisGeneratedAt,
+    mode,
+    refreshRouteIntelligence,
+    refreshWhatsAppExport,
+  ]);
 
   function renderViewportOverlay(content: React.ReactNode) {
     if (typeof document === "undefined") {
@@ -1439,7 +1489,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   endRouteNearOffice: form.endRouteNearOffice,
                   temporaryOfficeByManagerId: form.temporaryOfficeByManagerId,
                 });
-                const payload = await fetchRouteAnalysis(true);
+                const payload = await fetchRouteAnalysis();
                 setAnalysis(payload.analysis);
                 const successMessage = isEnglish
                   ? "Operation completed successfully."
@@ -1993,10 +2043,23 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       ) : null}
 
                       <div className="mt-3 grid gap-3 xl:grid-cols-[1.08fr_0.92fr]">
-                        <RouteLiveMap
-                          title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
-                          points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
-                        />
+                        {isExpanded ? (
+                          <RouteLiveMap
+                            title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
+                            points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
+                          />
+                        ) : (
+                          <div className="rounded-2xl border border-dashed border-white/10 bg-slate-950/50 p-4 text-sm text-slate-300">
+                            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
+                              {isEnglish ? "Live map" : "Mapa real"}
+                            </p>
+                            <p className="mt-2 leading-6">
+                              {isEnglish
+                                ? "Expand this property manager card to load the individual route map only when needed."
+                                : "Expanda este card do gerente para carregar o mapa individual da rota somente quando necessário."}
+                            </p>
+                          </div>
+                        )}
                         <div className="space-y-3">
                           <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
@@ -2072,11 +2135,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           <span>
                             {isExpanded
                               ? isEnglish
-                                ? "Hide Stops"
-                                : "Ocultar Paradas"
+                                ? "Hide Route Details"
+                                : "Ocultar detalhes da rota"
                               : isEnglish
-                                ? "Show Stops"
-                                : "Mostrar Paradas"}
+                                ? "Show Route Details"
+                                : "Mostrar detalhes da rota"}
                           </span>
                         </button>
                       </div>

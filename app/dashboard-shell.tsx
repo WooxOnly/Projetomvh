@@ -132,6 +132,10 @@ type DashboardShellProps = {
       preventMixedCondominiumOffices: boolean;
       forceEqualCheckins: boolean;
       endRouteNearOffice: boolean;
+      routeAnalysisJson?: string | null;
+      routeAnalysisSource?: string | null;
+      routeAnalysisModel?: string | null;
+      routeAnalysisGeneratedAt?: Date | string | null;
       status: string;
       totalCheckins: number;
       totalAssignments: number;
@@ -289,9 +293,6 @@ export function DashboardShell({ data }: DashboardShellProps) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    if (tab === "route" || tab === "availability") {
-      router.refresh();
-    }
   }
 
   const activeTabMeta = tabMeta[activeTab];

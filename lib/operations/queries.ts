@@ -5,7 +5,6 @@ import { HERE_ROUTING_NOTE, getHereRoutingLockedUntil } from "@/lib/operations/h
 import { countPendingLocationReviews } from "@/lib/location-review";
 import { listOffices } from "@/lib/offices";
 import { cleanupExpiredOperationalData } from "@/lib/operations/cleanup";
-import { ensureOperationRouteCoordinates } from "@/lib/operations/route-geocoding";
 import { listCondominiums, listProperties, listPropertyManagers } from "@/lib/operations/catalog";
 import {
   getActiveUploadOfficeBreakdown,
@@ -69,7 +68,7 @@ async function getWeeklyLocationMaintenanceSummary() {
   };
 }
 
-async function getLatestOperationRunBase(options?: { ensureCoordinates?: boolean }) {
+async function getLatestOperationRunBase() {
   const latestRun = await prisma.operationRun.findFirst({
     orderBy: {
       createdAt: "desc",
@@ -81,10 +80,6 @@ async function getLatestOperationRunBase(options?: { ensureCoordinates?: boolean
 
   if (!latestRun) {
     return null;
-  }
-
-  if (options?.ensureCoordinates !== false) {
-    await ensureOperationRouteCoordinates(latestRun.id);
   }
 
   return prisma.operationRun.findFirst({
@@ -199,11 +194,11 @@ async function getLatestOperationRunBase(options?: { ensureCoordinates?: boolean
 }
 
 export async function getLatestOperationRun() {
-  return getLatestOperationRunBase({ ensureCoordinates: true });
+  return getLatestOperationRunBase();
 }
 
 export async function getLatestOperationRunForExport() {
-  return getLatestOperationRunBase({ ensureCoordinates: false });
+  return getLatestOperationRunBase();
 }
 
 export async function getDashboardSnapshot() {

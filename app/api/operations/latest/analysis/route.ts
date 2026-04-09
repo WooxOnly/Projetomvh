@@ -16,32 +16,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [latestOperationRun, propertyManagers] = await Promise.all([
-      getLatestOperationRun(),
-      prisma.propertyManager.findMany({
-        orderBy: {
-          name: "asc",
-        },
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-          officeId: true,
-          office: {
-            select: {
-              id: true,
-              name: true,
-              address: true,
-              city: true,
-              state: true,
-              zipCode: true,
-              lat: true,
-              lng: true,
-            },
-          },
-        },
-      }),
-    ]);
+    const latestOperationRun = await getLatestOperationRun();
 
     if (!latestOperationRun) {
       return NextResponse.json(
@@ -61,6 +36,30 @@ export async function GET(request: Request) {
     ) {
       return NextResponse.json({ ok: true, analysis: cachedAnalysis, cached: true });
     }
+
+    const propertyManagers = await prisma.propertyManager.findMany({
+      orderBy: {
+        name: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        officeId: true,
+        office: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            lat: true,
+            lng: true,
+          },
+        },
+      },
+    });
 
     const analysis = await getRouteAnalysis(latestOperationRun, propertyManagers);
 
