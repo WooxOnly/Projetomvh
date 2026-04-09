@@ -507,12 +507,12 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 )}
               </div>
 
-              <div className="mobile-width-guard overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/5 p-4 sm:rounded-[1.5rem] sm:p-5">
+              <div className="mobile-width-guard overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/5 p-3.5 sm:rounded-[1.5rem] sm:p-5">
                 <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
                   {isEnglish ? "Legend" : "Legenda"}
                 </p>
                 <div
-                  className="mt-4 grid gap-2 pr-1 sm:max-h-[30rem] sm:overflow-y-auto sm:pr-2 md:grid-cols-2"
+                  className="mt-3.5 grid max-h-[18.5rem] gap-2 overflow-y-auto pr-1 sm:mt-4 sm:max-h-[30rem] sm:pr-2 md:grid-cols-2"
                   onMouseLeave={() => setActiveSliceId(null)}
                 >
                   {chartData.legendItems.map((slice) => (
@@ -522,7 +522,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                       onMouseEnter={() => setActiveSliceId(slice.id)}
                       onFocus={() => setActiveSliceId(slice.id)}
                       onClick={() => setActiveSliceId(slice.id)}
-                      className={`flex w-full items-start gap-2 rounded-xl border px-3 py-2.5 text-left transition sm:rounded-lg sm:px-2.5 sm:py-2 ${
+                      className={`flex w-full items-start gap-2 rounded-xl border px-2.5 py-2 text-left transition sm:rounded-lg sm:px-2.5 sm:py-2 ${
                         activeSlice?.id === slice.id
                           ? "border-cyan-300/50 bg-cyan-300/10"
                           : "border-white/10 bg-slate-950/40 hover:bg-white/5"
@@ -533,15 +533,15 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                         style={{ backgroundColor: slice.color }}
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="flex items-baseline justify-between gap-3">
-                          <span className="truncate text-sm font-medium text-white sm:text-[13px]">
+                        <span className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2">
+                          <span className="truncate text-[13px] font-medium text-white sm:text-[13px]">
                             {slice.label}
                           </span>
-                          <span className="shrink-0 text-sm font-semibold text-cyan-200 sm:text-[13px]">
+                          <span className="shrink-0 text-[13px] font-semibold text-cyan-200 sm:text-[13px]">
                             {slice.metricValue}
                           </span>
                         </span>
-                        <span className="mt-0.5 block truncate text-[11px] text-slate-400 sm:text-[10px]">
+                        <span className="mt-0.5 block truncate text-[10px] text-slate-400 sm:text-[10px]">
                           {slice.sublabel}
                         </span>
                       </span>
