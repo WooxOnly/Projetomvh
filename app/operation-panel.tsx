@@ -1,6 +1,15 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 
@@ -251,6 +260,19 @@ type IsolatedStopAnalysis = {
   worstGapMiles: number;
   labels: string[];
 };
+
+type RouteAdjustmentModalState =
+  | {
+      type: "swap_full";
+      firstPropertyManagerId: string;
+      secondPropertyManagerId: string;
+    }
+  | {
+      type: "adjust_between";
+      firstPropertyManagerId: string;
+      secondPropertyManagerId: string;
+    }
+  | null;
 
 function formatOfficeAddress(
   office:
@@ -756,6 +778,29 @@ async function rebuildLatestOperation(useHereRouting = false) {
   return readJsonResponse<{ ok: true; hereRoutingLockedUntil?: string | null }>(response);
 }
 
+async function applyLatestRouteAdjustment(body:
+  | {
+      action: "swap_full";
+      firstPropertyManagerId: string;
+      secondPropertyManagerId: string;
+    }
+  | {
+      action: "adjust_between";
+      firstPropertyManagerId: string;
+      secondPropertyManagerId: string;
+      assignmentIdsToFirstManager: string[];
+      assignmentIdsToSecondManager: string[];
+    },
+) {
+  const response = await fetch("/api/operations/latest/route-adjustments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  return readJsonResponse<{ ok: true }>(response);
+}
+
 async function runOperation(body: {
   spreadsheetUploadId: string;
   decisionMode: "default" | "override";
@@ -846,6 +891,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const [whatsAppExport, setWhatsAppExport] = useState<WhatsAppExportData | null>(null);
   const [copyState, setCopyState] = useState("");
   const [expandedStopManagers, setExpandedStopManagers] = useState<string[]>([]);
+  const [routeAdjustmentModal, setRouteAdjustmentModal] = useState<RouteAdjustmentModalState>(null);
+  const [adjustAssignmentsToFirstManager, setAdjustAssignmentsToFirstManager] = useState<string[]>([]);
+  const [adjustAssignmentsToSecondManager, setAdjustAssignmentsToSecondManager] = useState<string[]>([]);
   const [operationPending, setOperationPending] = useState(false);
   const [hasJustRunOperation, setHasJustRunOperation] = useState(false);
   const [hasManualSelectionChanges, setHasManualSelectionChanges] = useState(false);
@@ -1167,6 +1215,14 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     );
   }, [latestOperationRun]);
 
+  const groupedAssignmentsByManagerId = useMemo(
+    () =>
+      new Map(
+        groupedAssignments.map((item) => [item.manager.id, item] as const),
+      ),
+    [groupedAssignments],
+  );
+
   const whatsAppMessagesByManager = useMemo(
     () =>
       new Map(
@@ -1207,6 +1263,39 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     );
   }, [analysis, analysisError, data.propertyManagers, isEnglish, latestOperationRun, latestOperationTemporaryOfficeMap, mode]);
 
+  const routeAdjustmentFirstManagerGroup = routeAdjustmentModal
+    ? groupedAssignmentsByManagerId.get(routeAdjustmentModal.firstPropertyManagerId) ?? null
+    : null;
+  const routeAdjustmentSecondManagerGroup = routeAdjustmentModal
+    ? groupedAssignmentsByManagerId.get(routeAdjustmentModal.secondPropertyManagerId) ?? null
+    : null;
+
+  const routeAdjustmentFirstManagerCondominiums = useMemo(() => {
+    const grouped = new Map<string, string[]>();
+
+    for (const assignment of routeAdjustmentFirstManagerGroup?.assignments ?? []) {
+      const key = assignment.checkin.condominiumName?.trim() || (isEnglish ? "No resort" : "Sem condomínio");
+      const existing = grouped.get(key) ?? [];
+      existing.push(assignment.id);
+      grouped.set(key, existing);
+    }
+
+    return Array.from(grouped.entries()).sort((left, right) => left[0].localeCompare(right[0]));
+  }, [isEnglish, routeAdjustmentFirstManagerGroup]);
+
+  const routeAdjustmentSecondManagerCondominiums = useMemo(() => {
+    const grouped = new Map<string, string[]>();
+
+    for (const assignment of routeAdjustmentSecondManagerGroup?.assignments ?? []) {
+      const key = assignment.checkin.condominiumName?.trim() || (isEnglish ? "No resort" : "Sem condomínio");
+      const existing = grouped.get(key) ?? [];
+      existing.push(assignment.id);
+      grouped.set(key, existing);
+    }
+
+    return Array.from(grouped.entries()).sort((left, right) => left[0].localeCompare(right[0]));
+  }, [isEnglish, routeAdjustmentSecondManagerGroup]);
+
   useEffect(() => {
     const activeUploadId = data.activeUpload?.id;
 
@@ -1225,6 +1314,89 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     setHasManualSelectionChanges(false);
   }, [data.activeUpload?.id]);
 
+  useEffect(() => {
+    if (routeAdjustmentModal?.type !== "adjust_between") {
+      setAdjustAssignmentsToFirstManager([]);
+      setAdjustAssignmentsToSecondManager([]);
+      return;
+    }
+
+    setAdjustAssignmentsToFirstManager([]);
+    setAdjustAssignmentsToSecondManager([]);
+  }, [routeAdjustmentModal]);
+
+  function closeRouteAdjustmentModal() {
+    setRouteAdjustmentModal(null);
+    setAdjustAssignmentsToFirstManager([]);
+    setAdjustAssignmentsToSecondManager([]);
+  }
+
+  function openSwapFullModal(firstPropertyManagerId: string) {
+    const fallbackSecondManagerId =
+      groupedAssignments.find((item) => item.manager.id !== firstPropertyManagerId)?.manager.id ?? "";
+
+    if (!fallbackSecondManagerId) {
+      setError(
+        isEnglish
+          ? "At least two routes are needed to swap a full route."
+          : "É preciso ter pelo menos duas rotas para trocar uma rota completa.",
+      );
+      return;
+    }
+
+    setRouteAdjustmentModal({
+      type: "swap_full",
+      firstPropertyManagerId,
+      secondPropertyManagerId: fallbackSecondManagerId,
+    });
+  }
+
+  function openAdjustBetweenModal(firstPropertyManagerId: string) {
+    const fallbackSecondManagerId =
+      groupedAssignments.find((item) => item.manager.id !== firstPropertyManagerId)?.manager.id ?? "";
+
+    if (!fallbackSecondManagerId) {
+      setError(
+        isEnglish
+          ? "At least two routes are needed to adjust routes between PMs."
+          : "É preciso ter pelo menos duas rotas para ajustar rotas entre PMs.",
+      );
+      return;
+    }
+
+    setRouteAdjustmentModal({
+      type: "adjust_between",
+      firstPropertyManagerId,
+      secondPropertyManagerId: fallbackSecondManagerId,
+    });
+  }
+
+  function toggleAssignmentSelection(
+    assignmentId: string,
+    setter: Dispatch<SetStateAction<string[]>>,
+  ) {
+    setter((current) =>
+      current.includes(assignmentId)
+        ? current.filter((item) => item !== assignmentId)
+        : [...current, assignmentId],
+    );
+  }
+
+  function toggleCondominiumSelection(
+    assignmentIds: string[],
+    setter: Dispatch<SetStateAction<string[]>>,
+  ) {
+    setter((current) => {
+      const allSelected = assignmentIds.every((assignmentId) => current.includes(assignmentId));
+
+      if (allSelected) {
+        return current.filter((item) => !assignmentIds.includes(item));
+      }
+
+      return Array.from(new Set([...current, ...assignmentIds]));
+    });
+  }
+
   function handleAction(action: () => Promise<void>, successMessage: string) {
     startTransition(async () => {
       try {
@@ -1239,6 +1411,58 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
             : isEnglish
               ? "The operation failed."
               : "A operação falhou.",
+        );
+      }
+    });
+  }
+
+  function handleRouteAdjustmentSubmit() {
+    if (!routeAdjustmentModal) {
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        setMessage("");
+        setError("");
+        setAnalysisError("");
+
+        if (routeAdjustmentModal.type === "swap_full") {
+          await applyLatestRouteAdjustment({
+            action: "swap_full",
+            firstPropertyManagerId: routeAdjustmentModal.firstPropertyManagerId,
+            secondPropertyManagerId: routeAdjustmentModal.secondPropertyManagerId,
+          });
+        } else {
+          await applyLatestRouteAdjustment({
+            action: "adjust_between",
+            firstPropertyManagerId: routeAdjustmentModal.firstPropertyManagerId,
+            secondPropertyManagerId: routeAdjustmentModal.secondPropertyManagerId,
+            assignmentIdsToFirstManager: adjustAssignmentsToFirstManager,
+            assignmentIdsToSecondManager: adjustAssignmentsToSecondManager,
+          });
+        }
+
+        closeRouteAdjustmentModal();
+        setAnalysis(null);
+        setWhatsAppExport(null);
+        setMessage(
+          routeAdjustmentModal.type === "swap_full"
+            ? isEnglish
+              ? "Full route swap applied successfully."
+              : "Troca de rota completa aplicada com sucesso."
+            : isEnglish
+              ? "Route adjustment applied successfully."
+              : "Ajuste entre rotas aplicado com sucesso.",
+        );
+        router.refresh();
+      } catch (actionError) {
+        setError(
+          actionError instanceof Error
+            ? actionError.message
+            : isEnglish
+              ? "Could not apply the route adjustment."
+              : "Não foi possível aplicar o ajuste entre as rotas.",
         );
       }
     });
@@ -1406,7 +1630,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     refreshWhatsAppExport,
   ]);
 
-  function renderViewportOverlay(content: React.ReactNode) {
+  function renderViewportOverlay(content: ReactNode) {
     if (typeof document === "undefined") {
       return null;
     }
@@ -1451,6 +1675,368 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     className="rounded-2xl bg-cyan-300 px-6 py-3 text-sm font-semibold text-slate-950"
                   >
                     OK
+                  </button>
+                </div>
+              </div>
+            </div>,
+          )
+        : null}
+      {routeAdjustmentModal
+        ? renderViewportOverlay(
+            <div className="fixed inset-0 z-[122] overflow-y-auto bg-slate-950/72 px-4 py-8 backdrop-blur-sm">
+              <div className="mx-auto w-full max-w-6xl rounded-[1.75rem] border border-cyan-400/20 bg-slate-950/96 p-5 shadow-2xl shadow-cyan-950/30 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+                      {routeAdjustmentModal.type === "swap_full"
+                        ? isEnglish
+                          ? "Full route swap"
+                          : "Troca de rota completa"
+                        : isEnglish
+                          ? "Adjust routes between PMs"
+                          : "Ajustar rotas entre PMs"}
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-white sm:text-xl">
+                      {routeAdjustmentModal.type === "swap_full"
+                        ? isEnglish
+                          ? "Swap the entire route between two PMs"
+                          : "Trocar a rota inteira entre dois PMs"
+                        : isEnglish
+                          ? "Move check-ins in batches between two PMs"
+                          : "Mover check-ins em lote entre dois PMs"}
+                    </h3>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                      {routeAdjustmentModal.type === "swap_full"
+                        ? isEnglish
+                          ? "Use this when the whole route makes more sense with another PM."
+                          : "Use esta ação quando a rota inteira fizer mais sentido com outro PM."
+                        : isEnglish
+                          ? "Select what goes from one PM to the other. You can move only one side or both sides together."
+                          : "Selecione o que sai de um PM para o outro. Você pode mover só um lado ou os dois lados juntos."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeRouteAdjustmentModal}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200"
+                  >
+                    {isEnglish ? "Close" : "Fechar"}
+                  </button>
+                </div>
+
+                <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-400">
+                      {isEnglish ? "PM 1" : "PM 1"}
+                    </span>
+                    <select
+                      value={routeAdjustmentModal.firstPropertyManagerId}
+                      onChange={(event) =>
+                        setRouteAdjustmentModal((current) =>
+                          current
+                            ? {
+                                ...current,
+                                firstPropertyManagerId: event.target.value,
+                              }
+                            : current,
+                        )
+                      }
+                      className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
+                    >
+                      {groupedAssignments.map((item) => (
+                        <option key={item.manager.id} value={item.manager.id}>
+                          {cleanPropertyManagerName(item.manager.name)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-400">
+                      {isEnglish ? "PM 2" : "PM 2"}
+                    </span>
+                    <select
+                      value={routeAdjustmentModal.secondPropertyManagerId}
+                      onChange={(event) =>
+                        setRouteAdjustmentModal((current) =>
+                          current
+                            ? {
+                                ...current,
+                                secondPropertyManagerId: event.target.value,
+                              }
+                            : current,
+                        )
+                      }
+                      className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
+                    >
+                      {groupedAssignments.map((item) => (
+                        <option key={item.manager.id} value={item.manager.id}>
+                          {cleanPropertyManagerName(item.manager.name)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                {routeAdjustmentModal.type === "swap_full" ? (
+                  <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                        <p className="text-sm font-semibold text-white">
+                          {cleanPropertyManagerName(routeAdjustmentFirstManagerGroup?.manager.name ?? "")}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-300">
+                          {isEnglish ? "Current stops" : "Paradas atuais"}: {routeAdjustmentFirstManagerGroup?.assignments.length ?? 0}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                        <p className="text-sm font-semibold text-white">
+                          {cleanPropertyManagerName(routeAdjustmentSecondManagerGroup?.manager.name ?? "")}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-300">
+                          {isEnglish ? "Current stops" : "Paradas atuais"}: {routeAdjustmentSecondManagerGroup?.assignments.length ?? 0}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm leading-6 text-slate-300">
+                      {isEnglish
+                        ? "The full route, route order, score, map, PDF, and WhatsApp output will be recalculated automatically after confirmation."
+                        : "A rota completa, a ordem dos stops, o score, o mapa, o PDF e a saída do WhatsApp serão recalculados automaticamente após a confirmação."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-5 grid gap-4 xl:grid-cols-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-white">
+                            {cleanPropertyManagerName(routeAdjustmentFirstManagerGroup?.manager.name ?? "")}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-300">
+                            {routeAdjustmentFirstManagerGroup?.assignments.length ?? 0} {isEnglish ? "current stops" : "paradas atuais"}
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] text-cyan-100">
+                          {isEnglish ? "Send to PM 2" : "Enviar para PM 2"}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {routeAdjustmentFirstManagerCondominiums.map(([condominiumName, assignmentIds]) => {
+                          const allSelected = assignmentIds.every((assignmentId) =>
+                            adjustAssignmentsToSecondManager.includes(assignmentId),
+                          );
+
+                          return (
+                            <button
+                              key={condominiumName}
+                              type="button"
+                              onClick={() =>
+                                toggleCondominiumSelection(assignmentIds, setAdjustAssignmentsToSecondManager)
+                              }
+                              className={`rounded-full border px-3 py-1 text-xs ${
+                                allSelected
+                                  ? "border-cyan-200 bg-cyan-300/20 text-cyan-50"
+                                  : "border-white/10 bg-white/5 text-slate-300"
+                              }`}
+                            >
+                              {condominiumName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="mt-4 max-h-[24rem] space-y-2 overflow-y-auto pr-1">
+                        {routeAdjustmentFirstManagerGroup?.assignments.map((assignment) => {
+                          const checked = adjustAssignmentsToSecondManager.includes(assignment.id);
+
+                          return (
+                            <label
+                              key={assignment.id}
+                              className={`flex cursor-pointer gap-3 rounded-2xl border px-3 py-3 ${
+                                checked
+                                  ? "border-cyan-300/40 bg-cyan-300/10"
+                                  : "border-white/10 bg-slate-950/60"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  toggleAssignmentSelection(assignment.id, setAdjustAssignmentsToSecondManager)
+                                }
+                                className="mt-1 h-4 w-4 rounded border-white/10 bg-slate-950/70"
+                              />
+                              <div className="min-w-0">
+                                <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
+                                  Stop {assignment.routeOrder}
+                                </p>
+                                <p className="mt-1 text-sm font-medium text-white">
+                                  {assignment.checkin.condominiumName ||
+                                    (isEnglish ? "Condominium not informed" : "Condomínio não informado")}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-300">
+                                  {assignment.checkin.address ||
+                                    (isEnglish ? "Address not informed" : "Endereço não informado")}
+                                </p>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-white">
+                            {cleanPropertyManagerName(routeAdjustmentSecondManagerGroup?.manager.name ?? "")}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-300">
+                            {routeAdjustmentSecondManagerGroup?.assignments.length ?? 0} {isEnglish ? "current stops" : "paradas atuais"}
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[11px] text-emerald-100">
+                          {isEnglish ? "Send to PM 1" : "Enviar para PM 1"}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {routeAdjustmentSecondManagerCondominiums.map(([condominiumName, assignmentIds]) => {
+                          const allSelected = assignmentIds.every((assignmentId) =>
+                            adjustAssignmentsToFirstManager.includes(assignmentId),
+                          );
+
+                          return (
+                            <button
+                              key={condominiumName}
+                              type="button"
+                              onClick={() =>
+                                toggleCondominiumSelection(assignmentIds, setAdjustAssignmentsToFirstManager)
+                              }
+                              className={`rounded-full border px-3 py-1 text-xs ${
+                                allSelected
+                                  ? "border-emerald-200 bg-emerald-300/20 text-emerald-50"
+                                  : "border-white/10 bg-white/5 text-slate-300"
+                              }`}
+                            >
+                              {condominiumName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="mt-4 max-h-[24rem] space-y-2 overflow-y-auto pr-1">
+                        {routeAdjustmentSecondManagerGroup?.assignments.map((assignment) => {
+                          const checked = adjustAssignmentsToFirstManager.includes(assignment.id);
+
+                          return (
+                            <label
+                              key={assignment.id}
+                              className={`flex cursor-pointer gap-3 rounded-2xl border px-3 py-3 ${
+                                checked
+                                  ? "border-emerald-300/40 bg-emerald-300/10"
+                                  : "border-white/10 bg-slate-950/60"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  toggleAssignmentSelection(assignment.id, setAdjustAssignmentsToFirstManager)
+                                }
+                                className="mt-1 h-4 w-4 rounded border-white/10 bg-slate-950/70"
+                              />
+                              <div className="min-w-0">
+                                <p className="text-xs uppercase tracking-[0.22em] text-emerald-300">
+                                  Stop {assignment.routeOrder}
+                                </p>
+                                <p className="mt-1 text-sm font-medium text-white">
+                                  {assignment.checkin.condominiumName ||
+                                    (isEnglish ? "Condominium not informed" : "Condomínio não informado")}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-300">
+                                  {assignment.checkin.address ||
+                                    (isEnglish ? "Address not informed" : "Endereço não informado")}
+                                </p>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                  <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+                    {isEnglish ? "Summary" : "Resumo"}
+                  </p>
+                  {routeAdjustmentModal.type === "swap_full" ? (
+                    <div className="mt-2 space-y-1 text-sm text-slate-300">
+                      <p>
+                        {cleanPropertyManagerName(routeAdjustmentFirstManagerGroup?.manager.name ?? "")}:{" "}
+                        {routeAdjustmentFirstManagerGroup?.assignments.length ?? 0} {isEnglish ? "stops" : "paradas"}
+                      </p>
+                      <p>
+                        {cleanPropertyManagerName(routeAdjustmentSecondManagerGroup?.manager.name ?? "")}:{" "}
+                        {routeAdjustmentSecondManagerGroup?.assignments.length ?? 0} {isEnglish ? "stops" : "paradas"}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-2 space-y-1 text-sm text-slate-300">
+                      <p>
+                        {cleanPropertyManagerName(routeAdjustmentFirstManagerGroup?.manager.name ?? "")} -&gt;{" "}
+                        {cleanPropertyManagerName(routeAdjustmentSecondManagerGroup?.manager.name ?? "")}:{" "}
+                        {adjustAssignmentsToSecondManager.length} {isEnglish ? "check-ins selected" : "check-ins selecionados"}
+                      </p>
+                      <p>
+                        {cleanPropertyManagerName(routeAdjustmentSecondManagerGroup?.manager.name ?? "")} -&gt;{" "}
+                        {cleanPropertyManagerName(routeAdjustmentFirstManagerGroup?.manager.name ?? "")}:{" "}
+                        {adjustAssignmentsToFirstManager.length} {isEnglish ? "check-ins selected" : "check-ins selecionados"}
+                      </p>
+                      <p>
+                        {cleanPropertyManagerName(routeAdjustmentFirstManagerGroup?.manager.name ?? "")}:{" "}
+                        {(routeAdjustmentFirstManagerGroup?.assignments.length ?? 0) -
+                          adjustAssignmentsToSecondManager.length +
+                          adjustAssignmentsToFirstManager.length}{" "}
+                        {isEnglish ? "estimated stops after adjustment" : "paradas estimadas após o ajuste"}
+                      </p>
+                      <p>
+                        {cleanPropertyManagerName(routeAdjustmentSecondManagerGroup?.manager.name ?? "")}:{" "}
+                        {(routeAdjustmentSecondManagerGroup?.assignments.length ?? 0) -
+                          adjustAssignmentsToFirstManager.length +
+                          adjustAssignmentsToSecondManager.length}{" "}
+                        {isEnglish ? "estimated stops after adjustment" : "paradas estimadas após o ajuste"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={closeRouteAdjustmentModal}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-slate-200"
+                  >
+                    {isEnglish ? "Cancel" : "Cancelar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRouteAdjustmentSubmit}
+                    disabled={
+                      pending ||
+                      routeAdjustmentModal.firstPropertyManagerId ===
+                        routeAdjustmentModal.secondPropertyManagerId ||
+                      (routeAdjustmentModal.type === "adjust_between" &&
+                        adjustAssignmentsToFirstManager.length === 0 &&
+                        adjustAssignmentsToSecondManager.length === 0)
+                    }
+                    className={topActionButtonClass}
+                  >
+                    {routeAdjustmentModal.type === "swap_full"
+                      ? isEnglish
+                        ? "Confirm full route swap"
+                        : "Confirmar troca de rota completa"
+                      : isEnglish
+                        ? "Apply route adjustment"
+                        : "Aplicar ajuste entre rotas"}
                   </button>
                 </div>
               </div>
@@ -2118,6 +2704,23 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           </div>
                         </div>
                       </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => openSwapFullModal(manager.id)}
+                          className={topActionButtonClass}
+                        >
+                          {isEnglish ? "Swap Full Route" : "Trocar rota completa"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openAdjustBetweenModal(manager.id)}
+                          className={topActionButtonClass}
+                        >
+                          {isEnglish ? "Adjust Routes Between PMs" : "Ajustar rotas entre PMs"}
+                        </button>
                       </div>
 
                       <div className="mt-auto pt-4">

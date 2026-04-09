@@ -690,9 +690,15 @@ export async function updateOperationAssignment(
     },
   });
 
+  await finalizeOperationRunAssignmentChanges(assignment.operationRunId);
+
+  return assignment;
+}
+
+async function finalizeOperationRunAssignmentChanges(operationRunId: string) {
   await prisma.operationRun.update({
     where: {
-      id: assignment.operationRunId,
+      id: operationRunId,
     },
     data: {
       routeAnalysisJson: null,
@@ -703,14 +709,167 @@ export async function updateOperationAssignment(
   });
 
   if (hasHereRoutingApiKey()) {
-    const usedHereResequencing = await resequenceOperationRunWithHere(assignment.operationRunId);
+    const usedHereResequencing = await resequenceOperationRunWithHere(operationRunId);
 
     if (!usedHereResequencing) {
-      await resequenceOperationRun(assignment.operationRunId);
+      await resequenceOperationRun(operationRunId);
     }
   } else {
-    await resequenceOperationRun(assignment.operationRunId);
+    await resequenceOperationRun(operationRunId);
+  }
+}
+
+async function applyOperationAssignmentBatch(
+  operationRunId: string,
+  updates: Array<{ assignmentId: string; checkinId: string; propertyManagerId: string }>,
+) {
+  if (updates.length === 0) {
+    return;
   }
 
-  return assignment;
+  await prisma.$transaction([
+    ...updates.map((update) =>
+      prisma.operationAssignment.update({
+        where: {
+          id: update.assignmentId,
+        },
+        data: {
+          propertyManagerId: update.propertyManagerId,
+          source: "manual_override",
+        },
+      }),
+    ),
+    ...updates.map((update) =>
+      prisma.checkin.update({
+        where: {
+          id: update.checkinId,
+        },
+        data: {
+          propertyManagerId: update.propertyManagerId,
+          status: "assigned",
+        },
+      }),
+    ),
+  ]);
+
+  await finalizeOperationRunAssignmentChanges(operationRunId);
+}
+
+export async function swapOperationManagerRoutes(input: {
+  operationRunId: string;
+  firstPropertyManagerId: string;
+  secondPropertyManagerId: string;
+}) {
+  if (input.firstPropertyManagerId === input.secondPropertyManagerId) {
+    throw new Error("Selecione dois PMs diferentes para trocar a rota completa.");
+  }
+
+  const assignments = await prisma.operationAssignment.findMany({
+    where: {
+      operationRunId: input.operationRunId,
+      propertyManagerId: {
+        in: [input.firstPropertyManagerId, input.secondPropertyManagerId],
+      },
+    },
+    select: {
+      id: true,
+      checkinId: true,
+      propertyManagerId: true,
+    },
+  });
+
+  const hasFirstManager = assignments.some(
+    (assignment) => assignment.propertyManagerId === input.firstPropertyManagerId,
+  );
+  const hasSecondManager = assignments.some(
+    (assignment) => assignment.propertyManagerId === input.secondPropertyManagerId,
+  );
+
+  if (!hasFirstManager || !hasSecondManager) {
+    throw new Error("Os dois PMs precisam ter rota nesta operação para permitir a troca completa.");
+  }
+
+  const updates = assignments.map((assignment) => ({
+    assignmentId: assignment.id,
+    checkinId: assignment.checkinId,
+    propertyManagerId:
+      assignment.propertyManagerId === input.firstPropertyManagerId
+        ? input.secondPropertyManagerId
+        : input.firstPropertyManagerId,
+  }));
+
+  await applyOperationAssignmentBatch(input.operationRunId, updates);
+}
+
+export async function rebalanceOperationManagerRoutes(input: {
+  operationRunId: string;
+  firstPropertyManagerId: string;
+  secondPropertyManagerId: string;
+  assignmentIdsToFirstManager: string[];
+  assignmentIdsToSecondManager: string[];
+}) {
+  if (input.firstPropertyManagerId === input.secondPropertyManagerId) {
+    throw new Error("Selecione dois PMs diferentes para ajustar as rotas.");
+  }
+
+  const assignmentIds = Array.from(
+    new Set([...input.assignmentIdsToFirstManager, ...input.assignmentIdsToSecondManager]),
+  );
+
+  if (assignmentIds.length === 0) {
+    throw new Error("Selecione pelo menos um check-in para ajustar entre as rotas.");
+  }
+
+  const assignments = await prisma.operationAssignment.findMany({
+    where: {
+      operationRunId: input.operationRunId,
+      id: {
+        in: assignmentIds,
+      },
+    },
+    select: {
+      id: true,
+      checkinId: true,
+      propertyManagerId: true,
+    },
+  });
+
+  if (assignments.length !== assignmentIds.length) {
+    throw new Error("Alguns check-ins selecionados não pertencem mais à operação atual.");
+  }
+
+  const assignmentsToFirstManager = new Set(input.assignmentIdsToFirstManager);
+  const assignmentsToSecondManager = new Set(input.assignmentIdsToSecondManager);
+
+  const updates = assignments.map((assignment) => {
+    const shouldMoveToFirstManager = assignmentsToFirstManager.has(assignment.id);
+    const shouldMoveToSecondManager = assignmentsToSecondManager.has(assignment.id);
+
+    if (shouldMoveToFirstManager && shouldMoveToSecondManager) {
+      throw new Error("O mesmo check-in não pode ser enviado para os dois PMs.");
+    }
+
+    if (!shouldMoveToFirstManager && !shouldMoveToSecondManager) {
+      throw new Error("Foi encontrado um check-in sem destino definido no ajuste em lote.");
+    }
+
+    const expectedCurrentManagerId = shouldMoveToFirstManager
+      ? input.secondPropertyManagerId
+      : input.firstPropertyManagerId;
+    const targetManagerId = shouldMoveToFirstManager
+      ? input.firstPropertyManagerId
+      : input.secondPropertyManagerId;
+
+    if (assignment.propertyManagerId !== expectedCurrentManagerId) {
+      throw new Error("Um ou mais check-ins já mudaram de PM. Atualize a tela e tente novamente.");
+    }
+
+    return {
+      assignmentId: assignment.id,
+      checkinId: assignment.checkinId,
+      propertyManagerId: targetManagerId,
+    };
+  });
+
+  await applyOperationAssignmentBatch(input.operationRunId, updates);
 }
