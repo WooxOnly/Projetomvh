@@ -482,7 +482,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                   {isEnglish ? "Tap / focus" : "Toque / foco"}
                 </p>
                 {activeSlice ? (
-                  <div className="mt-3 flex flex-col">
+                  <div className="mt-3 flex h-[8.75rem] flex-col overflow-y-auto pr-1 sm:h-[9.5rem]">
                     <h4 className="line-clamp-2 overflow-hidden text-lg font-semibold leading-6 text-white sm:text-xl sm:leading-7">
                       {activeSlice.label}
                     </h4>
@@ -497,11 +497,13 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                     </p>
                   </div>
                 ) : (
-                  <p className="mt-3 text-sm leading-6 text-slate-300">
-                    {isEnglish
-                      ? "Tap a slice or legend item to see the details."
-                      : "Toque em uma fatia ou item da legenda para ver os detalhes."}
-                  </p>
+                  <div className="mt-3 flex h-[8.75rem] items-start sm:h-[9.5rem]">
+                    <p className="text-sm leading-6 text-slate-300">
+                      {isEnglish
+                        ? "Tap a slice or legend item to see the details."
+                        : "Toque em uma fatia ou item da legenda para ver os detalhes."}
+                    </p>
+                  </div>
                 )}
               </div>
 
