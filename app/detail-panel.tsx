@@ -512,7 +512,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                   {isEnglish ? "Legend" : "Legenda"}
                 </p>
                 <div
-                  className="mt-4 grid max-h-[22rem] gap-2 overflow-y-auto pr-1 sm:max-h-[30rem] sm:pr-2 md:grid-cols-2"
+                  className="mt-4 grid gap-2 pr-1 sm:max-h-[30rem] sm:overflow-y-auto sm:pr-2 md:grid-cols-2"
                   onMouseLeave={() => setActiveSliceId(null)}
                 >
                   {chartData.legendItems.map((slice) => (
