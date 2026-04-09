@@ -70,6 +70,17 @@ function getKnownRoutePoint(
   return null;
 }
 
+function areSamePoint(
+  left: { lat: number | null; lng: number | null } | null | undefined,
+  right: { lat: number | null; lng: number | null } | null | undefined,
+) {
+  if (!hasCoordinates(left) || !hasCoordinates(right)) {
+    return false;
+  }
+
+  return Math.abs(left!.lat! - right!.lat!) < 0.000001 && Math.abs(left!.lng! - right!.lng!) < 0.000001;
+}
+
 function cleanGeocodeString(value: string | null | undefined) {
   const normalized = value?.trim();
   return normalized ? normalized : null;
@@ -1043,6 +1054,76 @@ export async function ensureOperationRouteCoordinates(operationRunId: string) {
   for (const assignment of assignments) {
     await geocodeCheckin(assignment.checkin.id);
   }
+}
+
+export async function cleanupUploadInheritedCondominiumCoordinates(uploadId: string) {
+  const checkins = await prisma.checkin.findMany({
+    where: {
+      spreadsheetUploadId: uploadId,
+      lat: { not: null },
+      lng: { not: null },
+      condominium: {
+        lat: { not: null },
+        lng: { not: null },
+      },
+    },
+    select: {
+      id: true,
+      lat: true,
+      lng: true,
+      property: {
+        select: {
+          lat: true,
+          lng: true,
+        },
+      },
+      condominium: {
+        select: {
+          lat: true,
+          lng: true,
+        },
+      },
+    },
+  });
+
+  const suspiciousCheckins = checkins.filter((checkin) => {
+    if (!areSamePoint(checkin, checkin.condominium)) {
+      return false;
+    }
+
+    return !areSamePoint(checkin, checkin.property);
+  });
+
+  if (suspiciousCheckins.length === 0) {
+    return 0;
+  }
+
+  await prisma.$transaction([
+    ...suspiciousCheckins.map((checkin) =>
+      prisma.checkin.update({
+        where: {
+          id: checkin.id,
+        },
+        data: {
+          lat: null,
+          lng: null,
+        },
+      }),
+    ),
+    prisma.operationRun.updateMany({
+      where: {
+        spreadsheetUploadId: uploadId,
+      },
+      data: {
+        routeAnalysisJson: null,
+        routeAnalysisSource: null,
+        routeAnalysisModel: null,
+        routeAnalysisGeneratedAt: null,
+      },
+    }),
+  ]);
+
+  return suspiciousCheckins.length;
 }
 
 type UploadLocationEnrichmentOptions = {

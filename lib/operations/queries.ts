@@ -6,6 +6,7 @@ import { countPendingLocationReviews } from "@/lib/location-review";
 import { listOffices } from "@/lib/offices";
 import { cleanupExpiredOperationalData } from "@/lib/operations/cleanup";
 import { listCondominiums, listProperties, listPropertyManagers } from "@/lib/operations/catalog";
+import { cleanupUploadInheritedCondominiumCoordinates } from "@/lib/operations/route-geocoding";
 import {
   getActiveUploadOfficeBreakdown,
   getActiveUploadSummary,
@@ -75,11 +76,24 @@ async function getLatestOperationRunBase() {
     },
     select: {
       id: true,
+      spreadsheetUploadId: true,
     },
   });
 
   if (!latestRun) {
     return null;
+  }
+
+  const cleanedInheritedCoordinates = await cleanupUploadInheritedCondominiumCoordinates(
+    latestRun.spreadsheetUploadId,
+  );
+
+  if (cleanedInheritedCoordinates > 0) {
+    console.info(
+      "Cleaned inherited condominium coordinates from upload",
+      latestRun.spreadsheetUploadId,
+      cleanedInheritedCoordinates,
+    );
   }
 
   return prisma.operationRun.findFirst({
