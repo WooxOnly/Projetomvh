@@ -86,6 +86,52 @@ function cleanGeocodeString(value: string | null | undefined) {
   return normalized ? normalized : null;
 }
 
+function sanitizeZipCode(value: string | null | undefined) {
+  const normalized = cleanGeocodeString(value);
+  if (!normalized) {
+    return null;
+  }
+
+  const match = normalized.match(/\b\d{5}\b/u);
+  return match?.[0] ?? null;
+}
+
+function buildGeocodeQueryVariants(input: {
+  normalizedAddress: string | null;
+  label: string | null;
+  condominiumName: string | null;
+  condominium?: {
+    address?: string | null;
+    city?: string | null;
+    state?: string | null;
+    zipCode?: string | null;
+  } | null;
+}) {
+  const address = cleanGeocodeString(input.normalizedAddress);
+  const label = cleanGeocodeString(input.label);
+  const condominiumName = cleanGeocodeString(input.condominiumName);
+  const city = cleanGeocodeString(input.condominium?.city);
+  const state = cleanGeocodeString(input.condominium?.state);
+  const zipCode = sanitizeZipCode(input.condominium?.zipCode);
+  const condominiumAddress = cleanGeocodeString(input.condominium?.address);
+
+  return Array.from(
+    new Set(
+      [
+        composeAddress([address, city, state, zipCode, "USA"]),
+        composeAddress([address, state, zipCode, "USA"]),
+        composeAddress([address, city, state, "USA"]),
+        composeAddress([address, condominiumName, state, zipCode, "USA"]),
+        composeAddress([address, condominiumName, state, "USA"]),
+        composeAddress([label, condominiumName, state, zipCode, "USA"]),
+        composeAddress([label, condominiumName, state, "USA"]),
+        composeAddress([address, zipCode, "USA"]),
+        composeAddress([condominiumAddress, city, state, zipCode, "USA"]),
+      ].filter((query): query is string => Boolean(query)),
+    ),
+  );
+}
+
 function buildCondominiumGeoContext(value: {
   nameOriginal?: string | null;
   address?: string | null;
@@ -104,7 +150,7 @@ function buildCondominiumGeoContext(value: {
     preferredTerms: [
       cleanGeocodeString(value.city),
       cleanGeocodeString(value.state),
-      cleanGeocodeString(value.zipCode),
+      sanitizeZipCode(value.zipCode),
       cleanGeocodeString(value.address),
       cleanGeocodeString(value.nameOriginal),
     ].filter((term): term is string => Boolean(term)),
@@ -314,18 +360,61 @@ async function confirmAndPersistLocation(input: {
   entityType: LocationReviewEntityType;
   entityId: string;
   label: string | null;
-  query: string;
+  query: string | string[];
   normalizedAddress: string | null;
   condominiumName: string | null;
   context: CondominiumGeoContext | null;
 }) {
-  const candidates = await geocodeAddressCandidates(input.query, {
-    restrictToServiceArea: true,
-    requiredLocality: input.context?.requiredLocality ?? null,
-    preferredTerms: input.context?.preferredTerms ?? [],
-    preferredPoint: input.context?.preferredPoint ?? null,
-    maxDistanceFromPreferredMiles: input.context?.preferredPoint ? 10 : undefined,
-  });
+  const queries = Array.from(
+    new Set(
+      (Array.isArray(input.query) ? input.query : [input.query])
+        .map((query) => cleanGeocodeString(query))
+        .filter((query): query is string => Boolean(query)),
+    ),
+  );
+
+  let selectedQuery = queries[0] ?? null;
+  let selectedContext = input.context;
+  let candidates: GeocodeCandidate[] = [];
+
+  for (const query of queries) {
+    const strictCandidates = await geocodeAddressCandidates(query, {
+      restrictToServiceArea: true,
+      requiredLocality: input.context?.requiredLocality ?? null,
+      preferredTerms: input.context?.preferredTerms ?? [],
+      preferredPoint: input.context?.preferredPoint ?? null,
+      maxDistanceFromPreferredMiles: input.context?.preferredPoint ? 10 : undefined,
+    });
+
+    if (strictCandidates.length > 0) {
+      selectedQuery = query;
+      selectedContext = input.context;
+      candidates = strictCandidates;
+      break;
+    }
+
+    if (!input.context?.requiredLocality) {
+      continue;
+    }
+
+    const relaxedCandidates = await geocodeAddressCandidates(query, {
+      restrictToServiceArea: true,
+      requiredLocality: null,
+      preferredTerms: input.context.preferredTerms,
+      preferredPoint: input.context.preferredPoint,
+      maxDistanceFromPreferredMiles: input.context.preferredPoint ? 10 : undefined,
+    });
+
+    if (relaxedCandidates.length > 0) {
+      selectedQuery = query;
+      selectedContext = {
+        ...input.context,
+        requiredLocality: null,
+      };
+      candidates = relaxedCandidates;
+      break;
+    }
+  }
 
   const currentSelection = candidates[0] ?? null;
   if (!currentSelection) {
@@ -333,10 +422,10 @@ async function confirmAndPersistLocation(input: {
       entityType: input.entityType,
       entityId: input.entityId,
       title: getLocationReviewTitle(input.entityType, input.label),
-      originalQuery: input.query,
+      originalQuery: selectedQuery,
       normalizedAddress: input.normalizedAddress,
       condominiumName: input.condominiumName,
-      condominiumCity: input.context?.requiredLocality ?? null,
+      condominiumCity: selectedContext?.requiredLocality ?? null,
       condominiumState: null,
       condominiumZipCode: null,
       confidence: null,
@@ -351,10 +440,12 @@ async function confirmAndPersistLocation(input: {
   const needsConfirmation = shouldRequireLocationConfirmation(candidates, input.context);
   const confirmation = needsConfirmation
     ? await confirmLocationCandidateWithAi({
-        ...input,
-        candidates,
-        currentSelection,
-      })
+      ...input,
+      query: selectedQuery ?? "",
+      context: selectedContext,
+      candidates,
+      currentSelection,
+    })
     : ({
         selectedCandidate: currentSelection,
         confidence: 0.95,
@@ -368,10 +459,10 @@ async function confirmAndPersistLocation(input: {
       entityType: input.entityType,
       entityId: input.entityId,
       title: getLocationReviewTitle(input.entityType, input.label),
-      originalQuery: input.query,
+      originalQuery: selectedQuery,
       normalizedAddress: input.normalizedAddress,
       condominiumName: input.condominiumName,
-      condominiumCity: input.context?.requiredLocality ?? null,
+      condominiumCity: selectedContext?.requiredLocality ?? null,
       condominiumState: null,
       condominiumZipCode: null,
       confidence: confirmation.confidence,
@@ -726,19 +817,26 @@ async function geocodeProperty(propertyId: string) {
     return property;
   }
 
+  const condominium = property.condominium
+    ? mergeKnownCondominiumContext({
+      ...property.condominium,
+      zipCode: sanitizeZipCode(property.condominium.zipCode) ?? property.condominium.zipCode,
+    })
+    : null;
+
   await clearInvalidCoordinates("property", property.id, property);
 
   const condominiumReferencePoint =
-    property.condominium?.id != null
-      ? (hasCoordinates(property.condominium)
-          ? { lat: property.condominium.lat!, lng: property.condominium.lng! }
-          : await getCondominiumReferencePoint(property.condominium.id))
+    condominium?.id != null
+      ? (hasCoordinates(condominium)
+        ? { lat: condominium.lat!, lng: condominium.lng! }
+        : await getCondominiumReferencePoint(condominium.id))
       : null;
-  const condominiumGeoContext = property.condominium
+  const condominiumGeoContext = condominium
     ? buildCondominiumGeoContext({
-        ...property.condominium,
-        lat: condominiumReferencePoint?.lat ?? property.condominium.lat,
-        lng: condominiumReferencePoint?.lng ?? property.condominium.lng,
+      ...condominium,
+      lat: condominiumReferencePoint?.lat ?? condominium.lat,
+      lng: condominiumReferencePoint?.lng ?? condominium.lng,
       })
     : null;
 
@@ -762,22 +860,12 @@ async function geocodeProperty(propertyId: string) {
     return property;
   }
 
-  const query =
-    composeAddress([
-      property.address,
-      property.condominium?.city,
-      property.condominium?.state,
-      property.condominium?.zipCode,
-      "USA",
-    ]) ||
-    composeAddress([
-      property.nameOriginal,
-      property.condominium?.nameOriginal,
-      property.condominium?.city,
-      property.condominium?.state,
-      "Florida",
-      "USA",
-    ]);
+  const query = buildGeocodeQueryVariants({
+    normalizedAddress: property.address,
+    label: property.nameOriginal,
+    condominiumName: condominium?.nameOriginal ?? null,
+    condominium,
+  });
 
   const point = await confirmAndPersistLocation({
     entityType: LOCATION_REVIEW_ENTITY_TYPE.PROPERTY,
@@ -785,7 +873,7 @@ async function geocodeProperty(propertyId: string) {
     label: property.nameOriginal,
     query,
     normalizedAddress: property.address,
-    condominiumName: property.condominium?.nameOriginal ?? null,
+    condominiumName: condominium?.nameOriginal ?? null,
     context: condominiumGeoContext,
   });
 
@@ -867,6 +955,13 @@ async function geocodeCheckin(checkinId: string) {
     return null;
   }
 
+  const condominium = checkin.condominium
+    ? mergeKnownCondominiumContext({
+      ...checkin.condominium,
+      zipCode: sanitizeZipCode(checkin.condominium.zipCode) ?? checkin.condominium.zipCode,
+    })
+    : null;
+
   await clearInvalidCoordinates("checkin", checkin.id, checkin);
 
   if (hasCoordinates(checkin)) {
@@ -886,27 +981,17 @@ async function geocodeCheckin(checkinId: string) {
   let point = propertyPoint ?? getKnownRoutePoint(checkin.property);
 
   if (!point) {
-    const query =
-      composeAddress([
-        checkin.address,
-        checkin.condominium?.city,
-        checkin.condominium?.state,
-        checkin.condominium?.zipCode,
-        "USA",
-      ]) ||
-      composeAddress([
-        checkin.propertyName,
-        checkin.condominiumName,
-        checkin.condominium?.city,
-        checkin.condominium?.state,
-        "Florida",
-        "USA",
-      ]);
+    const query = buildGeocodeQueryVariants({
+      normalizedAddress: checkin.address,
+      label: checkin.propertyName,
+      condominiumName: checkin.condominiumName,
+      condominium,
+    });
 
-    const condominiumGeoContext = checkin.condominium
-      ? buildCondominiumGeoContext(checkin.condominium)
+    const condominiumGeoContext = condominium
+      ? buildCondominiumGeoContext(condominium)
       : null;
-    const geocoded = query
+    const geocoded = query.length > 0
       ? await confirmAndPersistLocation({
           entityType: LOCATION_REVIEW_ENTITY_TYPE.CHECKIN,
           entityId: checkin.id,
