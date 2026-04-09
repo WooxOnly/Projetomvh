@@ -29,6 +29,12 @@ body {
   overflow-x: hidden;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 button {
   transition:
     transform 160ms ease,
@@ -144,4 +150,11 @@ input[type="file"]:active::-webkit-file-upload-button {
 
 .mobile-safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+.mobile-width-guard {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
 }

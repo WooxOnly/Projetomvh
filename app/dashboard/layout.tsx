@@ -19,9 +19,9 @@ export default async function DashboardLayout({
   triggerActiveUploadLocationMaintenance();
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#1f2937,_#020617_55%)] px-3 py-4 text-white sm:px-4 sm:py-6 lg:py-10">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-7xl items-start">
-        <section className="mobile-safe-bottom w-full rounded-[1.5rem] border border-white/10 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur sm:rounded-[2rem] sm:p-6 lg:p-8">
+    <main className="mobile-width-guard min-h-screen bg-[radial-gradient(circle_at_top,_#1f2937,_#020617_55%)] px-3 py-4 text-white sm:px-4 sm:py-6 lg:py-10">
+      <div className="mobile-width-guard mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-7xl items-start">
+        <section className="mobile-safe-bottom mobile-width-guard w-full rounded-[1.5rem] border border-white/10 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur sm:rounded-[2rem] sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 border-b border-white/10 pb-5 md:flex-row md:items-center md:justify-between md:pb-6">
             <div className="space-y-4">
               <div>

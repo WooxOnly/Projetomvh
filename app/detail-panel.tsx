@@ -268,8 +268,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
+    <div className="mobile-width-guard space-y-4 sm:space-y-6">
+      <section className="mobile-width-guard overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
         <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
           {isEnglish ? "Details" : "Detalhamento"}
         </p>
@@ -305,7 +305,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
 
       {data.activeUploadOfficeBreakdown ? (
         <>
-          <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
+          <section className="mobile-width-guard overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-3xl">
                 <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
@@ -342,8 +342,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
             </div>
           </section>
 
-          <section className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-3 sm:gap-4 sm:rounded-[1.75rem] sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div>
+          <section className="mobile-width-guard grid gap-3 overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-3 sm:gap-4 sm:rounded-[1.75rem] sm:p-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <div className="min-w-0">
               <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:gap-3">
                 <button
                   type="button"
@@ -391,7 +391,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 </div>
               ) : null}
 
-              <div className="mt-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-3 sm:mt-6 sm:rounded-[1.75rem] sm:p-6">
+              <div className="mobile-width-guard mt-4 overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/5 p-3 sm:mt-6 sm:rounded-[1.75rem] sm:p-6">
                 {chartData.slices.length > 0 ? (
                   <div
                     className="relative flex items-center justify-center"
@@ -476,8 +476,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
               </div>
             </div>
 
-            <div className="space-y-3 sm:space-y-4">
-              <div className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4 sm:rounded-[1.5rem] sm:p-5">
+            <div className="min-w-0 space-y-3 sm:space-y-4">
+              <div className="mobile-width-guard overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/5 p-4 sm:rounded-[1.5rem] sm:p-5">
                 <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
                   {isEnglish ? "Tap / focus" : "Toque / foco"}
                 </p>
@@ -505,7 +505,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 )}
               </div>
 
-              <div className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4 sm:rounded-[1.5rem] sm:p-5">
+              <div className="mobile-width-guard overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/5 p-4 sm:rounded-[1.5rem] sm:p-5">
                 <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
                   {isEnglish ? "Legend" : "Legenda"}
                 </p>
@@ -550,7 +550,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
+          <section className="mobile-width-guard overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
               {isEnglish ? "Details by office" : "Detalhamento por escritório"}
             </p>
@@ -571,7 +571,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 return (
                   <div
                     key={office.officeId ?? office.officeName}
-                    className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5"
+                    className="mobile-width-guard overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5"
                   >
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div>
@@ -639,7 +639,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                       </table>
                     </div>
 
-                    <div className="mt-5 space-y-3 md:hidden">
+                    <div className="mobile-width-guard mt-5 space-y-3 md:hidden">
                       {office.regions.flatMap((region) =>
                         region.condominiums.map((condominium) => (
                           <div
@@ -675,7 +675,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
           </section>
         </>
       ) : (
-        <section className="rounded-[1.75rem] border border-dashed border-white/15 bg-slate-950/30 p-8 text-sm text-slate-300">
+        <section className="mobile-width-guard overflow-hidden rounded-[1.75rem] border border-dashed border-white/15 bg-slate-950/30 p-8 text-sm text-slate-300">
           {isEnglish
             ? "No upload has been processed yet. As soon as a file is imported, this page will show the visual details with charts, office view, and resort view."
             : "Nenhum upload foi processado ainda. Assim que um arquivo for importado, esta aba passará a mostrar o detalhamento visual com gráficos, leitura por escritório e leitura por condomínios."}
