@@ -131,6 +131,7 @@ type DashboardShellProps = {
       decisionMode: string;
       preventMixedCondominiumOffices: boolean;
       forceEqualCheckins: boolean;
+      endRouteNearOffice: boolean;
       status: string;
       totalCheckins: number;
       totalAssignments: number;

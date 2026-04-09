@@ -69,6 +69,7 @@ export async function POST(request: Request) {
       availablePropertyManagerIds,
       preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
       forceEqualCheckins: latestOperationRun.forceEqualCheckins,
+      endRouteNearOffice: latestOperationRun.endRouteNearOffice,
       useHereRouting: payload.useHereRouting === true,
       temporaryOfficeByManagerId: (() => {
         const entries: Record<string, string> = {};

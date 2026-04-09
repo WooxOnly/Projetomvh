@@ -97,6 +97,7 @@ async function getLatestOperationRunBase(options?: { ensureCoordinates?: boolean
       decisionMode: true,
       preventMixedCondominiumOffices: true,
       forceEqualCheckins: true,
+      endRouteNearOffice: true,
       status: true,
       routeAnalysisJson: true,
       routeAnalysisSource: true,

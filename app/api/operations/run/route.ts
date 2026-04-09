@@ -15,6 +15,7 @@ export async function POST(request: Request) {
       availablePropertyManagerIds?: string[];
       preventMixedCondominiumOffices?: boolean;
       forceEqualCheckins?: boolean;
+      endRouteNearOffice?: boolean;
       useHereRouting?: boolean;
       temporaryOfficeByManagerId?: Record<string, string>;
     };
@@ -28,7 +29,8 @@ export async function POST(request: Request) {
       decisionMode: payload.decisionMode === "override" ? "override" : "default",
       availablePropertyManagerIds: payload.availablePropertyManagerIds ?? [],
       preventMixedCondominiumOffices: payload.preventMixedCondominiumOffices !== false,
-      forceEqualCheckins: payload.forceEqualCheckins === true,
+      forceEqualCheckins: payload.forceEqualCheckins !== false,
+      endRouteNearOffice: payload.endRouteNearOffice !== false,
       useHereRouting: payload.useHereRouting === true,
       temporaryOfficeByManagerId: payload.temporaryOfficeByManagerId ?? {},
     });

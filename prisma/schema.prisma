@@ -197,6 +197,7 @@ model OperationRun {
   decisionMode      String
   preventMixedCondominiumOffices Boolean   @default(true)
   forceEqualCheckins Boolean               @default(false)
+  endRouteNearOffice Boolean               @default(true)
   status            String                 @default("ready")
   notes             String?
   routeAnalysisJson String?

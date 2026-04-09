@@ -576,6 +576,15 @@ export async function resequenceOperationRunWithHere(operationRunId: string) {
     return false;
   }
 
+  const operationRun = await prisma.operationRun.findUnique({
+    where: {
+      id: operationRunId,
+    },
+    select: {
+      endRouteNearOffice: true,
+    },
+  });
+
   const assignments = await prisma.operationAssignment.findMany({
     where: {
       operationRunId,
@@ -618,7 +627,11 @@ export async function resequenceOperationRunWithHere(operationRunId: string) {
 
   for (const managerAssignments of byManager.values()) {
     const sortedAssignments = await sortAssignmentsForRouteWithHere(engine, managerAssignments);
-    sortedAssignments.forEach((assignment, index) => {
+    const effectiveAssignments = operationRun?.endRouteNearOffice
+      ? [...sortedAssignments].reverse()
+      : sortedAssignments;
+
+    effectiveAssignments.forEach((assignment, index) => {
       updates.push(
         prisma.operationAssignment.update({
           where: { id: assignment.id },

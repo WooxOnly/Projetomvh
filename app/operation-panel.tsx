@@ -60,6 +60,7 @@ type OperationPanelProps = {
       decisionMode: string;
       preventMixedCondominiumOffices: boolean;
       forceEqualCheckins: boolean;
+      endRouteNearOffice: boolean;
       status: string;
       totalAssignments: number;
       createdAt: Date | string;
@@ -727,6 +728,7 @@ async function runOperation(body: {
   availablePropertyManagerIds: string[];
   preventMixedCondominiumOffices: boolean;
   forceEqualCheckins: boolean;
+  endRouteNearOffice: boolean;
   temporaryOfficeByManagerId: Record<string, string>;
 }) {
   const response = await fetch("/api/operations/run", {
@@ -816,7 +818,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     decisionMode: "default",
     availablePropertyManagerIds: [] as string[],
     preventMixedCondominiumOffices: true,
-    forceEqualCheckins: false,
+    forceEqualCheckins: true,
+    endRouteNearOffice: true,
     temporaryOfficeByManagerId: {} as Record<string, string>,
   });
   const [cooldownNow, setCooldownNow] = useState(() => Date.now());
@@ -1039,6 +1042,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
           ),
           preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
           forceEqualCheckins: latestOperationRun.forceEqualCheckins,
+          endRouteNearOffice: latestOperationRun.endRouteNearOffice,
           temporaryOfficeByManagerId: Object.fromEntries(
             latestOperationRun.availablePMs
               .filter((item) => item.temporaryOfficeId)
@@ -1432,6 +1436,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   availablePropertyManagerIds: form.availablePropertyManagerIds,
                   preventMixedCondominiumOffices: form.preventMixedCondominiumOffices,
                   forceEqualCheckins: form.forceEqualCheckins,
+                  endRouteNearOffice: form.endRouteNearOffice,
                   temporaryOfficeByManagerId: form.temporaryOfficeByManagerId,
                 });
                 const payload = await fetchRouteAnalysis(true);
@@ -1653,6 +1658,23 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   />
                   <span>
                     {isEnglish ? "Force equal check-ins" : "Forçar igualar check-ins"}
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/8 px-3 py-2 text-xs text-slate-100">
+                  <input
+                    type="checkbox"
+                    checked={form.endRouteNearOffice}
+                    onChange={(event) => {
+                      setHasManualSelectionChanges(true);
+                      setHasJustRunOperation(false);
+                      setForm((current) => ({
+                        ...current,
+                        endRouteNearOffice: event.target.checked,
+                      }));
+                    }}
+                  />
+                  <span>
+                    {isEnglish ? "End route near office" : "Finalizar rota perto do escritório"}
                   </span>
                 </label>
               </div>

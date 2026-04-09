@@ -21,6 +21,7 @@ type RunOperationInput = {
   availablePropertyManagerIds?: string[];
   preventMixedCondominiumOffices?: boolean;
   forceEqualCheckins?: boolean;
+  endRouteNearOffice?: boolean;
   useHereRouting?: boolean;
   temporaryOfficeByManagerId?: Record<string, string>;
 };
@@ -185,7 +186,7 @@ export async function runDailyOperation(input: RunOperationInput) {
       availableManagers: managersForOperation,
       decisionMode: input.decisionMode,
       preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
-      forceEqualCheckins: input.forceEqualCheckins ?? false,
+      forceEqualCheckins: input.forceEqualCheckins ?? true,
     }),
     upload.checkins,
   );
@@ -198,7 +199,7 @@ export async function runDailyOperation(input: RunOperationInput) {
             availableManagers: managersForOperation,
             decisionMode: input.decisionMode,
             preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
-            forceEqualCheckins: input.forceEqualCheckins ?? false,
+            forceEqualCheckins: input.forceEqualCheckins ?? true,
           },
           basePlan,
         )
@@ -210,7 +211,7 @@ export async function runDailyOperation(input: RunOperationInput) {
       availableManagers: managersForOperation,
       decisionMode: input.decisionMode,
       preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
-      forceEqualCheckins: input.forceEqualCheckins ?? false,
+      forceEqualCheckins: input.forceEqualCheckins ?? true,
     },
   );
 
@@ -222,7 +223,8 @@ export async function runDailyOperation(input: RunOperationInput) {
       operationDate: upload.operationDate,
       decisionMode: input.decisionMode,
       preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
-      forceEqualCheckins: input.forceEqualCheckins ?? false,
+      forceEqualCheckins: input.forceEqualCheckins ?? true,
+      endRouteNearOffice: input.endRouteNearOffice ?? true,
       status: "ready",
       notes: input.useHereRouting ? HERE_ROUTING_NOTE : LOCAL_ROUTING_NOTE,
       routeAnalysisJson: null,
@@ -292,10 +294,10 @@ export async function runDailyOperation(input: RunOperationInput) {
   if (input.useHereRouting && hasHereRoutingApiKey()) {
     const usedHereResequencing = await resequenceOperationRunWithHere(operationRun.id);
 
-    if (!usedHereResequencing && !plan.every((assignment) => assignment.source === "ai_distribution")) {
+    if (!usedHereResequencing) {
       await resequenceOperationRun(operationRun.id);
     }
-  } else if (!plan.every((assignment) => assignment.source === "ai_distribution")) {
+  } else {
     await resequenceOperationRun(operationRun.id);
   }
 
@@ -592,6 +594,15 @@ function sortAssignmentsForRoute<T extends RouteSortableAssignment>(assignments:
 }
 
 export async function resequenceOperationRun(operationRunId: string) {
+  const operationRun = await prisma.operationRun.findUnique({
+    where: {
+      id: operationRunId,
+    },
+    select: {
+      endRouteNearOffice: true,
+    },
+  });
+
   const assignments = await prisma.operationAssignment.findMany({
     where: {
       operationRunId,
@@ -631,8 +642,13 @@ export async function resequenceOperationRun(operationRunId: string) {
   }
 
   await prisma.$transaction(
-    Array.from(byManager.values()).flatMap((managerAssignments) =>
-      sortAssignmentsForRoute(managerAssignments).map((assignment, index) =>
+    Array.from(byManager.values()).flatMap((managerAssignments) => {
+      const sortedAssignments = sortAssignmentsForRoute(managerAssignments);
+      const effectiveAssignments = operationRun?.endRouteNearOffice
+        ? [...sortedAssignments].reverse()
+        : sortedAssignments;
+
+      return effectiveAssignments.map((assignment, index) =>
         prisma.operationAssignment.update({
           where: {
             id: assignment.id,
@@ -641,8 +657,8 @@ export async function resequenceOperationRun(operationRunId: string) {
             routeOrder: index + 1,
           },
         }),
-      ),
-    ),
+      );
+    }),
   );
 }
 
