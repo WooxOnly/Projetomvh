@@ -156,6 +156,36 @@ function alphabeticalSort<T extends RouteSortableAssignment>(assignments: T[]) {
   });
 }
 
+function getAssignmentBlockKey<T extends RouteSortableAssignment>(assignment: T) {
+  const condominium = normalizeText(assignment.checkin.condominiumName ?? "");
+  if (condominium) {
+    return `condominium:${condominium}`;
+  }
+
+  const address = normalizeText(assignment.checkin.address ?? "");
+  if (address) {
+    return `address:${address}`;
+  }
+
+  const property = normalizeText(assignment.checkin.propertyName ?? "");
+  if (property) {
+    return `property:${property}`;
+  }
+
+  return `assignment:${assignment.id}`;
+}
+
+function getAssignmentPoint<T extends RouteSortableAssignment>(assignment: T): Point | null {
+  if (assignment.checkin.lat == null || assignment.checkin.lng == null) {
+    return null;
+  }
+
+  return {
+    lat: assignment.checkin.lat,
+    lng: assignment.checkin.lng,
+  };
+}
+
 class HereTravelEngine {
   private readonly apiKey = getHereApiKey();
   private readonly maxCalls: number;
@@ -461,19 +491,6 @@ async function sortAssignmentsForRouteWithHere<T extends RouteSortableAssignment
   assignments: T[],
 ) {
   const alphabeticallySorted = alphabeticalSort(assignments);
-  const withCoordinates = alphabeticallySorted.filter(
-    (assignment) => assignment.checkin.lat != null && assignment.checkin.lng != null,
-  );
-  const withoutCoordinates = alphabeticallySorted.filter(
-    (assignment) => assignment.checkin.lat == null || assignment.checkin.lng == null,
-  );
-
-  if (withCoordinates.length <= 1) {
-    return [...withCoordinates, ...withoutCoordinates];
-  }
-
-  const route: T[] = [];
-  const remaining = [...withCoordinates];
   const officeOriginRecord = alphabeticallySorted.find(
     (assignment) =>
       assignment.propertyManager?.office?.lat != null && assignment.propertyManager?.office?.lng != null,
@@ -482,34 +499,59 @@ async function sortAssignmentsForRouteWithHere<T extends RouteSortableAssignment
     officeOriginRecord?.lat != null && officeOriginRecord.lng != null
       ? { lat: officeOriginRecord.lat, lng: officeOriginRecord.lng }
       : null;
+  const blocks = Array.from(
+    alphabeticallySorted.reduce((groups, assignment) => {
+      const key = getAssignmentBlockKey(assignment);
+      const current = groups.get(key) ?? [];
+      current.push(assignment);
+      groups.set(key, current);
+      return groups;
+    }, new Map<string, T[]>()),
+  ).map(([key, blockAssignments]) => {
+    const sortedAssignments = alphabeticalSort(blockAssignments);
+    const representativePoint = getPointsCentroid(
+      blockAssignments
+        .map((assignment) => getAssignmentPoint(assignment))
+        .filter((value): value is Point => Boolean(value)),
+    );
 
+    return {
+      key,
+      assignments: sortedAssignments,
+      representativePoint,
+    };
+  });
+
+  const blocksWithCoordinates = blocks.filter((block) => block.representativePoint != null);
+  const blocksWithoutCoordinates = blocks.filter((block) => block.representativePoint == null);
+
+  if (blocksWithCoordinates.length === 0) {
+    return blocks.flatMap((block) => block.assignments);
+  }
+
+  const orderedBlocks: Array<(typeof blocksWithCoordinates)[number]> = [];
+  const remainingBlocks = [...blocksWithCoordinates];
   let currentPoint =
     officeOrigin ??
-    ({
-      lat: remaining[0]!.checkin.lat!,
-      lng: remaining[0]!.checkin.lng!,
-    } satisfies Point);
+    remainingBlocks[0]!.representativePoint ?? { lat: 0, lng: 0 };
 
-  while (remaining.length > 0) {
-    const candidateIndexes = remaining
-      .map((assignment, index) => ({
+  while (remainingBlocks.length > 0) {
+    const candidateIndexes = remainingBlocks
+      .map((block, index) => ({
         index,
-        approxMiles: haversineDistanceMiles(currentPoint, {
-          lat: assignment.checkin.lat!,
-          lng: assignment.checkin.lng!,
-        }),
+        approxMiles: haversineDistanceMiles(currentPoint, block.representativePoint!),
       }))
       .sort((left, right) => left.approxMiles - right.approxMiles)
-      .slice(0, Math.min(3, remaining.length));
+      .slice(0, Math.min(3, remainingBlocks.length));
 
     let bestIndex = candidateIndexes[0]?.index ?? 0;
     let bestMiles = Number.POSITIVE_INFINITY;
 
     for (const candidate of candidateIndexes) {
-      const summary = await engine.getRouteSummary(currentPoint, {
-        lat: remaining[candidate.index]!.checkin.lat!,
-        lng: remaining[candidate.index]!.checkin.lng!,
-      });
+      const summary = await engine.getRouteSummary(
+        currentPoint,
+        remainingBlocks[candidate.index]!.representativePoint!,
+      );
 
       if (summary.miles < bestMiles) {
         bestMiles = summary.miles;
@@ -517,19 +559,16 @@ async function sortAssignmentsForRouteWithHere<T extends RouteSortableAssignment
       }
     }
 
-    const [nextAssignment] = remaining.splice(bestIndex, 1);
-    if (!nextAssignment) {
+    const [nextBlock] = remainingBlocks.splice(bestIndex, 1);
+    if (!nextBlock) {
       break;
     }
 
-    route.push(nextAssignment);
-    currentPoint = {
-      lat: nextAssignment.checkin.lat!,
-      lng: nextAssignment.checkin.lng!,
-    };
+    orderedBlocks.push(nextBlock);
+    currentPoint = nextBlock.representativePoint!;
   }
 
-  return [...route, ...withoutCoordinates];
+  return [...orderedBlocks, ...blocksWithoutCoordinates].flatMap((block) => block.assignments);
 }
 
 export async function resequenceOperationRunWithHere(operationRunId: string) {
