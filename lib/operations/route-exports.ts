@@ -373,13 +373,6 @@ export async function buildOperationPdf(
       color: PDF_THEME.sectionLabel,
     });
 
-    page.drawLine({
-      start: { x: 150, y: startY + 4 },
-      end: { x: 806, y: startY + 4 },
-      thickness: 0.8,
-      color: PDF_THEME.pageBorder,
-    });
-
     const tableTop = startY - 26;
     page.drawRectangle({
       x: 30,
