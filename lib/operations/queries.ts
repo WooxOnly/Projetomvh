@@ -102,6 +102,7 @@ async function getLatestOperationRunBase() {
     },
     select: {
       id: true,
+      spreadsheetUploadId: true,
       operationDate: true,
       decisionMode: true,
       preventMixedCondominiumOffices: true,
@@ -190,6 +191,7 @@ async function getLatestOperationRunBase() {
               id: true,
               condominiumName: true,
               propertyName: true,
+              building: true,
               address: true,
               bedroomsSnapshot: true,
               integratorName: true,

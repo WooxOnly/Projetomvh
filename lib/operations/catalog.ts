@@ -240,6 +240,7 @@ export async function listProperties() {
       id: true,
       nameOriginal: true,
       nameNormalized: true,
+      building: true,
       address: true,
       bedrooms: true,
       hasBbqGrill: true,
@@ -269,6 +270,7 @@ export async function createProperty(input: Record<string, unknown>) {
     data: {
       nameOriginal,
       nameNormalized: normalizeText(nameOriginal),
+      building: getOptionalText(input.building),
       address: getOptionalText(input.address),
       bedrooms: getOptionalInt(input.bedrooms),
       hasBbqGrill: getOptionalBoolean(input.hasBbqGrill),
@@ -290,6 +292,7 @@ export async function updateProperty(id: string, input: Record<string, unknown>)
     data: {
       nameOriginal,
       nameNormalized: normalizeText(nameOriginal),
+      building: getOptionalText(input.building) ?? null,
       address: getOptionalText(input.address) ?? null,
       bedrooms: getOptionalInt(input.bedrooms) ?? null,
       hasBbqGrill: getOptionalBoolean(input.hasBbqGrill) ?? null,

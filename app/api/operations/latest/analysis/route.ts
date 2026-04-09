@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     after(async () => {
       try {
         await ensureActiveUploadLocationMaintenance({
-          uploadId: latestOperationRun.spreadsheetUpload.id,
+          uploadId: latestOperationRun.spreadsheetUploadId,
         });
       } catch (error) {
         console.error("Active upload maintenance from analysis failed", error);

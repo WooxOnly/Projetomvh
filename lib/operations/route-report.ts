@@ -1,3 +1,6 @@
+import { isWithinCentralFloridaServiceArea } from "@/lib/geocoding";
+import { formatOperationalAddress } from "@/lib/upload/normalize";
+
 type RouteOffice = {
   id: string;
   name: string;
@@ -33,6 +36,7 @@ type RouteAssignment = {
     id: string;
     condominiumName: string | null;
     propertyName: string | null;
+    building: string | null;
     address: string | null;
     bedroomsSnapshot: number | null;
     integratorName: string | null;
@@ -159,6 +163,13 @@ function formatOfficeAddress(office: RouteOffice) {
 
 function getClusterLabel(assignment: RouteAssignment) {
   return assignment.clusterLabel || assignment.checkin.condominiumName || "sem-cluster";
+}
+
+export function formatCheckinOperationalAddress(checkin: {
+  address: string | null;
+  building: string | null;
+}) {
+  return formatOperationalAddress(checkin.address, checkin.building);
 }
 
 function estimateRouteDistanceKm(assignments: RouteAssignment[]) {
@@ -518,7 +529,7 @@ export function buildWhatsAppPayload(
         messageLines.push(
           `${assignment.routeOrder}. ${assignment.checkin.propertyName ?? "Check-in sem imovel"}`,
           `Resort: ${assignment.checkin.condominiumName ?? "Nao informado"}`,
-          `Endereco: ${assignment.checkin.address ?? "Nao informado"}`,
+          `Endereco: ${formatCheckinOperationalAddress(assignment.checkin) ?? "Nao informado"}`,
           `Guest: ${assignment.checkin.guestName ?? "Nao informado"}`,
           `Door Code: ${assignment.checkin.doorCode ?? "Nao informado"}`,
           "",
@@ -541,4 +552,3 @@ export function buildWhatsAppPayload(
     managerMessages,
   } satisfies WhatsAppPayload;
 }
-import { isWithinCentralFloridaServiceArea } from "@/lib/geocoding";

@@ -101,6 +101,7 @@ model Property {
   id                       String   @id @default(cuid())
   nameOriginal             String
   nameNormalized           String
+  building                 String?
   address                  String?
   lat                      Float?
   lng                      Float?
@@ -165,6 +166,7 @@ model Checkin {
   condominiumName       String?
   propertyId            String?
   propertyName          String?
+  building              String?
   address               String?
   lat                   Float?
   lng                   Float?

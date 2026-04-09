@@ -56,6 +56,7 @@ type ResourcePanelProps = {
     properties: Array<{
       id: string;
       nameOriginal: string;
+      building: string | null;
       address: string | null;
       bedrooms: number | null;
       hasBbqGrill: boolean | null;
@@ -122,10 +123,11 @@ function emptyForm(kind: ResourcePanelProps["kind"]): FormState {
     };
   }
 
-  return {
-    id: "",
-    nameOriginal: "",
-    address: "",
+    return {
+      id: "",
+      nameOriginal: "",
+      building: "",
+      address: "",
     bedrooms: "",
     hasBbqGrill: "",
     notes: "",
@@ -280,6 +282,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
       const matchesText = matchesSearch(
         [
           property.nameOriginal,
+          property.building,
           property.address,
           property.notes,
           property.condominium?.nameOriginal,
@@ -527,12 +530,20 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
           placeholder={isEnglish ? "House / identifier" : "Casa / identificador"}
           className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
         />
-        <input
-          value={String(form.address ?? "")}
-          onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
-          placeholder={isEnglish ? "Address" : "Endereço"}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
-        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <input
+            value={String(form.building ?? "")}
+            onChange={(event) => setForm((current) => ({ ...current, building: event.target.value }))}
+            placeholder={isEnglish ? "Building" : "Building"}
+            className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
+          />
+          <input
+            value={String(form.address ?? "")}
+            onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
+            placeholder={isEnglish ? "Address without building" : "Endereço sem o building"}
+            className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
+          />
+        </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <input
             value={String(form.bedrooms ?? "")}
@@ -628,7 +639,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
     const property = item as ResourcePanelProps["data"]["properties"][number];
     return `${property.nameOriginal} | ${
       property.condominium?.nameOriginal || (isEnglish ? "No resort" : "Sem condomínio")
-    } | ${isEnglish ? "Bedrooms" : "Quartos"}: ${property.bedrooms ?? "N/D"} | BBQ: ${
+    } | ${isEnglish ? "Address" : "Endereço"}: ${[property.building, property.address].filter(Boolean).join("-") || "N/D"} | ${isEnglish ? "Bedrooms" : "Quartos"}: ${property.bedrooms ?? "N/D"} | BBQ: ${
       property.hasBbqGrill == null
         ? "N/D"
         : property.hasBbqGrill
@@ -694,6 +705,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
     return {
       id: property.id,
       nameOriginal: property.nameOriginal,
+      building: property.building ?? "",
       address: property.address ?? "",
       bedrooms: property.bedrooms?.toString() ?? "",
       hasBbqGrill: property.hasBbqGrill == null ? "" : property.hasBbqGrill ? "true" : "false",

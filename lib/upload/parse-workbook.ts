@@ -2,6 +2,8 @@ import * as XLSX from "xlsx";
 
 import {
   cleanText,
+  extractOperationalBuilding,
+  formatOperationalAddress,
   normalizeText,
   normalizeOperationalAddress,
   parseOperationDate,
@@ -65,6 +67,7 @@ type ParsedRow = {
   condominiumAddress: string;
   propertyName: string;
   propertyNormalized: string;
+  building: string;
   address: string;
   bedrooms: number | null;
   propertyManagerName: string;
@@ -323,7 +326,12 @@ export function parseWorkbook(buffer: Buffer, fallbackOperationDate: Date) {
         ),
         propertyName: operationalPropertyIdentifier || "Imovel sem identificador",
         propertyNormalized: normalizeText(operationalPropertyIdentifier || "Imovel sem identificador"),
-        address: cleanText(rawAddressValue) || cleanText(rawPropertyValue),
+        building: extractOperationalBuilding(cleanText(rawAddressValue) || cleanText(rawPropertyValue)),
+        address:
+          normalizeOperationalAddress(cleanText(rawAddressValue) || cleanText(rawPropertyValue)) ||
+          formatOperationalAddress(cleanText(rawAddressValue), extractOperationalBuilding(cleanText(rawAddressValue))) ||
+          formatOperationalAddress(cleanText(rawPropertyValue), extractOperationalBuilding(cleanText(rawPropertyValue))) ||
+          "",
         bedrooms: parseOptionalInt(mapping.bedrooms ? row[mapping.bedrooms] : ""),
         propertyManagerName: normalizedPropertyManagerName,
         propertyManagerNormalized: normalizeText(normalizedPropertyManagerName),

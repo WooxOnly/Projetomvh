@@ -33,6 +33,35 @@ export function normalizeOperationalAddress(value: unknown) {
     .trim();
 }
 
+export function extractOperationalBuilding(value: unknown) {
+  const text = cleanText(value);
+
+  if (!text) {
+    return "";
+  }
+
+  const match = text.match(/^\s*([^\s-]+)-\s*.+$/u);
+  return match?.[1]?.trim() ?? "";
+}
+
+export function formatOperationalAddress(
+  address: string | null | undefined,
+  building: string | null | undefined,
+) {
+  const normalizedAddress = cleanText(address);
+  const normalizedBuilding = cleanText(building);
+
+  if (!normalizedAddress) {
+    return normalizedBuilding;
+  }
+
+  if (!normalizedBuilding) {
+    return normalizedAddress;
+  }
+
+  return `${normalizedBuilding}-${normalizedAddress}`;
+}
+
 export function parseOptionalInt(value: unknown) {
   const text = cleanText(value);
 

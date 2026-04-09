@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 import { useLanguage } from "@/app/language-provider";
 import { RouteLiveMap } from "@/app/route-live-map";
 import { RouteOverviewMap } from "@/app/route-overview-map";
+import { formatOperationalAddress } from "@/lib/upload/normalize";
 
 type OperationPanelProps = {
   mode?: "availability" | "route" | "full";
@@ -117,6 +118,7 @@ type OperationPanelProps = {
           id: string;
           condominiumName: string | null;
           propertyName: string | null;
+          building: string | null;
           address: string | null;
           bedroomsSnapshot: number | null;
           integratorName: string | null;
@@ -139,6 +141,10 @@ function formatUploadLabel(upload: { sequenceNumber: number | null; fileName: st
 
 function cleanPropertyManagerName(name: string) {
   return name.replace(/^Responsible\s+/i, "").trim() || name;
+}
+
+function formatCheckinAddress(checkin: { address: string | null; building: string | null }) {
+  return formatOperationalAddress(checkin.address, checkin.building);
 }
 
 function PdfIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -491,7 +497,7 @@ function analyzeIsolatedStops(
     if (nearestLeg > Math.max(6, averageLegDistance * 1.9)) {
       labels.push(
         assignment.checkin.propertyName ??
-          assignment.checkin.address ??
+          formatCheckinAddress(assignment.checkin) ??
           assignment.checkin.condominiumName ??
           `Stop ${assignment.routeOrder}`,
       );
@@ -1947,7 +1953,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                     (isEnglish ? "Condominium not informed" : "Condomínio não informado")}
                                 </p>
                                 <p className="mt-1 text-sm text-slate-300">
-                                  {assignment.checkin.address ||
+                                  {formatCheckinAddress(assignment.checkin) ||
                                     (isEnglish ? "Address not informed" : "Endereço não informado")}
                                 </p>
                               </div>
@@ -2025,7 +2031,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                     (isEnglish ? "Condominium not informed" : "Condomínio não informado")}
                                 </p>
                                 <p className="mt-1 text-sm text-slate-300">
-                                  {assignment.checkin.address ||
+                                  {formatCheckinAddress(assignment.checkin) ||
                                     (isEnglish ? "Address not informed" : "Endereço não informado")}
                                 </p>
                               </div>
@@ -2833,7 +2839,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                     (isEnglish ? "Condominium not informed" : "Condomínio não informado")}
                                 </p>
                                 <p className="mt-1 text-sm text-slate-300">
-                                  {assignment.checkin.address ||
+                                  {formatCheckinAddress(assignment.checkin) ||
                                   (isEnglish ? "Address not informed" : "Endereço não informado")}
                                 </p>
                               </div>

@@ -3,6 +3,7 @@ import { PDFDocument, PDFFont, StandardFonts, rgb } from "pdf-lib";
 
 import {
   buildWhatsAppPayload,
+  formatCheckinOperationalAddress,
   type RouteDirectoryManager,
   type RouteRunReport,
 } from "@/lib/operations/route-report";
@@ -439,7 +440,7 @@ export async function buildOperationPdf(
       const row = [
         { text: String(assignment.routeOrder), column: headers[0]! },
         { text: assignment.checkin.condominiumName ?? notInformed, column: headers[1]! },
-        { text: assignment.checkin.address ?? notInformed, column: headers[2]! },
+        { text: formatCheckinOperationalAddress(assignment.checkin) ?? notInformed, column: headers[2]! },
         { text: assignment.checkin.guestName ?? notInformed, column: headers[3]! },
         { text: String(assignment.checkin.numberOfNights ?? "N/D"), column: headers[4]! },
         { text: assignment.checkin.doorCode ?? notInformed, column: headers[5]! },

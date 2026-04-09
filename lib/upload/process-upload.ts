@@ -13,6 +13,7 @@ import {
 import { mergeKnownCondominiumContext } from "@/lib/known-condominium-context";
 import { setActiveSpreadsheetUpload } from "@/lib/upload/active-upload";
 import { parseWorkbook, type SuspiciousUploadRow } from "@/lib/upload/parse-workbook";
+import { formatOperationalAddress } from "@/lib/upload/normalize";
 import { attachUploadSequenceNumber, getSpreadsheetUploadSequenceMap } from "@/lib/upload/sequence";
 
 const TEMP_RETENTION_DAYS = 30;
@@ -108,7 +109,7 @@ function detectDuplicateCheckins(rows: ReturnType<typeof parseWorkbook>["rows"])
     const operationDateKey = row.operationDate.toISOString().slice(0, 10);
     const condominiumName = row.condominiumName.trim();
     const propertyName = row.propertyName.trim();
-    const address = row.address.trim();
+    const address = formatOperationalAddress(row.address, row.building).trim();
     const duplicateKey = [
       operationDateKey,
       row.condominiumNormalized,
@@ -424,6 +425,7 @@ async function getOrCreateProperty(
       id: true,
       nameOriginal: true,
       nameNormalized: true,
+      building: true,
       address: true,
       bedrooms: true,
       hasBbqGrill: true,
@@ -437,6 +439,7 @@ async function getOrCreateProperty(
     const updates: {
       nameOriginal?: string;
       nameNormalized?: string;
+      building?: string;
       address?: string;
       bedrooms?: number;
       hasBbqGrill?: boolean;
@@ -451,6 +454,9 @@ async function getOrCreateProperty(
     }
     if (shouldReplaceString(property.address, row.address)) {
       updates.address = row.address;
+    }
+    if (shouldReplaceString(property.building, row.building)) {
+      updates.building = row.building;
     }
     if (shouldReplaceNumber(property.bedrooms, row.bedrooms)) {
       updates.bedrooms = row.bedrooms ?? undefined;
@@ -482,6 +488,7 @@ async function getOrCreateProperty(
     data: {
       nameOriginal: row.propertyName,
       nameNormalized: row.propertyNormalized,
+      building: row.building || undefined,
       address: row.address || undefined,
       lat: row.latitude ?? undefined,
       lng: row.longitude ?? undefined,
@@ -546,6 +553,7 @@ export async function processUpload(input: ProcessUploadInput) {
     condominiumName?: string;
     propertyId?: string;
     propertyName?: string;
+    building?: string;
     address?: string;
     lat?: number;
     lng?: number;
@@ -606,6 +614,7 @@ export async function processUpload(input: ProcessUploadInput) {
       condominiumName: row.condominiumName || undefined,
       propertyId,
       propertyName: row.propertyName || undefined,
+      building: row.building || undefined,
       address: row.address || undefined,
       lat: row.latitude ?? undefined,
       lng: row.longitude ?? undefined,

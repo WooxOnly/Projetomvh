@@ -58,6 +58,7 @@ type CadastrosShellProps = {
       id: string;
       nameOriginal: string;
       nameNormalized: string;
+      building: string | null;
       address: string | null;
       bedrooms: number | null;
       hasBbqGrill: boolean | null;
