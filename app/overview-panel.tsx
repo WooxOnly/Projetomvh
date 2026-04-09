@@ -1,5 +1,6 @@
 "use client";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 type OverviewPanelProps = {
@@ -183,7 +184,9 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
                   }}
                   className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
                 >
-                  {isEnglish ? "Open full details" : "Abrir detalhamento completo"}
+                  <ButtonLabel icon="details">
+                    {isEnglish ? "Open full details" : "Abrir detalhamento completo"}
+                  </ButtonLabel>
                 </button>
                 <button
                   type="button"
@@ -192,7 +195,9 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
                   }}
                   className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
                 >
-                  {isEnglish ? "Review homes without bedrooms" : "Revisar casas sem quartos"}
+                  <ButtonLabel icon="review">
+                    {isEnglish ? "Review homes without bedrooms" : "Revisar casas sem quartos"}
+                  </ButtonLabel>
                 </button>
               </div>
             </>

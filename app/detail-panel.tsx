@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 type DetailPanelProps = {
@@ -335,7 +336,9 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                     onClick={onOpenAvailabilityTab}
                     className="min-h-11 w-full rounded-2xl bg-cyan-300 px-5 py-3 text-center text-sm font-semibold text-slate-950 sm:w-auto"
                   >
-                    {isEnglish ? "Go to managers of the day" : "Avançar para os gerentes do dia"}
+                    <ButtonLabel icon="managers">
+                      {isEnglish ? "Go to managers of the day" : "Avançar para os gerentes do dia"}
+                    </ButtonLabel>
                   </button>
                 </div>
               ) : null}
@@ -354,7 +357,9 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                       : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
                   }`}
                 >
-                  {isEnglish ? "By Resorts" : "Por condom\u00ednios"}
+                  <ButtonLabel icon="route">
+                    {isEnglish ? "By Resorts" : "Por condom\u00ednios"}
+                  </ButtonLabel>
                 </button>
                 <button
                   type="button"
@@ -365,7 +370,9 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                       : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
                   }`}
                 >
-                  {isEnglish ? "By Office" : "Por escrit\u00f3rio"}
+                  <ButtonLabel icon="office">
+                    {isEnglish ? "By Office" : "Por escrit\u00f3rio"}
+                  </ButtonLabel>
                 </button>
               </div>
 

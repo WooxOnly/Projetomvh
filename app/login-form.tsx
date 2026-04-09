@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 type FormErrors = {
@@ -117,7 +118,12 @@ export function LoginForm() {
             onClick={() => setShowPassword((current) => !current)}
             className="rounded-xl px-3 py-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-300 transition hover:bg-white/8 hover:text-white"
           >
-            {showPassword ? (isEnglish ? "Hide" : "Ocultar") : isEnglish ? "Show" : "Mostrar"}
+            <ButtonLabel
+              icon={showPassword ? "hide" : "show"}
+              className="gap-1.5"
+            >
+              {showPassword ? (isEnglish ? "Hide" : "Ocultar") : isEnglish ? "Show" : "Mostrar"}
+            </ButtonLabel>
           </button>
         </div>
         {errors.password ? (
@@ -136,7 +142,9 @@ export function LoginForm() {
         disabled={pending}
         className="w-full rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {pending ? (isEnglish ? "Signing in..." : "Entrando...") : isEnglish ? "Sign in" : "Entrar"}
+        <ButtonLabel icon="login">
+          {pending ? (isEnglish ? "Signing in..." : "Entrando...") : isEnglish ? "Sign in" : "Entrar"}
+        </ButtonLabel>
       </button>
     </form>
   );

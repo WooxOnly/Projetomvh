@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 type HistoryPanelProps = {
@@ -209,13 +210,15 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
               disabled={pending}
               className="min-h-11 rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-100"
             >
-              {pendingId === "clear"
-                ? isEnglish
-                  ? "Clearing..."
-                  : "Limpando..."
-                : isEnglish
-                  ? "Clear active base"
-                  : "Deixar sem ativo"}
+              <ButtonLabel icon="clear">
+                {pendingId === "clear"
+                  ? isEnglish
+                    ? "Clearing..."
+                    : "Limpando..."
+                  : isEnglish
+                    ? "Clear active base"
+                    : "Deixar sem ativo"}
+              </ButtonLabel>
             </button>
           </div>
         </div>
@@ -273,7 +276,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
                 type="submit"
                 className="min-h-11 w-full rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 md:w-auto"
               >
-                {isEnglish ? "Load" : "Carregar"}
+                <ButtonLabel icon="load">{isEnglish ? "Load" : "Carregar"}</ButtonLabel>
               </button>
             </div>
           </form>
@@ -334,17 +337,19 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
                         : "border border-white/10 bg-white/5 text-slate-100"
                     }`}
                   >
-                    {pending && pendingId === upload.id
-                      ? isEnglish
-                        ? "Updating..."
-                        : "Atualizando..."
-                      : isActive
+                    <ButtonLabel icon="activate">
+                      {pending && pendingId === upload.id
                         ? isEnglish
-                          ? "Active upload"
-                          : "Upload ativo"
-                        : isEnglish
-                          ? "Set as active"
-                          : "Tornar ativo"}
+                          ? "Updating..."
+                          : "Atualizando..."
+                        : isActive
+                          ? isEnglish
+                            ? "Active upload"
+                            : "Upload ativo"
+                          : isEnglish
+                            ? "Set as active"
+                            : "Tornar ativo"}
+                    </ButtonLabel>
                   </button>
                 </div>
 

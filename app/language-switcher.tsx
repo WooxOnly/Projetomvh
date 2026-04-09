@@ -1,5 +1,6 @@
 "use client";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 export function LanguageSwitcher() {
@@ -16,7 +17,9 @@ export function LanguageSwitcher() {
             : "text-slate-300 hover:bg-white/8 hover:text-white"
         }`}
       >
-        Português
+        <ButtonLabel icon="language" className="gap-1.5">
+          Português
+        </ButtonLabel>
       </button>
       <button
         type="button"
@@ -27,7 +30,9 @@ export function LanguageSwitcher() {
             : "text-slate-300 hover:bg-white/8 hover:text-white"
         }`}
       >
-        English
+        <ButtonLabel icon="language" className="gap-1.5">
+          English
+        </ButtonLabel>
       </button>
       <span className="sr-only">{language}</span>
     </div>

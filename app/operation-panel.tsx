@@ -14,6 +14,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 import { RouteLiveMap } from "@/app/route-live-map";
 import { RouteOverviewMap } from "@/app/route-overview-map";
@@ -1760,7 +1761,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     onClick={() => setPersistentSuccessMessage("")}
                     className="rounded-2xl bg-cyan-300 px-6 py-3 text-sm font-semibold text-slate-950"
                   >
-                    OK
+                    <ButtonLabel icon="activate">OK</ButtonLabel>
                   </button>
                 </div>
               </div>
@@ -2094,7 +2095,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     onClick={closeRouteAdjustmentModal}
                     className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-slate-200"
                   >
-                    {isEnglish ? "Cancel" : "Cancelar"}
+                    <ButtonLabel icon="cancel">{isEnglish ? "Cancel" : "Cancelar"}</ButtonLabel>
                   </button>
                   <button
                     type="button"
@@ -2109,13 +2110,15 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     }
                     className={topActionButtonClass}
                   >
-                    {routeAdjustmentModal.type === "swap_full"
-                      ? isEnglish
-                        ? "Confirm full route swap"
-                        : "Confirmar troca de rota completa"
-                      : isEnglish
-                        ? "Apply route adjustment"
-                        : "Aplicar ajuste entre rotas"}
+                    <ButtonLabel icon="activate">
+                      {routeAdjustmentModal.type === "swap_full"
+                        ? isEnglish
+                          ? "Confirm full route swap"
+                          : "Confirmar troca de rota completa"
+                        : isEnglish
+                          ? "Apply route adjustment"
+                          : "Aplicar ajuste entre rotas"}
+                    </ButtonLabel>
                   </button>
                 </div>
               </div>
@@ -2403,7 +2406,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       : "bg-cyan-300 text-slate-950"
                   }`}
                 >
-                  {isEnglish ? "Run operation" : "Rodar operação"}
+                  <ButtonLabel icon="route">
+                    {isEnglish ? "Run operation" : "Rodar operação"}
+                  </ButtonLabel>
                 </button>
                 {mode === "availability" && data.latestOperationRun && onOpenRouteTab ? (
                   <button
@@ -2415,7 +2420,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         : "border border-white/10 text-slate-200"
                     }`}
                   >
-                    {isEnglish ? "View best route" : "Ver melhor rota"}
+                    <ButtonLabel icon="details">
+                      {isEnglish ? "View best route" : "Ver melhor rota"}
+                    </ButtonLabel>
                   </button>
                 ) : null}
               </div>
@@ -2447,8 +2454,10 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   disabled={rebuildTarget !== null}
                   className={topActionButtonClass}
                 >
-                  {rebuildTarget === "local" ? <SpinnerIcon className="mr-2 h-5 w-5" /> : null}
-                  <span>{isEnglish ? "Recalculate route" : "Recalcular rota"}</span>
+                  {rebuildTarget === "local" ? <SpinnerIcon className="h-5 w-5" /> : null}
+                  <ButtonLabel icon="route">
+                    {isEnglish ? "Recalculate route" : "Recalcular rota"}
+                  </ButtonLabel>
                 </button>
                 <button
                   type="button"
@@ -2472,8 +2481,10 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   }
                   aria-label={isEnglish ? "Use HERE API" : "Usar API HERE"}
                 >
-                  {rebuildTarget === "here" ? <SpinnerIcon className="mr-2 h-5 w-5" /> : null}
-                  <span>{formatCooldownLabel(normalizedHereApiLockedUntil, isEnglish)}</span>
+                  {rebuildTarget === "here" ? <SpinnerIcon className="h-5 w-5" /> : null}
+                  <ButtonLabel icon="route">
+                    {formatCooldownLabel(normalizedHereApiLockedUntil, isEnglish)}
+                  </ButtonLabel>
                 </button>
               </div>
                 {isHereApiLocked ? (

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 export function LogoutButton() {
@@ -32,7 +33,9 @@ export function LogoutButton() {
       disabled={pending}
       className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300/40 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? (isEnglish ? "Signing out..." : "Saindo...") : isEnglish ? "Sign out" : "Sair"}
+      <ButtonLabel icon="logout">
+        {pending ? (isEnglish ? "Signing out..." : "Saindo...") : isEnglish ? "Sign out" : "Sair"}
+      </ButtonLabel>
     </button>
   );
 }

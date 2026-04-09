@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 type ResourcePanelProps = {
@@ -746,13 +747,15 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
             disabled={pending}
             className="min-h-11 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950"
           >
-            {String(form.id)
-              ? isEnglish
-                ? `Save ${config.button}`
-                : `Salvar ${config.button}`
-              : isEnglish
-                ? `Create ${config.button}`
-                : `Criar ${config.button}`}
+            <ButtonLabel icon={String(form.id) ? "save" : "upload"}>
+              {String(form.id)
+                ? isEnglish
+                  ? `Save ${config.button}`
+                  : `Salvar ${config.button}`
+                : isEnglish
+                  ? `Create ${config.button}`
+                  : `Criar ${config.button}`}
+            </ButtonLabel>
           </button>
           {String(form.id) ? (
             <button
@@ -760,7 +763,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
               className="min-h-11 rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
               onClick={() => setForm(emptyForm(kind))}
             >
-              {isEnglish ? "Cancel" : "Cancelar"}
+              <ButtonLabel icon="cancel">{isEnglish ? "Cancel" : "Cancelar"}</ButtonLabel>
             </button>
           ) : null}
         </div>
@@ -829,7 +832,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
                     className="min-h-11 rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-200"
                     onClick={() => setForm(itemToForm(item as never))}
                   >
-                    {isEnglish ? "Edit" : "Editar"}
+                    <ButtonLabel icon="edit">{isEnglish ? "Edit" : "Editar"}</ButtonLabel>
                   </button>
                   <button
                     type="button"
@@ -843,7 +846,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
                       )
                     }
                   >
-                    {isEnglish ? "Delete" : "Excluir"}
+                    <ButtonLabel icon="delete">{isEnglish ? "Delete" : "Excluir"}</ButtonLabel>
                   </button>
                 </div>
               </div>

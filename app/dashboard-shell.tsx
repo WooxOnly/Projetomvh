@@ -3,6 +3,7 @@
 import type { ReactElement } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 import { DetailPanel } from "@/app/detail-panel";
 import { OperationPanel } from "@/app/operation-panel";
@@ -203,7 +204,7 @@ function TabGroup({
   activeTab,
   onSelect,
 }: {
-  items: Array<{ key: TabKey; label: string }>;
+  items: Array<{ key: TabKey; label: string; icon: "upload" | "details" | "managers" | "route" }>;
   activeTab: TabKey;
   onSelect: (tab: TabKey) => void;
 }) {
@@ -220,7 +221,7 @@ function TabGroup({
               : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
           }`}
         >
-          {tab.label}
+          <ButtonLabel icon={tab.icon}>{tab.label}</ButtonLabel>
         </button>
       ))}
     </div>
@@ -246,14 +247,15 @@ export function DashboardShell({ data }: DashboardShellProps) {
   const { isEnglish } = useLanguage();
   const requestedTab = searchParams.get("tab");
 
-  const tabs: Array<{ key: TabKey; label: string }> = [
-    { key: "uploads", label: isEnglish ? "Import File" : "Importar Arquivo" },
-    { key: "details", label: isEnglish ? "Details" : "Detalhamento" },
+  const tabs: Array<{ key: TabKey; label: string; icon: "upload" | "details" | "managers" | "route" }> = [
+    { key: "uploads", label: isEnglish ? "Import File" : "Importar Arquivo", icon: "upload" },
+    { key: "details", label: isEnglish ? "Details" : "Detalhamento", icon: "details" },
     {
       key: "availability",
       label: isEnglish ? "Managers of the Day" : "Gerentes do Dia",
+      icon: "managers",
     },
-    { key: "route", label: isEnglish ? "Best Route" : "Melhor Rota" },
+    { key: "route", label: isEnglish ? "Best Route" : "Melhor Rota", icon: "route" },
   ];
 
   const tabMeta: Record<TabKey, { eyebrow: string; title: string; description: string }> = {

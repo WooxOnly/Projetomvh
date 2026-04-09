@@ -3,6 +3,7 @@
 import type { ReactElement } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 import { ResourcePanel } from "@/app/resource-panel";
 
@@ -78,7 +79,11 @@ function TabGroup({
   activeTab,
   onSelect,
 }: {
-  items: Array<{ key: CadastroTabKey; label: string }>;
+  items: Array<{
+    key: CadastroTabKey;
+    label: string;
+    icon: "office" | "managers" | "route" | "home";
+  }>;
   activeTab: CadastroTabKey;
   onSelect: (tab: CadastroTabKey) => void;
 }) {
@@ -95,7 +100,7 @@ function TabGroup({
               : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
           }`}
         >
-          {tab.label}
+          <ButtonLabel icon={tab.icon}>{tab.label}</ButtonLabel>
         </button>
       ))}
     </div>
@@ -109,14 +114,19 @@ export function CadastrosShell({ data }: CadastrosShellProps) {
   const { isEnglish } = useLanguage();
   const requestedTab = searchParams.get("tab");
 
-  const tabs: Array<{ key: CadastroTabKey; label: string }> = [
-    { key: "offices", label: isEnglish ? "Offices" : "Escritórios" },
+  const tabs: Array<{
+    key: CadastroTabKey;
+    label: string;
+    icon: "office" | "managers" | "route" | "home";
+  }> = [
+    { key: "offices", label: isEnglish ? "Offices" : "Escritórios", icon: "office" },
     {
       key: "propertyManagers",
       label: isEnglish ? "Property Managers" : "Gerentes de Propriedades",
+      icon: "managers",
     },
-    { key: "condominiums", label: isEnglish ? "Resorts" : "Condomínios" },
-    { key: "properties", label: isEnglish ? "Houses" : "Casas" },
+    { key: "condominiums", label: isEnglish ? "Resorts" : "Condomínios", icon: "route" },
+    { key: "properties", label: isEnglish ? "Houses" : "Casas", icon: "home" },
   ];
 
   const tabMeta: Record<CadastroTabKey, { title: string; description: string }> = {

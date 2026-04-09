@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 type OfficeSummary = {
@@ -461,13 +462,15 @@ export function UploadPanel({
               disabled={pending}
               className="min-h-11 rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {pending
-                ? isEnglish
-                  ? "Processing..."
-                  : "Processando..."
-                : isEnglish
-                  ? "Process upload"
-                  : "Processar upload"}
+              <ButtonLabel icon="upload">
+                {pending
+                  ? isEnglish
+                    ? "Processing..."
+                    : "Processando..."
+                  : isEnglish
+                    ? "Process upload"
+                    : "Processar upload"}
+              </ButtonLabel>
             </button>
           </div>
         </form>
@@ -487,7 +490,9 @@ export function UploadPanel({
                 onClick={onOpenDetailsTab}
                 className="mt-3 min-h-11 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950"
               >
-                {isEnglish ? "Open details" : "Abrir detalhamento"}
+                <ButtonLabel icon="details">
+                  {isEnglish ? "Open details" : "Abrir detalhamento"}
+                </ButtonLabel>
               </button>
             ) : null}
           </div>
@@ -534,14 +539,18 @@ export function UploadPanel({
                 disabled={pending}
                 className="min-h-11 rounded-2xl bg-amber-200 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-100 disabled:opacity-70"
               >
-                {isEnglish ? "Import anyway" : "Importar mesmo assim"}
+                <ButtonLabel icon="upload">
+                  {isEnglish ? "Import anyway" : "Importar mesmo assim"}
+                </ButtonLabel>
               </button>
               <button
                 type="button"
                 onClick={() => setReviewState(null)}
                 className="min-h-11 rounded-2xl border border-amber-200/30 bg-transparent px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-200/10"
               >
-                {isEnglish ? "Cancel and review file" : "Cancelar e revisar planilha"}
+                <ButtonLabel icon="cancel">
+                  {isEnglish ? "Cancel and review file" : "Cancelar e revisar planilha"}
+                </ButtonLabel>
               </button>
             </div>
           </div>
@@ -566,7 +575,9 @@ export function UploadPanel({
                   onClick={onReviewMissingBedrooms}
                   className="min-h-11 rounded-2xl border border-amber-200/30 bg-amber-200/10 px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-200/20"
                 >
-                  {isEnglish ? "Review on Homes page" : "Revisar na página Casas"}
+                  <ButtonLabel icon="review">
+                    {isEnglish ? "Review on Homes page" : "Revisar na página Casas"}
+                  </ButtonLabel>
                 </button>
               </div>
             ) : null}
@@ -714,7 +725,7 @@ export function UploadPanel({
                 onClick={() => setOfficeAssignmentState(null)}
                 className="min-h-11 rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
               >
-                {isEnglish ? "Later" : "Depois"}
+                <ButtonLabel icon="cancel">{isEnglish ? "Later" : "Depois"}</ButtonLabel>
               </button>
               <button
                 type="button"
@@ -722,13 +733,15 @@ export function UploadPanel({
                 onClick={handleSaveOfficeAssignments}
                 className="min-h-11 rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {assigningOffices
-                  ? isEnglish
-                    ? "Saving..."
-                    : "Salvando..."
-                  : isEnglish
-                    ? "Save offices"
-                    : "Salvar escritórios"}
+                <ButtonLabel icon="save">
+                  {assigningOffices
+                    ? isEnglish
+                      ? "Saving..."
+                      : "Salvando..."
+                    : isEnglish
+                      ? "Save offices"
+                      : "Salvar escritórios"}
+                </ButtonLabel>
               </button>
             </div>
           </div>
