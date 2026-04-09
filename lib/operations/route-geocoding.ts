@@ -868,13 +868,11 @@ async function geocodeCheckin(checkinId: string) {
     propertyPoint = getKnownRoutePoint(property, checkin.property);
   }
 
-  let condominiumPoint: { lat: number; lng: number } | null = null;
   if (checkin.condominiumId) {
-    const condominium = await geocodeCondominium(checkin.condominiumId);
-    condominiumPoint = getKnownRoutePoint(condominium, checkin.condominium);
+    await geocodeCondominium(checkin.condominiumId);
   }
 
-  let point = propertyPoint ?? condominiumPoint ?? getKnownRoutePoint(checkin.property, checkin.condominium);
+  let point = propertyPoint ?? getKnownRoutePoint(checkin.property);
 
   if (!point) {
     const query =
@@ -970,7 +968,7 @@ export async function ensureOperationRouteCoordinates(operationRunId: string) {
         return null;
       }
 
-      const point = getKnownRoutePoint(assignment.checkin.property, assignment.checkin.condominium);
+      const point = getKnownRoutePoint(assignment.checkin.property);
       if (!point) {
         return null;
       }
@@ -1156,7 +1154,7 @@ export async function enrichUploadLocationData(
 
   const uploadSyncOperations = uploadSyncCandidates
     .map((checkin) => {
-      const point = getKnownRoutePoint(checkin.property, checkin.condominium);
+      const point = getKnownRoutePoint(checkin.property);
       if (!point) {
         return null;
       }
