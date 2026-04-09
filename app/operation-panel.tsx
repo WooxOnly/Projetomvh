@@ -2667,23 +2667,10 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       ) : null}
 
                       <div className="mt-3 grid gap-3 xl:grid-cols-[1.08fr_0.92fr]">
-                        {isExpanded ? (
-                          <RouteLiveMap
-                            title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
-                            points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
-                          />
-                        ) : (
-                          <div className="rounded-2xl border border-dashed border-white/10 bg-slate-950/50 p-4 text-sm text-slate-300">
-                            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
-                              {isEnglish ? "Live map" : "Mapa real"}
-                            </p>
-                            <p className="mt-2 leading-6">
-                              {isEnglish
-                                ? "Expand this property manager card to load the individual route map only when needed."
-                                : "Expanda este card do gerente para carregar o mapa individual da rota somente quando necessário."}
-                            </p>
-                          </div>
-                        )}
+                        <RouteLiveMap
+                          title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
+                          points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
+                        />
                         <div className="space-y-3">
                           <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
