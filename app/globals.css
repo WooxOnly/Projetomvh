@@ -135,7 +135,10 @@ input[type="file"]:active::-webkit-file-upload-button {
   gap: 0.75rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  padding-bottom: 0.25rem;
+  overflow-y: visible;
+  padding-top: 0.25rem;
+  padding-bottom: 0.35rem;
+  margin-top: -0.25rem;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
