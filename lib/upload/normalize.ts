@@ -28,7 +28,7 @@ export function normalizeOperationalAddress(value: unknown) {
   }
 
   return text
-    .replace(/^\s*[^\s-]+-\s*(.+)$/u, "$1")
+    .replace(/^\s*\d+\s*-\s*(.+)$/u, "$1")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -40,7 +40,7 @@ export function extractOperationalBuilding(value: unknown) {
     return "";
   }
 
-  const match = text.match(/^\s*([^\s-]+)-\s*.+$/u);
+  const match = text.match(/^\s*(\d+)\s*-\s*.+$/u);
   return match?.[1]?.trim() ?? "";
 }
 
