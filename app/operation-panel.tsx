@@ -2711,12 +2711,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         </div>
                       ) : null}
 
-                      <div className="mt-3 grid gap-3 xl:grid-cols-[1.04fr_0.96fr] xl:items-start">
+                      <div className="mt-3 grid gap-3 xl:grid-cols-[1.04fr_0.96fr] xl:items-stretch">
                         <RouteLiveMap
                           title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
                           points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
                         />
-                        <div className="flex h-full flex-col gap-3">
+                        <div className="flex h-full min-h-full flex-col gap-3">
                           <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
                             <p className="mt-1.5 text-sm leading-5 text-white">{uniqueResorts.length}</p>
@@ -2728,7 +2728,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               ))}
                             </div>
                           </div>
-                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
+                          <div className="content-safe mt-auto rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
                               {isEnglish ? "Export" : "Exportar"}
                             </p>

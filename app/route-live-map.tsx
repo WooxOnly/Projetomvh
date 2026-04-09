@@ -219,7 +219,7 @@ export function RouteLiveMap({ title, points }: RouteLiveMapProps) {
         </p>
         <p className="text-[11px] text-slate-400">{title}</p>
       </div>
-      <div ref={mapRef} className="h-52 w-full overflow-hidden rounded-2xl sm:h-64" />
+      <div ref={mapRef} className="h-44 w-full overflow-hidden rounded-2xl sm:h-56" />
       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-slate-300">
         <span className="inline-flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400" />
