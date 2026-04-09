@@ -2585,6 +2585,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   const effectiveOffice = getEffectiveManagerOffice(manager);
                   const isolatedStops = analyzeIsolatedStops(assignments, effectiveOffice);
                   const isExpanded = expandedStopManagers.includes(manager.id);
+                  const hasInferredMapPoints = (managerAnalysis?.mapPoints ?? []).some(
+                    (point) => point.inferred,
+                  );
                   const uniqueResorts = Array.from(
                     new Set(
                       assignments
@@ -2621,7 +2624,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
                               {isEnglish ? "Route information" : "Informacoes da rota"}
                             </p>
-                            <p className="mt-2 text-[13px] leading-5 text-slate-200">
+                            <p className="mt-1.5 text-[12px] leading-5 text-slate-200">
                               {managerAnalysis?.summary ?? (isEnglish ? "No additional AI reading for this property manager." : "Sem leitura de IA adicional para este gerente de propriedades.")}
                             </p>
                             <p className="mt-2 text-[11px] leading-4.5 text-amber-200">
@@ -2630,6 +2633,13 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p className="mt-1.5 text-[11px] leading-4.5 text-emerald-200">
                               {isEnglish ? "Adjustment" : "Ajuste"}: {managerAnalysis?.hint ?? (isEnglish ? "No suggested adjustment" : "Sem ajuste sugerido")}
                             </p>
+                            {hasInferredMapPoints ? (
+                              <p className="mt-1.5 text-[10px] leading-4 text-slate-400">
+                                {isEnglish
+                                  ? "Map view includes automatically positioned points while the real coordinate base is still being enriched."
+                                  : "A visualização do mapa inclui pontos posicionados automaticamente enquanto a base real de coordenadas ainda está sendo enriquecida."}
+                              </p>
+                            ) : null}
                           </div>
                         </div>
                         <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-3 xl:self-end">
@@ -2666,12 +2676,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         </div>
                       ) : null}
 
-                      <div className="mt-3 grid gap-3 xl:grid-cols-[1.08fr_0.92fr]">
+                      <div className="mt-3 grid gap-3 xl:grid-cols-[1.04fr_0.96fr] xl:items-start">
                         <RouteLiveMap
                           title={effectiveOffice?.name ?? managerAnalysis?.officeName ?? cleanPropertyManagerName(manager.name)}
                           points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
                         />
-                        <div className="space-y-3">
+                        <div className="flex h-full flex-col gap-3">
                           <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-3">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
                             <p className="mt-1.5 text-sm leading-5 text-white">{uniqueResorts.length}</p>
@@ -2687,7 +2697,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
                               {isEnglish ? "Export" : "Exportar"}
                             </p>
-                            <div className="mt-2.5 flex flex-wrap gap-3">
+                            <div className="mt-2 flex flex-wrap gap-3">
                               <button
                                 type="button"
                                 onClick={() => void handlePdfDownload(manager.id)}
