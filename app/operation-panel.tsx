@@ -2720,7 +2720,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-2.5">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
                             <p className="mt-1 text-sm leading-5 text-white">{uniqueResorts.length}</p>
-                            <div className="mt-1 text-[11px] leading-4 text-slate-400">
+                            <div className="mt-1 grid gap-x-4 gap-y-1 text-[11px] leading-4 text-slate-400 sm:grid-cols-2">
                               {uniqueResorts.map((resort) => (
                                 <p key={resort} className="break-normal whitespace-normal">
                                   {resort}
