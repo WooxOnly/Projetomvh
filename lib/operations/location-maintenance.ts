@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  getActiveSpreadsheetUploadId,
   getLastLocationMaintenanceAt,
   setLastLocationMaintenanceAt,
 } from "@/lib/upload/active-upload";
@@ -10,6 +11,7 @@ import {
   enrichMissingCheckinLocationData,
   enrichMissingCondominiumLocationData,
   enrichMissingPropertyLocationData,
+  enrichUploadLocationData,
 } from "@/lib/operations/route-geocoding";
 import { prisma } from "@/lib/prisma";
 
@@ -81,8 +83,17 @@ export async function runLocationMaintenanceBatch() {
   const before = await getLocationCoverageSnapshot();
   let after = before;
   let previous = before;
+  const activeUploadId = await getActiveSpreadsheetUploadId();
 
   for (let pass = 0; pass < MAX_MAINTENANCE_PASSES_PER_RUN; pass += 1) {
+    if (activeUploadId) {
+      await enrichUploadLocationData(activeUploadId, {
+        condominiumLimit: 24,
+        propertyLimit: DEFAULT_PROPERTY_BATCH_SIZE,
+        checkinLimit: DEFAULT_CHECKIN_BATCH_SIZE,
+      });
+    }
+
     await enrichMissingCondominiumLocationData();
     await enrichMissingPropertyLocationData(DEFAULT_PROPERTY_BATCH_SIZE);
     await enrichMissingCheckinLocationData(DEFAULT_CHECKIN_BATCH_SIZE);

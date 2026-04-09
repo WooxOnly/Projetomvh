@@ -969,6 +969,90 @@ export async function ensureOperationRouteCoordinates(operationRunId: string) {
   }
 }
 
+type UploadLocationEnrichmentOptions = {
+  condominiumLimit?: number;
+  propertyLimit?: number;
+  checkinLimit?: number;
+};
+
+export async function enrichUploadLocationData(
+  uploadId: string,
+  options: UploadLocationEnrichmentOptions = {},
+) {
+  const condominiumLimit = options.condominiumLimit ?? 24;
+  const propertyLimit = options.propertyLimit ?? 80;
+  const checkinLimit = options.checkinLimit ?? 240;
+
+  const [condominiums, properties, checkins] = await Promise.all([
+    prisma.condominium.findMany({
+      where: {
+        checkins: {
+          some: {
+            spreadsheetUploadId: uploadId,
+          },
+        },
+        OR: [
+          { address: null },
+          { city: null },
+          { state: null },
+          { zipCode: null },
+          { lat: null },
+          { lng: null },
+        ],
+      },
+      select: {
+        id: true,
+      },
+      orderBy: {
+        updatedAt: "asc",
+      },
+      take: condominiumLimit,
+    }),
+    prisma.property.findMany({
+      where: {
+        checkins: {
+          some: {
+            spreadsheetUploadId: uploadId,
+          },
+        },
+        OR: [{ lat: null }, { lng: null }],
+      },
+      select: {
+        id: true,
+      },
+      orderBy: {
+        updatedAt: "asc",
+      },
+      take: propertyLimit,
+    }),
+    prisma.checkin.findMany({
+      where: {
+        spreadsheetUploadId: uploadId,
+        OR: [{ lat: null }, { lng: null }],
+      },
+      select: {
+        id: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: checkinLimit,
+    }),
+  ]);
+
+  for (const condominium of condominiums) {
+    await geocodeCondominium(condominium.id);
+  }
+
+  for (const property of properties) {
+    await geocodeProperty(property.id);
+  }
+
+  for (const checkin of checkins) {
+    await geocodeCheckin(checkin.id);
+  }
+}
+
 export async function enrichAllCondominiumLocationData() {
   const condominiums = await prisma.condominium.findMany({
     select: {

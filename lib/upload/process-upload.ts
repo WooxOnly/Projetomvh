@@ -9,7 +9,6 @@ import { prisma } from "@/lib/prisma";
 import { cleanupExpiredOperationalData } from "@/lib/operations/cleanup";
 import {
   enrichCondominiumLocationData,
-  enrichMissingCondominiumLocationData,
 } from "@/lib/operations/route-geocoding";
 import { mergeKnownCondominiumContext } from "@/lib/known-condominium-context";
 import { setActiveSpreadsheetUpload } from "@/lib/upload/active-upload";
@@ -656,7 +655,6 @@ export async function processUpload(input: ProcessUploadInput) {
   });
 
   await setActiveSpreadsheetUpload(updatedUpload.id);
-  await enrichMissingCondominiumLocationData();
   const sequenceMap = await getSpreadsheetUploadSequenceMap();
 
   return {
