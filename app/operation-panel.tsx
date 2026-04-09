@@ -203,6 +203,36 @@ function SpinnerIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+function SwapRouteIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M7 7h9m0 0-2.5-2.5M16 7l-2.5 2.5M17 17H8m0 0 2.5-2.5M8 17l2.5 2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function AdjustRouteIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M5 7h10m0 0-2.5-2.5M15 7l-2.5 2.5M19 17H9m0 0 2.5-2.5M9 17l2.5 2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="6" cy="17" r="1.5" fill="currentColor" />
+      <circle cx="18" cy="7" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
 type RouteAnalysisData = {
   source: "heuristic" | "openai";
   model: string | null;
@@ -1715,13 +1745,6 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           : "Selecione o que sai de um PM para o outro. Você pode mover só um lado ou os dois lados juntos."}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={closeRouteAdjustmentModal}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200"
-                  >
-                    {isEnglish ? "Close" : "Fechar"}
-                  </button>
                 </div>
 
                 <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -2706,19 +2729,21 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       </div>
                       </div>
 
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div className="mt-4 flex flex-wrap justify-center gap-2">
                         <button
                           type="button"
                           onClick={() => openSwapFullModal(manager.id)}
-                          className={topActionButtonClass}
+                          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full border border-cyan-300/35 bg-cyan-400/10 px-3.5 py-2 text-[13px] font-medium text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.05),0_8px_20px_rgba(34,211,238,0.07)] transition hover:border-cyan-200/70 hover:bg-cyan-300/18 hover:text-white"
                         >
+                          <SwapRouteIcon className="h-4 w-4" />
                           {isEnglish ? "Swap Full Route" : "Trocar rota completa"}
                         </button>
                         <button
                           type="button"
                           onClick={() => openAdjustBetweenModal(manager.id)}
-                          className={topActionButtonClass}
+                          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full border border-cyan-300/35 bg-cyan-400/10 px-3.5 py-2 text-[13px] font-medium text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.05),0_8px_20px_rgba(34,211,238,0.07)] transition hover:border-cyan-200/70 hover:bg-cyan-300/18 hover:text-white"
                         >
+                          <AdjustRouteIcon className="h-4 w-4" />
                           {isEnglish ? "Adjust Routes Between PMs" : "Ajustar rotas entre PMs"}
                         </button>
                       </div>
