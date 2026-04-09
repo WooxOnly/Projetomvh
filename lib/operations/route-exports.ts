@@ -145,6 +145,61 @@ function drawAlignedText(
   });
 }
 
+const PDF_THEME = {
+  pageBackground: rgb(1, 1, 1),
+  pageBorder: rgb(0.82, 0.87, 0.92),
+  accent: rgb(0.16, 0.39, 0.63),
+  accentSoft: rgb(0.9, 0.94, 0.98),
+  title: rgb(0.12, 0.25, 0.4),
+  textPrimary: rgb(0.16, 0.2, 0.27),
+  textSecondary: rgb(0.34, 0.4, 0.48),
+  sectionLabel: rgb(0.17, 0.32, 0.5),
+  tableHeaderBackground: rgb(0.93, 0.96, 0.99),
+  tableHeaderBorder: rgb(0.75, 0.82, 0.89),
+  tableHeaderText: rgb(0.18, 0.28, 0.39),
+  rowBorder: rgb(0.86, 0.89, 0.93),
+  rowOdd: rgb(1, 1, 1),
+  rowEven: rgb(0.97, 0.98, 0.99),
+  footerText: rgb(0.48, 0.54, 0.61),
+};
+
+function drawInfoCard(
+  page: ReturnType<PDFDocument["addPage"]>,
+  regularFont: PDFFont,
+  boldFont: PDFFont,
+  label: string,
+  value: string,
+  x: number,
+  y: number,
+  width: number,
+) {
+  page.drawRectangle({
+    x,
+    y,
+    width,
+    height: 34,
+    borderWidth: 0.8,
+    borderColor: PDF_THEME.tableHeaderBorder,
+    color: PDF_THEME.accentSoft,
+  });
+
+  page.drawText(label, {
+    x: x + 10,
+    y: y + 21,
+    size: 7.5,
+    font: regularFont,
+    color: PDF_THEME.textSecondary,
+  });
+
+  page.drawText(value, {
+    x: x + 10,
+    y: y + 8,
+    size: 10,
+    font: boldFont,
+    color: PDF_THEME.title,
+  });
+}
+
 export function getWhatsAppExport(
   run: RouteRunReport,
   directoryManagers: RouteDirectoryManager[],
@@ -198,13 +253,20 @@ export async function buildOperationPdf(
   const createPage = () => {
     const page = pdf.addPage([842, 595]);
     page.drawRectangle({
+      x: 0,
+      y: 0,
+      width: 842,
+      height: 595,
+      color: PDF_THEME.pageBackground,
+    });
+    page.drawRectangle({
       x: 24,
       y: 24,
       width: 794,
       height: 547,
       borderWidth: 1,
-      borderColor: rgb(0.15, 0.75, 0.85),
-      color: rgb(0.1, 0.13, 0.2),
+      borderColor: PDF_THEME.pageBorder,
+      color: PDF_THEME.pageBackground,
     });
     return page;
   };
@@ -216,43 +278,86 @@ export async function buildOperationPdf(
       page.drawText(isEnglish ? "Daily operation - Reservations" : "Operação diária - Reservas", {
         x: 36,
         y: 544,
-        size: 18,
+        size: 20,
         font: boldFont,
-        color: rgb(0.33, 0.86, 0.95),
+        color: PDF_THEME.title,
+      });
+
+      page.drawText(
+        isEnglish
+          ? "Printable summary with optimized contrast and low ink usage"
+          : "Resumo para impressao com contraste otimizado e baixo consumo de tinta",
+        {
+          x: 36,
+          y: 527,
+          size: 9,
+          font: regularFont,
+          color: PDF_THEME.textSecondary,
+        },
+      );
+
+      page.drawLine({
+        start: { x: 36, y: 538 },
+        end: { x: 806, y: 538 },
+        thickness: 1.25,
+        color: PDF_THEME.accent,
       });
     }
 
-    const infoY = isFirstPage ? 520 : 542;
+    const infoY = isFirstPage ? 492 : 542;
     page.drawText(`${isEnglish ? "Date" : "Data"}: ${formatDateOnly(filteredRun.operationDate, language)}`, {
       x: 36,
       y: infoY,
       size: 10,
       font: regularFont,
-      color: rgb(0.88, 0.91, 0.96),
+      color: PDF_THEME.textSecondary,
     });
 
-    page.drawText(
-      `${isEnglish ? "Total reservations" : "Total de reservas"}: ${filteredRun.assignments.length}`,
-      {
-        x: 580,
-        y: infoY,
-        size: 10,
-        font: regularFont,
-        color: rgb(0.88, 0.91, 0.96),
-      },
-    );
-    page.drawText(
-      `${isEnglish ? "Total resorts" : "Total de condomínios"}: ${totalCondominiums}`,
-      {
-        x: 580,
-        y: infoY - 14,
-        size: 10,
-        font: regularFont,
-        color: rgb(0.88, 0.91, 0.96),
-      },
-    );
+    if (isFirstPage) {
+      drawInfoCard(
+        page,
+        regularFont,
+        boldFont,
+        isEnglish ? "Reservations" : "Reservas",
+        String(filteredRun.assignments.length),
+        540,
+        484,
+        122,
+      );
+      drawInfoCard(
+        page,
+        regularFont,
+        boldFont,
+        isEnglish ? "Resorts" : "Condomínios",
+        String(totalCondominiums),
+        674,
+        484,
+        122,
+      );
+    } else {
+      page.drawText(
+        `${isEnglish ? "Total reservations" : "Total de reservas"}: ${filteredRun.assignments.length}`,
+        {
+          x: 580,
+          y: infoY,
+          size: 10,
+          font: regularFont,
+          color: PDF_THEME.textSecondary,
+        },
+      );
+      page.drawText(
+        `${isEnglish ? "Total resorts" : "Total de condomínios"}: ${totalCondominiums}`,
+        {
+          x: 580,
+          y: infoY - 14,
+          size: 10,
+          font: regularFont,
+          color: PDF_THEME.textSecondary,
+        },
+      );
+    }
 
-    return isFirstPage ? 492 : 514;
+    return isFirstPage ? 456 : 514;
   };
 
   const drawSectionHeader = (
@@ -263,20 +368,27 @@ export async function buildOperationPdf(
     page.drawText(`${isEnglish ? "Manager" : "Gerente"}: ${managerName}`, {
       x: 36,
       y: startY,
-      size: 10,
+      size: 10.5,
       font: boldFont,
-      color: rgb(0.88, 0.91, 0.96),
+      color: PDF_THEME.sectionLabel,
     });
 
-    const tableTop = startY - 24;
+    page.drawLine({
+      start: { x: 150, y: startY + 4 },
+      end: { x: 806, y: startY + 4 },
+      thickness: 0.8,
+      color: PDF_THEME.pageBorder,
+    });
+
+    const tableTop = startY - 26;
     page.drawRectangle({
       x: 30,
       y: tableTop,
       width: 782,
-      height: 22,
+      height: 24,
       borderWidth: 0.8,
-      borderColor: rgb(0.15, 0.75, 0.85),
-      color: rgb(0.12, 0.18, 0.28),
+      borderColor: PDF_THEME.tableHeaderBorder,
+      color: PDF_THEME.tableHeaderBackground,
     });
 
     headers.forEach((header) => {
@@ -287,14 +399,14 @@ export async function buildOperationPdf(
         fitted.text,
         fitted.size,
         header.x,
-        tableTop + 7,
+        tableTop + 8,
         header.maxWidth,
-        rgb(0.9, 0.98, 1),
+        PDF_THEME.tableHeaderText,
         header.align,
       );
     });
 
-    return tableTop - 4;
+    return tableTop - 6;
   };
 
   let page = createPage();
@@ -302,33 +414,33 @@ export async function buildOperationPdf(
   let nextY = drawPageHeader(page, pageNumber);
 
   groupedByManager.forEach(([managerName, assignments], groupIndex) => {
-    if (nextY < 96) {
+    if (nextY < 102) {
       page = createPage();
       pageNumber += 1;
       nextY = drawPageHeader(page, pageNumber);
     } else if (groupIndex > 0) {
-      nextY -= 10;
+      nextY -= 14;
     }
 
     nextY = drawSectionHeader(page, nextY, managerName);
 
     assignments.forEach((assignment, index) => {
-      if (nextY < 66) {
+      if (nextY < 72) {
         page = createPage();
         pageNumber += 1;
         nextY = drawPageHeader(page, pageNumber);
         nextY = drawSectionHeader(page, nextY, managerName);
       }
 
-      const rowHeight = 18;
+      const rowHeight = 20;
       page.drawRectangle({
         x: 30,
         y: nextY - rowHeight + 3,
         width: 782,
         height: rowHeight,
         borderWidth: 0.5,
-        borderColor: rgb(0.2, 0.26, 0.36),
-        color: index % 2 === 0 ? rgb(0.11, 0.14, 0.2) : rgb(0.09, 0.12, 0.18),
+        borderColor: PDF_THEME.rowBorder,
+        color: index % 2 === 0 ? PDF_THEME.rowOdd : PDF_THEME.rowEven,
       });
 
       const row = [
@@ -353,9 +465,9 @@ export async function buildOperationPdf(
           fitted.text,
           fitted.size,
           column.x,
-          nextY - 9,
+          nextY - 10,
           column.maxWidth,
-          rgb(0.92, 0.96, 1),
+          PDF_THEME.textPrimary,
           column.align,
         );
       });
@@ -367,6 +479,13 @@ export async function buildOperationPdf(
   const pages = pdf.getPages();
   if (pages.length > 1) {
     pages.forEach((currentPage, index) => {
+      currentPage.drawLine({
+        start: { x: 36, y: 46 },
+        end: { x: 806, y: 46 },
+        thickness: 0.8,
+        color: PDF_THEME.pageBorder,
+      });
+
       currentPage.drawText(
         `${isEnglish ? "Page" : "Página"} ${index + 1} ${isEnglish ? "of" : "de"} ${pages.length}`,
         {
@@ -374,7 +493,7 @@ export async function buildOperationPdf(
           y: 34,
           size: 8,
           font: regularFont,
-          color: rgb(0.88, 0.91, 0.96),
+          color: PDF_THEME.footerText,
         },
       );
     });
