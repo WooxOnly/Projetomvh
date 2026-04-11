@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 export function DashboardSectionNav() {
@@ -10,10 +11,22 @@ export function DashboardSectionNav() {
   const { isEnglish } = useLanguage();
 
   const sections = [
-    { href: "/dashboard", label: isEnglish ? "Home" : "Início" },
-    { href: "/dashboard/cadastros", label: isEnglish ? "Records" : "Cadastros" },
-    { href: "/dashboard/history", label: isEnglish ? "History" : "Histórico" },
-    { href: "/dashboard/process", label: isEnglish ? "Daily Flow" : "Fluxo do Dia" },
+    { href: "/dashboard", label: isEnglish ? "Home" : "Início", icon: "home" as const },
+    {
+      href: "/dashboard/cadastros",
+      label: isEnglish ? "Records" : "Cadastros",
+      icon: "office" as const,
+    },
+    {
+      href: "/dashboard/history",
+      label: isEnglish ? "History" : "Histórico",
+      icon: "history" as const,
+    },
+    {
+      href: "/dashboard/process",
+      label: isEnglish ? "Daily Flow" : "Fluxo do Dia",
+      icon: "route" as const,
+    },
   ];
 
   return (
@@ -28,13 +41,13 @@ export function DashboardSectionNav() {
           <Link
             key={section.href}
             href={section.href}
-            className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition ${
+            className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2.5 text-sm font-medium transition sm:px-[1.15rem] ${
               isActive
-                ? "bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30"
-                : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                ? "border-cyan-200/50 bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30"
+                : "border-white/10 bg-white/5 text-slate-200 hover:border-cyan-300/35 hover:bg-white/10"
             }`}
           >
-            {section.label}
+            <ButtonLabel icon={section.icon}>{section.label}</ButtonLabel>
           </Link>
         );
       })}
