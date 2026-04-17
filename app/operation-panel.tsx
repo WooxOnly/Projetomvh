@@ -2899,7 +2899,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     }}
                   />
                   <span>
-                    {isEnglish ? "Do not merge condominiums" : "Não mesclar condomínios"}
+                    {isEnglish ? "DO NOT MERGE CONDOMINIUMS" : "NÃO MESCLAR CONDOMÍNIOS"}
                   </span>
                 </label>
                 <label
@@ -2923,7 +2923,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     }}
                   />
                   <span>
-                    {isEnglish ? "Force equal check-ins" : "Forçar igualar check-ins"}
+                    {isEnglish ? "FORCE EQUAL CHECK-INS" : "FORÇAR IGUALAR CHECK-INS"}
                   </span>
                 </label>
                 <label
@@ -2947,7 +2947,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     }}
                   />
                   <span>
-                    {isEnglish ? "End route near office" : "Finalizar rota perto do escritório"}
+                    {isEnglish ? "END ROUTE NEAR OFFICE" : "FINALIZAR ROTA PERTO DO ESCRITÓRIO"}
                   </span>
                 </label>
               </div>
