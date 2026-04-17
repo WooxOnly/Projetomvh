@@ -69,6 +69,21 @@ export async function POST(request: Request) {
       spreadsheetUploadId: latestOperationRun.spreadsheetUpload.id,
       decisionMode: latestOperationRun.decisionMode === "override" ? "override" : "default",
       availablePropertyManagerIds,
+      ownerAssignmentsByCheckinId: (() => {
+        const groupedAssignments: Record<string, string[]> = {};
+
+        for (const assignment of latestOperationRun.assignments) {
+          if (assignment.source !== "owner_manual") {
+            continue;
+          }
+
+          const current = groupedAssignments[assignment.checkin.id] ?? [];
+          current.push(assignment.propertyManager.id);
+          groupedAssignments[assignment.checkin.id] = current;
+        }
+
+        return groupedAssignments;
+      })(),
       preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
       forceEqualCheckins: latestOperationRun.forceEqualCheckins,
       endRouteNearOffice: latestOperationRun.endRouteNearOffice,

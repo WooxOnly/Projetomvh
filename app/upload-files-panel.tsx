@@ -18,10 +18,11 @@ type UploadFilesPanelProps = {
     totalCheckins: number;
     totalOwnerCheckins: number;
     totalBlockedCheckins: number;
+    totalCancelledCheckins: number;
     reviewItems: Array<{
       id: string;
       sourceRowNumber: number | null;
-      classification: "CHECKIN" | "OWNER" | "BLOCKED";
+      classification: "CHECKIN" | "OWNER" | "BLOCKED" | "CANCELLED";
       integratorName: string | null;
       condominiumName: string | null;
       propertyName: string | null;

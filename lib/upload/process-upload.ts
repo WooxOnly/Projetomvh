@@ -573,7 +573,7 @@ export async function processUpload(input: ProcessUploadInput) {
     hasBbqGrill?: boolean;
     hasEarlyCheckin?: boolean;
     rawDataJson: string;
-    classification: "CHECKIN" | "OWNER" | "BLOCKED";
+    classification: "CHECKIN" | "OWNER" | "BLOCKED" | "CANCELLED";
     status: string;
     expiresAt: Date;
   }> = [];
@@ -656,6 +656,7 @@ export async function processUpload(input: ProcessUploadInput) {
       totalCheckins: 0,
       totalOwnerCheckins: 0,
       totalBlockedCheckins: 0,
+      totalCancelledCheckins: 0,
       totalUniqueCondominiums: uniqueCondominiums.size,
       totalUniqueProperties: uniqueProperties.size,
       totalUniquePMs: uniquePMs.size,
@@ -668,6 +669,7 @@ export async function processUpload(input: ProcessUploadInput) {
       totalCheckins: true,
       totalOwnerCheckins: true,
       totalBlockedCheckins: true,
+      totalCancelledCheckins: true,
       totalUniqueCondominiums: true,
       totalUniqueProperties: true,
       totalUniquePMs: true,
@@ -687,6 +689,7 @@ export async function processUpload(input: ProcessUploadInput) {
         totalCheckins: uploadWithClassificationTotals.totalCheckins,
         totalOwnerCheckins: uploadWithClassificationTotals.totalOwnerCheckins,
         totalBlockedCheckins: uploadWithClassificationTotals.totalBlockedCheckins,
+        totalCancelledCheckins: uploadWithClassificationTotals.totalCancelledCheckins,
       },
       sequenceMap,
     ),

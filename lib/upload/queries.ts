@@ -6,6 +6,7 @@ import { getSuggestedCondominiumClassification } from "@/lib/condominium-classif
 import { listOffices } from "@/lib/offices";
 import { prisma } from "@/lib/prisma";
 import { getActiveSpreadsheetUploadId } from "@/lib/upload/active-upload";
+import { isOwnerStayIntegrator } from "@/lib/upload/integrator-rules";
 import {
   attachUploadSequenceNumber,
   attachUploadSequenceNumbers,
@@ -45,6 +46,7 @@ export async function getActiveUploadSummary() {
       totalCheckins: true,
       totalOwnerCheckins: true,
       totalBlockedCheckins: true,
+      totalCancelledCheckins: true,
       totalUniqueCondominiums: true,
       totalUniqueProperties: true,
       totalUniquePMs: true,
@@ -86,16 +88,24 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
       totalCheckins: true,
       totalOwnerCheckins: true,
       totalBlockedCheckins: true,
+      totalCancelledCheckins: true,
       totalUniqueCondominiums: true,
       totalUniqueProperties: true,
       totalUniquePMs: true,
       checkins: {
         where: {
-          OR: [{ propertyManagerId: { not: null } }, { propertyManagerName: { not: null } }],
+          classification: CheckinClassification.CHECKIN,
         },
         select: {
+          id: true,
+          sourceRowNumber: true,
           propertyManagerId: true,
           propertyManagerName: true,
+          integratorName: true,
+          condominiumName: true,
+          propertyName: true,
+          building: true,
+          address: true,
         },
       },
     },
@@ -131,10 +141,22 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
       totalCheckins: upload.totalCheckins,
       totalOwnerCheckins: upload.totalOwnerCheckins,
       totalBlockedCheckins: upload.totalBlockedCheckins,
+      totalCancelledCheckins: upload.totalCancelledCheckins,
       totalUniqueCondominiums: upload.totalUniqueCondominiums,
       totalUniqueProperties: upload.totalUniqueProperties,
       totalUniquePMs: upload.totalUniquePMs,
       importedPropertyManagers,
+      ownerCheckins: upload.checkins
+        .filter((checkin) => isOwnerStayIntegrator(checkin.integratorName))
+        .map((checkin) => ({
+          id: checkin.id,
+          sourceRowNumber: checkin.sourceRowNumber,
+          integratorName: checkin.integratorName,
+          condominiumName: checkin.condominiumName,
+          propertyName: checkin.propertyName,
+          building: checkin.building,
+          address: checkin.address,
+        })),
     };
     }),
     sequenceMap,
@@ -343,6 +365,7 @@ async function getUploadReviewDataById(uploadId: string) {
       totalCheckins: true,
       totalOwnerCheckins: true,
       totalBlockedCheckins: true,
+      totalCancelledCheckins: true,
       checkins: {
         orderBy: [{ sourceRowNumber: "asc" }, { createdAt: "asc" }],
         select: {

@@ -35,6 +35,7 @@ enum CheckinClassification {
   CHECKIN
   OWNER
   BLOCKED
+  CANCELLED
 }
 
 model User {
@@ -135,6 +136,7 @@ model SpreadsheetUpload {
   totalCheckins           Int       @default(0)
   totalOwnerCheckins      Int       @default(0)
   totalBlockedCheckins    Int       @default(0)
+  totalCancelledCheckins  Int       @default(0)
   totalUniqueCondominiums Int       @default(0)
   totalUniqueProperties   Int       @default(0)
   totalUniquePMs          Int       @default(0)
@@ -254,7 +256,7 @@ model OperationAssignment {
   checkin         Checkin         @relation(fields: [checkinId], references: [id], onDelete: Cascade)
   propertyManager PropertyManager @relation(fields: [propertyManagerId], references: [id], onDelete: Cascade)
 
-  @@unique([operationRunId, checkinId])
+  @@unique([operationRunId, checkinId, propertyManagerId])
 }
 
 model LocationReview {

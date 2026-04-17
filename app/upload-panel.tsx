@@ -22,12 +22,13 @@ type UploadSummary = {
   totalCheckins: number;
   totalOwnerCheckins: number;
   totalBlockedCheckins: number;
+  totalCancelledCheckins: number;
   totalUniqueCondominiums: number;
   totalUniqueProperties: number;
   totalUniquePMs: number;
 };
 
-type CheckinClassification = "CHECKIN" | "OWNER" | "BLOCKED";
+type CheckinClassification = "CHECKIN" | "OWNER" | "BLOCKED" | "CANCELLED";
 
 type UploadReviewData = {
   id: string;
@@ -39,6 +40,7 @@ type UploadReviewData = {
   totalCheckins: number;
   totalOwnerCheckins: number;
   totalBlockedCheckins: number;
+  totalCancelledCheckins: number;
   reviewItems: Array<{
     id: string;
     sourceRowNumber: number | null;
@@ -179,6 +181,7 @@ export function UploadPanel({
   } | null>(null);
   const [reviewData, setReviewData] = useState<UploadReviewData | null>(activeUploadReview);
   const [classificationPendingId, setClassificationPendingId] = useState<string | null>(null);
+  const [isReviewExpanded, setIsReviewExpanded] = useState(false);
 
   useEffect(() => {
     setReviewData(activeUploadReview);
@@ -193,12 +196,17 @@ export function UploadPanel({
         totalCheckins: activeUploadReview.totalCheckins,
         totalOwnerCheckins: activeUploadReview.totalOwnerCheckins,
         totalBlockedCheckins: activeUploadReview.totalBlockedCheckins,
+        totalCancelledCheckins: activeUploadReview.totalCancelledCheckins,
         totalUniqueCondominiums: 0,
         totalUniqueProperties: 0,
         totalUniquePMs: 0,
       });
     }
   }, [activeUploadReview]);
+
+  useEffect(() => {
+    setIsReviewExpanded(false);
+  }, [reviewData?.id]);
 
   function persistUploadFeedback(next: {
     message: string;
@@ -477,19 +485,27 @@ export function UploadPanel({
 
   function getClassificationLabel(classification: CheckinClassification) {
     if (classification === "OWNER") {
-      return isEnglish ? "Owner" : "Owner";
+      return "CHECK INS";
+    }
+
+    if (classification === "CANCELLED") {
+      return "Cancelled";
     }
 
     if (classification === "BLOCKED") {
       return "BLACKED OUT";
     }
 
-    return isEnglish ? "Check-in" : "Check-in";
+    return "CHECK INS";
   }
 
   function getClassificationBadgeClass(classification: CheckinClassification) {
     if (classification === "OWNER") {
-      return "border-amber-400/25 bg-amber-400/10 text-amber-100";
+      return "border-emerald-400/25 bg-emerald-400/10 text-emerald-100";
+    }
+
+    if (classification === "CANCELLED") {
+      return "border-orange-400/25 bg-orange-400/10 text-orange-100";
     }
 
     if (classification === "BLOCKED") {
@@ -530,21 +546,21 @@ export function UploadPanel({
     ? [
         {
           key: "CHECKIN" as const,
-          title: isEnglish ? "Normal check-ins" : "Check-ins normais",
-          count: reviewData.totalCheckins,
-          emptyMessage: isEnglish ? "No normal check-ins in this upload." : "Nenhum check-in normal neste upload.",
-        },
-        {
-          key: "OWNER" as const,
-          title: isEnglish ? "Owner" : "Owner",
-          count: reviewData.totalOwnerCheckins,
-          emptyMessage: isEnglish ? "No owner lines in this upload." : "Nenhuma linha owner neste upload.",
+          title: "CHECK INS",
+          count: reviewData.totalCheckins + reviewData.totalOwnerCheckins,
+          emptyMessage: isEnglish ? "No check-ins in this upload." : "Nenhum check-in neste upload.",
         },
         {
           key: "BLOCKED" as const,
           title: "BLACKED OUT",
           count: reviewData.totalBlockedCheckins,
           emptyMessage: isEnglish ? "No BLACKED OUT lines in this upload." : "Nenhuma linha BLACKED OUT neste upload.",
+        },
+        {
+          key: "CANCELLED" as const,
+          title: "Cancelled",
+          count: reviewData.totalCancelledCheckins,
+          emptyMessage: isEnglish ? "No Cancelled lines in this upload." : "Nenhuma linha Cancelled neste upload.",
         },
       ]
     : [];
@@ -625,45 +641,62 @@ export function UploadPanel({
           </div>
         </form>
 
-        {message ? (
-          <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
-            <p>{message}</p>
+        {message || summary ? (
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-sm text-slate-200">
+            {message ? <p className="font-medium text-white">{message}</p> : null}
             {summary ? (
-              <p className="mt-2 text-emerald-50/90">
+              <p className="mt-2 text-slate-300">
                 {isEnglish ? "Active file" : "Arquivo ativo"}:{" "}
                 <span className="font-medium text-white">{formatUploadLabel(summary)}</span>
               </p>
             ) : null}
             {summary ? (
-              <div className="mt-3 grid gap-2 sm:grid-cols-4">
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
                 <div className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
                   <p className="uppercase tracking-[0.2em] text-slate-400">{isEnglish ? "Imported" : "Importado"}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{summary.totalRows}</p>
                 </div>
-                <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-100">
-                  <p className="uppercase tracking-[0.2em] text-emerald-200">{isEnglish ? "Check-ins" : "Check-ins"}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalCheckins}</p>
+                <div className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
+                  <p className="uppercase tracking-[0.2em] text-cyan-300">CHECK INS</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalCheckins + summary.totalOwnerCheckins}</p>
                 </div>
-                <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
-                  <p className="uppercase tracking-[0.2em] text-amber-200">Owner</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalOwnerCheckins}</p>
-                </div>
-                <div className="rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-xs text-rose-100">
-                  <p className="uppercase tracking-[0.2em] text-rose-200">BLACKED OUT</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalBlockedCheckins}</p>
+                <div className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
+                  <p className="uppercase tracking-[0.2em] text-rose-200">BLACKED OUT / CANCELLED</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalBlockedCheckins + summary.totalCancelledCheckins}</p>
                 </div>
               </div>
             ) : null}
-            {summary && onOpenDetailsTab ? (
-              <button
-                type="button"
-                onClick={onOpenDetailsTab}
-                className="mt-3 min-h-11 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950"
-              >
-                <ButtonLabel icon="details">
-                  {isEnglish ? "Open details" : "Abrir detalhamento"}
-                </ButtonLabel>
-              </button>
+            {summary && (onOpenDetailsTab || reviewData) ? (
+              <div className="mt-3 flex flex-wrap gap-3">
+                {reviewData ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsReviewExpanded((current) => !current)}
+                    className="min-h-11 rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+                  >
+                    <ButtonLabel icon="details">
+                      {isReviewExpanded
+                        ? isEnglish
+                          ? "Hide imported lines"
+                          : "Ocultar linhas importadas"
+                        : isEnglish
+                          ? "Review imported lines"
+                          : "Revisar linhas importadas"}
+                    </ButtonLabel>
+                  </button>
+                ) : null}
+                {summary && onOpenDetailsTab ? (
+                  <button
+                    type="button"
+                    onClick={onOpenDetailsTab}
+                    className="min-h-11 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950"
+                  >
+                    <ButtonLabel icon="details">
+                      {isEnglish ? "Open details" : "Abrir detalhamento"}
+                    </ButtonLabel>
+                  </button>
+                ) : null}
+              </div>
             ) : null}
           </div>
         ) : null}
@@ -726,34 +759,6 @@ export function UploadPanel({
           </div>
         ) : null}
 
-        {missingBedrooms.length > 0 ? (
-          <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/8 p-4 text-sm text-amber-100">
-            <p className="font-medium">
-              {isEnglish
-                ? "Some homes still do not have a bedroom count."
-                : "Algumas casas ainda estão sem quantidade de quartos."}
-            </p>
-            <p className="mt-2 text-amber-50/90">
-              {isEnglish
-                ? `We identified ${missingBedrooms.length} ${missingBedrooms.length === 1 ? "home" : "homes"} without this information. The rest of the flow can continue normally.`
-                : `Identificamos ${missingBedrooms.length} ${missingBedrooms.length === 1 ? "casa sem essa informação" : "casas sem essa informação"}. O restante do fluxo pode continuar normalmente.`}
-            </p>
-            {onReviewMissingBedrooms ? (
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={onReviewMissingBedrooms}
-                  className="min-h-11 rounded-2xl border border-amber-200/30 bg-amber-200/10 px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-200/20"
-                >
-                  <ButtonLabel icon="review">
-                    {isEnglish ? "Review on Homes page" : "Revisar na página Casas"}
-                  </ButtonLabel>
-                </button>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
         {duplicateCheckins.length > 0 ? (
           <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/8 p-4 text-sm text-rose-100">
             <p className="font-medium">
@@ -788,51 +793,31 @@ export function UploadPanel({
           </div>
         ) : null}
 
-        {reviewData ? (
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+        {reviewData && isReviewExpanded ? (
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
               {isEnglish ? "Import review" : "Revisão da importação"}
             </p>
             <h3 className="mt-3 text-lg font-semibold text-white">
-              {isEnglish ? "Review and correct the imported classification" : "Revise e corrija a classificação importada"}
+              {isEnglish ? "Imported lines" : "Linhas importadas"}
             </h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
               {isEnglish
-                ? "Every imported line stays visible here. You can move any item between normal check-in, owner, and blocked before running the operation."
-                : "Toda linha importada continua visível aqui. Você pode mover qualquer item entre check-in normal, owner e blocked antes de rodar a operação."}
+                ? "Open only the group you want to review. You can move any line between CHECK INS, BLACKED OUT, and Cancelled before running the operation."
+                : "Abra apenas o grupo que quiser revisar. Você pode mover qualquer linha entre CHECK INS, BLACKED OUT e Cancelled antes de rodar a operação."}
             </p>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
-                  {isEnglish ? "Total imported" : "Total importado"}
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalRows}</p>
-              </div>
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-emerald-200">
-                  {isEnglish ? "Normal check-ins" : "Check-ins normais"}
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalCheckins}</p>
-              </div>
-              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-amber-200">Owner</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalOwnerCheckins}</p>
-              </div>
-              <div className="rounded-2xl border border-rose-400/20 bg-rose-400/10 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-rose-200">BLACKED OUT</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalBlockedCheckins}</p>
-              </div>
-            </div>
 
             <div className="mt-5 space-y-4">
               {reviewSections.map((section) => {
-                const items = reviewData.reviewItems.filter((item) => item.classification === section.key);
+                const items = reviewData.reviewItems.filter((item) =>
+                  section.key === "CHECKIN"
+                    ? item.classification === "CHECKIN" || item.classification === "OWNER"
+                    : item.classification === section.key,
+                );
 
                 return (
                   <details
                     key={section.key}
-                    open={section.key !== "CHECKIN"}
                     className="rounded-2xl border border-white/10 bg-slate-950/45 p-4"
                   >
                     <summary className="cursor-pointer list-none">
@@ -903,9 +888,9 @@ export function UploadPanel({
                                     }
                                     className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm font-medium text-white outline-none"
                                   >
-                                    <option value="CHECKIN">{isEnglish ? "Normal check-in" : "Check-in normal"}</option>
-                                    <option value="OWNER">Owner</option>
+                                    <option value="CHECKIN">CHECK INS</option>
                                     <option value="BLOCKED">BLACKED OUT</option>
+                                    <option value="CANCELLED">Cancelled</option>
                                   </select>
                                 </label>
                               </div>
@@ -922,6 +907,34 @@ export function UploadPanel({
                 );
               })}
             </div>
+          </div>
+        ) : null}
+
+        {missingBedrooms.length > 0 ? (
+          <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/8 p-4 text-sm text-amber-100">
+            <p className="font-medium">
+              {isEnglish
+                ? "Some homes still do not have a bedroom count."
+                : "Algumas casas ainda estão sem quantidade de quartos."}
+            </p>
+            <p className="mt-2 text-amber-50/90">
+              {isEnglish
+                ? `We identified ${missingBedrooms.length} ${missingBedrooms.length === 1 ? "home" : "homes"} without this information. The rest of the flow can continue normally.`
+                : `Identificamos ${missingBedrooms.length} ${missingBedrooms.length === 1 ? "casa sem essa informação" : "casas sem essa informação"}. O restante do fluxo pode continuar normalmente.`}
+            </p>
+            {onReviewMissingBedrooms ? (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={onReviewMissingBedrooms}
+                  className="min-h-11 rounded-2xl border border-amber-200/30 bg-amber-200/10 px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-200/20"
+                >
+                  <ButtonLabel icon="review">
+                    {isEnglish ? "Review on Homes page" : "Revisar na página Casas"}
+                  </ButtonLabel>
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </section>

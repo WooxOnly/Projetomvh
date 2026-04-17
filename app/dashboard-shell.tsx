@@ -84,6 +84,7 @@ type DashboardShellProps = {
       totalCheckins: number;
       totalOwnerCheckins: number;
       totalBlockedCheckins: number;
+      totalCancelledCheckins: number;
       totalUniqueCondominiums: number;
       totalUniqueProperties: number;
       totalUniquePMs: number;
@@ -98,10 +99,11 @@ type DashboardShellProps = {
       totalCheckins: number;
       totalOwnerCheckins: number;
       totalBlockedCheckins: number;
+      totalCancelledCheckins: number;
       reviewItems: Array<{
         id: string;
         sourceRowNumber: number | null;
-        classification: "CHECKIN" | "OWNER" | "BLOCKED";
+        classification: "CHECKIN" | "OWNER" | "BLOCKED" | "CANCELLED";
         integratorName: string | null;
         condominiumName: string | null;
         propertyName: string | null;
@@ -149,6 +151,15 @@ type DashboardShellProps = {
       importedPropertyManagers: Array<{
         id: string | null;
         name: string;
+      }>;
+      ownerCheckins: Array<{
+        id: string;
+        sourceRowNumber: number | null;
+        integratorName: string | null;
+        condominiumName: string | null;
+        propertyName: string | null;
+        building: string | null;
+        address: string | null;
       }>;
     }>;
     latestOperationRun: {

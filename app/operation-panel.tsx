@@ -65,6 +65,15 @@ type OperationPanelProps = {
         id: string | null;
         name: string;
       }>;
+      ownerCheckins: Array<{
+        id: string;
+        sourceRowNumber: number | null;
+        integratorName: string | null;
+        condominiumName: string | null;
+        propertyName: string | null;
+        building: string | null;
+        address: string | null;
+      }>;
     }>;
     latestOperationRun: {
       id: string;
@@ -877,6 +886,7 @@ async function runOperation(body: {
   spreadsheetUploadId: string;
   decisionMode: "default" | "override";
   availablePropertyManagerIds: string[];
+  ownerAssignmentsByCheckinId: Record<string, string[]>;
   preventMixedCondominiumOffices: boolean;
   forceEqualCheckins: boolean;
   endRouteNearOffice: boolean;
@@ -976,6 +986,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     spreadsheetUploadId: data.activeUpload?.id ?? "",
     decisionMode: "default",
     availablePropertyManagerIds: [] as string[],
+    ownerAssignmentsByCheckinId: {} as Record<string, string[]>,
     preventMixedCondominiumOffices: true,
     forceEqualCheckins: true,
     endRouteNearOffice: true,
@@ -1053,6 +1064,14 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const selectedUpload = useMemo(
     () => data.uploadHistory.find((item) => item.id === form.spreadsheetUploadId) ?? null,
     [data.uploadHistory, form.spreadsheetUploadId],
+  );
+  const selectedUploadOwnerCheckins = useMemo(
+    () => selectedUpload?.ownerCheckins ?? [],
+    [selectedUpload],
+  );
+  const selectedUploadOwnerCheckinIds = useMemo(
+    () => new Set(selectedUploadOwnerCheckins.map((item) => item.id)),
+    [selectedUploadOwnerCheckins],
   );
 
   const allPropertyManagersSorted = useMemo(
@@ -1145,6 +1164,36 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     () => new Set(importedManagerIdsForUpload),
     [importedManagerIdsForUpload],
   );
+  const selectedAvailableManagers = useMemo(
+    () =>
+      allPropertyManagersSorted.filter((manager) =>
+        form.availablePropertyManagerIds.includes(manager.id),
+      ),
+    [allPropertyManagersSorted, form.availablePropertyManagerIds],
+  );
+
+  function toggleOwnerCheckinResponsible(
+    checkinId: string,
+    propertyManagerId: string,
+    nextChecked: boolean,
+  ) {
+    setHasManualSelectionChanges(true);
+    setHasJustRunOperation(false);
+    setForm((current) => {
+      const currentManagers = current.ownerAssignmentsByCheckinId[checkinId] ?? [];
+      const nextManagers = nextChecked
+        ? Array.from(new Set([...currentManagers, propertyManagerId]))
+        : currentManagers.filter((value) => value !== propertyManagerId);
+
+      return {
+        ...current,
+        ownerAssignmentsByCheckinId: {
+          ...current.ownerAssignmentsByCheckinId,
+          [checkinId]: nextManagers,
+        },
+      };
+    });
+  }
 
   async function handleWhatsAppCopy(target: string, managerName?: string) {
     const existingMessage =
@@ -1203,6 +1252,18 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
           availablePropertyManagerIds: latestOperationRun.availablePMs.map(
             (item) => item.propertyManagerId,
           ),
+          ownerAssignmentsByCheckinId: Object.fromEntries(
+            selectedUploadOwnerCheckins.map((ownerCheckin) => [
+              ownerCheckin.id,
+              latestOperationRun.assignments
+                .filter(
+                  (assignment) =>
+                    assignment.checkin.id === ownerCheckin.id &&
+                    assignment.source === "owner_manual",
+                )
+                .map((assignment) => assignment.propertyManager.id),
+            ]),
+          ),
           preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
           forceEqualCheckins: latestOperationRun.forceEqualCheckins,
           endRouteNearOffice: latestOperationRun.endRouteNearOffice,
@@ -1217,6 +1278,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       return {
         ...current,
         availablePropertyManagerIds: importedManagerIdsForUpload,
+        ownerAssignmentsByCheckinId: Object.fromEntries(
+          selectedUploadOwnerCheckins.map((ownerCheckin) => [ownerCheckin.id, []]),
+        ),
       };
     });
   }, [
@@ -1224,18 +1288,37 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     importedManagerIdsForUpload,
     latestOperationRun,
     selectedUpload,
+    selectedUploadOwnerCheckins,
   ]);
 
   useEffect(() => {
     setForm((current) => ({
       ...current,
-      temporaryOfficeByManagerId: Object.fromEntries(
-        Object.entries(current.temporaryOfficeByManagerId).filter(([managerId]) =>
-          current.availablePropertyManagerIds.includes(managerId),
+        temporaryOfficeByManagerId: Object.fromEntries(
+          Object.entries(current.temporaryOfficeByManagerId).filter(([managerId]) =>
+            current.availablePropertyManagerIds.includes(managerId),
+          ),
         ),
+        ownerAssignmentsByCheckinId: Object.fromEntries(
+          Object.entries(current.ownerAssignmentsByCheckinId)
+            .filter(([checkinId]) => selectedUploadOwnerCheckinIds.has(checkinId))
+            .map(([checkinId, managerIds]) => [
+              checkinId,
+              managerIds.filter((managerId) =>
+                current.availablePropertyManagerIds.includes(managerId),
+              ),
+            ]),
+        ),
+      }));
+  }, [form.availablePropertyManagerIds, selectedUploadOwnerCheckinIds]);
+
+  const ownerResponsibleManagerIds = useMemo(
+    () =>
+      new Set(
+        Object.values(form.ownerAssignmentsByCheckinId).flatMap((managerIds) => managerIds),
       ),
-    }));
-  }, [form.availablePropertyManagerIds]);
+    [form.ownerAssignmentsByCheckinId],
+  );
 
   useEffect(() => {
     if (!message && !error && !copyState) return;
@@ -2439,6 +2522,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   spreadsheetUploadId: form.spreadsheetUploadId,
                   decisionMode: form.decisionMode === "override" ? "override" : "default",
                   availablePropertyManagerIds: form.availablePropertyManagerIds,
+                  ownerAssignmentsByCheckinId: form.ownerAssignmentsByCheckinId,
                   preventMixedCondominiumOffices: form.preventMixedCondominiumOffices,
                   forceEqualCheckins: form.forceEqualCheckins,
                   endRouteNearOffice: form.endRouteNearOffice,
@@ -2573,6 +2657,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         {!item.isActive ? isEnglish ? " (inactive)" : " (inativo)" : ""}
                         {item.office ? ` | ${item.office.name}` : ""}
                         {importedManagerIdsForUploadSet.has(item.id) ? isEnglish ? " | in spreadsheet" : " | na planilha" : ""}
+                        {ownerResponsibleManagerIds.has(item.id)
+                          ? isEnglish
+                            ? " | reserved for OWN"
+                            : " | reservado para OWN"
+                          : ""}
                       </span>
                       <div
                         className={`flex min-h-[1.2rem] flex-wrap items-center gap-2 text-xs ${
@@ -2626,6 +2715,125 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     ? `Some property managers from the spreadsheet were not automatically pre-selected because the name appears more than once in the database: ${importedManagerSelection.unresolvedNames.join(", ")}.`
                     : `Alguns gerentes de propriedades da planilha não foram pré-selecionados automaticamente porque o nome aparece mais de uma vez na base: ${importedManagerSelection.unresolvedNames.join(", ")}.`}
                 </p>
+              ) : null}
+              {selectedUploadOwnerCheckins.length > 0 ? (
+                <div className="mt-5 rounded-[1.5rem] border border-amber-300/20 bg-amber-300/8 p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.35em] text-amber-200">
+                        OWN
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-white">
+                        {isEnglish
+                          ? "Choose the PMs responsible for owner check-ins"
+                          : "Escolha os PMs responsáveis pelos check-ins de owner"}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-amber-50/90">
+                        {isEnglish
+                          ? "These check-ins stay out of the automatic route distribution. Any PM marked here will be reserved for OWN only in this run."
+                          : "Esses check-ins ficam fora da distribuição automática de rotas. Todo PM marcado aqui ficará reservado apenas para OWN neste run."}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-amber-300/25 bg-slate-950/45 px-3 py-1 text-xs text-amber-100">
+                      {selectedUploadOwnerCheckins.length} {isEnglish ? "OWN check-in(s)" : "OWN check-in(s)"}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {selectedUploadOwnerCheckins.map((ownerCheckin) => {
+                      const selectedManagersForOwner = form.ownerAssignmentsByCheckinId[ownerCheckin.id] ?? [];
+                      const ownerAddress = formatCheckinAddress({
+                        address: ownerCheckin.address,
+                        building: ownerCheckin.building,
+                      });
+
+                      return (
+                        <div
+                          key={ownerCheckin.id}
+                          className="rounded-2xl border border-white/10 bg-slate-950/50 p-4"
+                        >
+                          <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] text-amber-100">
+                                  OWN
+                                </span>
+                                {ownerCheckin.sourceRowNumber != null ? (
+                                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
+                                    {isEnglish ? "Row" : "Linha"} {ownerCheckin.sourceRowNumber}
+                                  </span>
+                                ) : null}
+                                {ownerCheckin.integratorName ? (
+                                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
+                                    Integrator: {ownerCheckin.integratorName}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="mt-3 text-sm font-semibold text-white">
+                                {ownerCheckin.propertyName || (isEnglish ? "Property not informed" : "Imóvel não informado")}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-300">
+                                {isEnglish ? "Resort" : "Condomínio"}: {ownerCheckin.condominiumName || (isEnglish ? "Not informed" : "Não informado")}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-300">
+                                {isEnglish ? "Address" : "Endereço"}: {ownerAddress || (isEnglish ? "Not informed" : "Não informado")}
+                              </p>
+                            </div>
+                            <div className="min-w-0 lg:max-w-sm">
+                              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                                {isEnglish ? "Responsible PMs" : "PMs responsáveis"}
+                              </p>
+                              {selectedAvailableManagers.length > 0 ? (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {selectedAvailableManagers.map((manager) => {
+                                    const checked = selectedManagersForOwner.includes(manager.id);
+
+                                    return (
+                                      <label
+                                        key={`${ownerCheckin.id}-${manager.id}`}
+                                        className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-xs transition ${
+                                          checked
+                                            ? "border-amber-300/35 bg-amber-300/15 text-amber-50"
+                                            : "border-white/10 bg-white/5 text-slate-200"
+                                        }`}
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={checked}
+                                          onChange={(event) =>
+                                            toggleOwnerCheckinResponsible(
+                                              ownerCheckin.id,
+                                              manager.id,
+                                              event.target.checked,
+                                            )
+                                          }
+                                        />
+                                        <span>{cleanPropertyManagerName(manager.name)}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <p className="mt-2 text-xs text-slate-400">
+                                  {isEnglish
+                                    ? "Select the PMs of the day above before assigning this OWN."
+                                    : "Selecione primeiro os PMs do dia acima antes de atribuir este OWN."}
+                                </p>
+                              )}
+                              {selectedManagersForOwner.length === 0 ? (
+                                <p className="mt-2 text-xs text-amber-200">
+                                  {isEnglish
+                                    ? "This OWN still has no responsible PM selected."
+                                    : "Este OWN ainda não tem PM responsável selecionado."}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               ) : null}
             </div>
 

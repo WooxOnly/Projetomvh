@@ -530,6 +530,7 @@ export function buildWhatsAppPayload(
           `${assignment.routeOrder}. ${assignment.checkin.propertyName ?? "Check-in sem imovel"}`,
           `Resort: ${assignment.checkin.condominiumName ?? "Nao informado"}`,
           `Endereco: ${formatCheckinOperationalAddress(assignment.checkin) ?? "Nao informado"}`,
+          `Integrator: ${assignment.checkin.integratorName ?? "Nao informado"}`,
           `Guest: ${assignment.checkin.guestName ?? "Nao informado"}`,
           `Door Code: ${assignment.checkin.doorCode ?? "Nao informado"}`,
           "",

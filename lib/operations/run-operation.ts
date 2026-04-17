@@ -15,11 +15,13 @@ import {
   resequenceOperationRunWithHere,
 } from "@/lib/operations/here-routing";
 import { HERE_ROUTING_NOTE, LOCAL_ROUTING_NOTE } from "@/lib/operations/here-usage";
+import { isOwnerStayIntegrator } from "@/lib/upload/integrator-rules";
 
 type RunOperationInput = {
   spreadsheetUploadId: string;
   decisionMode: "default" | "override";
   availablePropertyManagerIds?: string[];
+  ownerAssignmentsByCheckinId?: Record<string, string[]>;
   preventMixedCondominiumOffices?: boolean;
   forceEqualCheckins?: boolean;
   endRouteNearOffice?: boolean;
@@ -93,6 +95,12 @@ export async function runDailyOperation(input: RunOperationInput) {
   const operationalCheckins = upload.checkins.filter(
     (checkin) => checkin.classification === CheckinClassification.CHECKIN,
   );
+  const ownerCheckins = operationalCheckins.filter((checkin) =>
+    isOwnerStayIntegrator(checkin.integratorName),
+  );
+  const distributionCheckins = operationalCheckins.filter(
+    (checkin) => !isOwnerStayIntegrator(checkin.integratorName),
+  );
 
   if (operationalCheckins.length === 0) {
     throw new Error("Esse upload nao possui check-ins para distribuir.");
@@ -128,6 +136,52 @@ export async function runDailyOperation(input: RunOperationInput) {
   const availableManagerIds = new Set<string>();
   for (const managerRecord of availableManagers) {
     availableManagerIds.add(managerRecord.id);
+  }
+
+  const ownerAssignmentsByCheckinId = input.ownerAssignmentsByCheckinId ?? {};
+  const ownerCheckinIds = new Set(ownerCheckins.map((checkin) => checkin.id));
+  const reservedOwnerManagerIds = new Set<string>();
+  const ownerAssignmentRows: Array<{
+    checkinId: string;
+    propertyManagerId: string;
+    routeOrder: number;
+    workload: number;
+    clusterLabel: string | null;
+    source: string;
+  }> = [];
+
+  for (const ownerCheckin of ownerCheckins) {
+    const selectedManagerIds = Array.from(
+      new Set((ownerAssignmentsByCheckinId[ownerCheckin.id] ?? []).filter(Boolean)),
+    );
+
+    if (selectedManagerIds.length === 0) {
+      throw new Error(
+        `Defina ao menos um PM responsável para o OWN ${ownerCheckin.propertyName ?? ownerCheckin.address ?? ownerCheckin.id}.`,
+      );
+    }
+
+    selectedManagerIds.forEach((propertyManagerId, index) => {
+      if (!availableManagerIds.has(propertyManagerId)) {
+        throw new Error("Os PMs definidos para OWN precisam estar selecionados como disponíveis no dia.");
+      }
+
+      reservedOwnerManagerIds.add(propertyManagerId);
+      ownerAssignmentRows.push({
+        checkinId: ownerCheckin.id,
+        propertyManagerId,
+        routeOrder: index + 1,
+        workload: 1,
+        clusterLabel: ownerCheckin.condominiumName ?? null,
+        source: "owner_manual",
+      });
+    });
+  }
+
+  for (const checkinId of Object.keys(ownerAssignmentsByCheckinId)) {
+    if (!ownerCheckinIds.has(checkinId)) {
+      throw new Error("Foi encontrada uma atribuição de OWN para um check-in que não pertence mais ao upload atual.");
+    }
   }
 
   const temporaryOfficeEntries: Array<[string, string]> = [];
@@ -185,40 +239,54 @@ export async function runDailyOperation(input: RunOperationInput) {
     });
   }
 
-  const basePlan = enforceSmallResortSingleManager(
-    await buildOperationPlan({
-      checkins: operationalCheckins,
-      availableManagers: managersForOperation,
-      decisionMode: input.decisionMode,
-      preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
-      forceEqualCheckins: input.forceEqualCheckins ?? true,
-    }),
-    operationalCheckins,
+  const managersForDistribution = managersForOperation.filter(
+    (managerRecord) => !reservedOwnerManagerIds.has(managerRecord.id),
   );
-  const plan = enforceEqualCheckinCounts(
-    enforceSmallResortSingleManager(
-    input.useHereRouting
-      ? await optimizePlanWithHere(
+
+  if (distributionCheckins.length > 0 && managersForDistribution.length === 0) {
+    throw new Error("Selecione ao menos um PM livre para a distribuição automática dos check-ins que não são OWN.");
+  }
+
+  const basePlan =
+    distributionCheckins.length > 0
+      ? enforceSmallResortSingleManager(
+          await buildOperationPlan({
+            checkins: distributionCheckins,
+            availableManagers: managersForDistribution,
+            decisionMode: input.decisionMode,
+            preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+            forceEqualCheckins: input.forceEqualCheckins ?? true,
+          }),
+          distributionCheckins,
+        )
+      : [];
+  const plan =
+    distributionCheckins.length > 0
+      ? enforceEqualCheckinCounts(
+          enforceSmallResortSingleManager(
+            input.useHereRouting
+              ? await optimizePlanWithHere(
+                  {
+                    checkins: distributionCheckins,
+                    availableManagers: managersForDistribution,
+                    decisionMode: input.decisionMode,
+                    preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+                    forceEqualCheckins: input.forceEqualCheckins ?? true,
+                  },
+                  basePlan,
+                )
+              : basePlan,
+            distributionCheckins,
+          ),
           {
-            checkins: operationalCheckins,
-            availableManagers: managersForOperation,
+            checkins: distributionCheckins,
+            availableManagers: managersForDistribution,
             decisionMode: input.decisionMode,
             preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
             forceEqualCheckins: input.forceEqualCheckins ?? true,
           },
-          basePlan,
         )
-      : basePlan,
-      operationalCheckins,
-    ),
-    {
-      checkins: operationalCheckins,
-      availableManagers: managersForOperation,
-      decisionMode: input.decisionMode,
-      preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
-      forceEqualCheckins: input.forceEqualCheckins ?? true,
-    },
-  );
+      : [];
 
   const expiresAt = getExpiryDate(upload.operationDate);
 
@@ -237,7 +305,7 @@ export async function runDailyOperation(input: RunOperationInput) {
       routeAnalysisModel: null,
       routeAnalysisGeneratedAt: null,
       totalCheckins: operationalCheckins.length,
-      totalAssignments: plan.length,
+      totalAssignments: plan.length + ownerAssignmentRows.length,
       expiresAt,
       availablePMs: {
         create: (() => {
@@ -268,6 +336,9 @@ export async function runDailyOperation(input: RunOperationInput) {
               source: assignmentRecord.source,
             });
           }
+          for (const ownerAssignment of ownerAssignmentRows) {
+            rows.push(ownerAssignment);
+          }
           return rows;
         })(),
       },
@@ -284,6 +355,9 @@ export async function runDailyOperation(input: RunOperationInput) {
           const checkinIds: string[] = [];
           for (const assignmentRecord of plan) {
             checkinIds.push(assignmentRecord.checkinId);
+          }
+          for (const ownerAssignment of ownerAssignmentRows) {
+            checkinIds.push(ownerAssignment.checkinId);
           }
           return checkinIds;
         })(),
