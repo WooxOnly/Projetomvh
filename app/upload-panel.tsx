@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 
 import { ButtonLabel } from "@/app/button-icon";
@@ -20,9 +20,36 @@ type UploadSummary = {
   createdAt: Date | string;
   totalRows: number;
   totalCheckins: number;
+  totalOwnerCheckins: number;
+  totalBlockedCheckins: number;
   totalUniqueCondominiums: number;
   totalUniqueProperties: number;
   totalUniquePMs: number;
+};
+
+type CheckinClassification = "CHECKIN" | "OWNER" | "BLOCKED";
+
+type UploadReviewData = {
+  id: string;
+  sequenceNumber: number | null;
+  fileName: string;
+  operationDate: Date | string;
+  createdAt: Date | string;
+  totalRows: number;
+  totalCheckins: number;
+  totalOwnerCheckins: number;
+  totalBlockedCheckins: number;
+  reviewItems: Array<{
+    id: string;
+    sourceRowNumber: number | null;
+    classification: CheckinClassification;
+    integratorName: string | null;
+    condominiumName: string | null;
+    propertyName: string | null;
+    building: string | null;
+    address: string | null;
+    guestName: string | null;
+  }>;
 };
 
 type DuplicateUploadCheckin = {
@@ -53,6 +80,7 @@ type UploadResponse = {
 
 type UploadPanelProps = {
   offices: OfficeSummary[];
+  activeUploadReview: UploadReviewData | null;
   onReviewMissingBedrooms?: () => void;
   onOpenDetailsTab?: () => void;
 };
@@ -118,6 +146,7 @@ function readPersistedUploadFeedback() {
 
 export function UploadPanel({
   offices,
+  activeUploadReview,
   onReviewMissingBedrooms,
   onOpenDetailsTab,
 }: UploadPanelProps) {
@@ -148,6 +177,28 @@ export function UploadPanel({
     condominiums: Array<{ id: string; name: string }>;
     values: Record<string, string>;
   } | null>(null);
+  const [reviewData, setReviewData] = useState<UploadReviewData | null>(activeUploadReview);
+  const [classificationPendingId, setClassificationPendingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setReviewData(activeUploadReview);
+    if (activeUploadReview) {
+      setSummary({
+        id: activeUploadReview.id,
+        sequenceNumber: activeUploadReview.sequenceNumber,
+        fileName: activeUploadReview.fileName,
+        operationDate: activeUploadReview.operationDate,
+        createdAt: activeUploadReview.createdAt,
+        totalRows: activeUploadReview.totalRows,
+        totalCheckins: activeUploadReview.totalCheckins,
+        totalOwnerCheckins: activeUploadReview.totalOwnerCheckins,
+        totalBlockedCheckins: activeUploadReview.totalBlockedCheckins,
+        totalUniqueCondominiums: 0,
+        totalUniqueProperties: 0,
+        totalUniquePMs: 0,
+      });
+    }
+  }, [activeUploadReview]);
 
   function persistUploadFeedback(next: {
     message: string;
@@ -197,6 +248,31 @@ export function UploadPanel({
           (isEnglish ? "Could not save the office." : "Não foi possível salvar o escritório."),
       );
     }
+  }
+
+  async function patchClassification(checkinId: string, classification: CheckinClassification) {
+    const response = await fetch(`/api/checkins/${checkinId}/classification`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ classification }),
+    });
+
+    const data = (await response.json().catch(() => ({}))) as {
+      message?: string;
+      upload?: UploadSummary;
+      uploadReview?: UploadReviewData;
+    };
+
+    if (!response.ok) {
+      throw new Error(
+        data.message ??
+          (isEnglish
+            ? "Could not update the classification."
+            : "Nao foi possivel atualizar a classificacao."),
+      );
+    }
+
+    return data;
   }
 
   function openOfficeAssignmentModal(data: UploadResponse) {
@@ -399,6 +475,80 @@ export function UploadPanel({
     });
   }
 
+  function getClassificationLabel(classification: CheckinClassification) {
+    if (classification === "OWNER") {
+      return isEnglish ? "Owner" : "Owner";
+    }
+
+    if (classification === "BLOCKED") {
+      return isEnglish ? "Blocked" : "Blocked";
+    }
+
+    return isEnglish ? "Check-in" : "Check-in";
+  }
+
+  function getClassificationBadgeClass(classification: CheckinClassification) {
+    if (classification === "OWNER") {
+      return "border-amber-400/25 bg-amber-400/10 text-amber-100";
+    }
+
+    if (classification === "BLOCKED") {
+      return "border-rose-400/25 bg-rose-400/10 text-rose-100";
+    }
+
+    return "border-emerald-400/25 bg-emerald-400/10 text-emerald-100";
+  }
+
+  async function handleClassificationChange(checkinId: string, classification: CheckinClassification) {
+    setClassificationPendingId(checkinId);
+    setError("");
+
+    try {
+      const data = await patchClassification(checkinId, classification);
+      setSummary(data.upload ?? null);
+      setReviewData(data.uploadReview ?? null);
+      setMessage(
+        isEnglish
+          ? "Classification updated successfully."
+          : "Classificacao atualizada com sucesso.",
+      );
+      router.refresh();
+    } catch (classificationError) {
+      setError(
+        classificationError instanceof Error
+          ? classificationError.message
+          : isEnglish
+            ? "Could not update the classification."
+            : "Nao foi possivel atualizar a classificacao.",
+      );
+    } finally {
+      setClassificationPendingId(null);
+    }
+  }
+
+  const reviewSections = reviewData
+    ? [
+        {
+          key: "CHECKIN" as const,
+          title: isEnglish ? "Normal check-ins" : "Check-ins normais",
+          count: reviewData.totalCheckins,
+          emptyMessage: isEnglish ? "No normal check-ins in this upload." : "Nenhum check-in normal neste upload.",
+        },
+        {
+          key: "OWNER" as const,
+          title: isEnglish ? "Owner" : "Owner",
+          count: reviewData.totalOwnerCheckins,
+          emptyMessage: isEnglish ? "No owner lines in this upload." : "Nenhuma linha owner neste upload.",
+        },
+        {
+          key: "BLOCKED" as const,
+          title: isEnglish ? "Blocked" : "Blocked",
+          count: reviewData.totalBlockedCheckins,
+          emptyMessage: isEnglish ? "No blocked lines in this upload." : "Nenhuma linha blocked neste upload.",
+        },
+      ]
+    : [];
+
   return (
     <>
       {pending
@@ -483,6 +633,26 @@ export function UploadPanel({
                 {isEnglish ? "Active file" : "Arquivo ativo"}:{" "}
                 <span className="font-medium text-white">{formatUploadLabel(summary)}</span>
               </p>
+            ) : null}
+            {summary ? (
+              <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                <div className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
+                  <p className="uppercase tracking-[0.2em] text-slate-400">{isEnglish ? "Imported" : "Importado"}</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalRows}</p>
+                </div>
+                <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-100">
+                  <p className="uppercase tracking-[0.2em] text-emerald-200">{isEnglish ? "Check-ins" : "Check-ins"}</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalCheckins}</p>
+                </div>
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+                  <p className="uppercase tracking-[0.2em] text-amber-200">Owner</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalOwnerCheckins}</p>
+                </div>
+                <div className="rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-xs text-rose-100">
+                  <p className="uppercase tracking-[0.2em] text-rose-200">Blocked</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalBlockedCheckins}</p>
+                </div>
+              </div>
             ) : null}
             {summary && onOpenDetailsTab ? (
               <button
@@ -614,6 +784,143 @@ export function UploadPanel({
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+        ) : null}
+
+        {reviewData ? (
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+              {isEnglish ? "Import review" : "Revisão da importação"}
+            </p>
+            <h3 className="mt-3 text-lg font-semibold text-white">
+              {isEnglish ? "Review and correct the imported classification" : "Revise e corrija a classificação importada"}
+            </h3>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+              {isEnglish
+                ? "Every imported line stays visible here. You can move any item between normal check-in, owner, and blocked before running the operation."
+                : "Toda linha importada continua visível aqui. Você pode mover qualquer item entre check-in normal, owner e blocked antes de rodar a operação."}
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+                  {isEnglish ? "Total imported" : "Total importado"}
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalRows}</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-emerald-200">
+                  {isEnglish ? "Normal check-ins" : "Check-ins normais"}
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalCheckins}</p>
+              </div>
+              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-amber-200">Owner</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalOwnerCheckins}</p>
+              </div>
+              <div className="rounded-2xl border border-rose-400/20 bg-rose-400/10 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-rose-200">Blocked</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalBlockedCheckins}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              {reviewSections.map((section) => {
+                const items = reviewData.reviewItems.filter((item) => item.classification === section.key);
+
+                return (
+                  <details
+                    key={section.key}
+                    open={section.key !== "CHECKIN"}
+                    className="rounded-2xl border border-white/10 bg-slate-950/45 p-4"
+                  >
+                    <summary className="cursor-pointer list-none">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-white">{section.title}</p>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {section.count} {isEnglish ? "line(s)" : "linha(s)"}
+                          </p>
+                        </div>
+                        <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getClassificationBadgeClass(section.key)}`}>
+                          {getClassificationLabel(section.key)}
+                        </span>
+                      </div>
+                    </summary>
+
+                    {items.length > 0 ? (
+                      <div className="mt-4 space-y-3">
+                        {items.map((item) => (
+                          <div
+                            key={item.id}
+                            className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                          >
+                            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getClassificationBadgeClass(item.classification)}`}>
+                                    {getClassificationLabel(item.classification)}
+                                  </span>
+                                  {item.sourceRowNumber != null ? (
+                                    <span className="rounded-full border border-white/10 bg-slate-950/50 px-2.5 py-1 text-[11px] text-slate-300">
+                                      {isEnglish ? "Row" : "Linha"} {item.sourceRowNumber}
+                                    </span>
+                                  ) : null}
+                                  {item.integratorName ? (
+                                    <span className="rounded-full border border-white/10 bg-slate-950/50 px-2.5 py-1 text-[11px] text-slate-300">
+                                      Integrator: {item.integratorName}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <p className="mt-3 text-sm font-semibold text-white">
+                                  {item.propertyName || (isEnglish ? "Property not informed" : "Imóvel não informado")}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-300">
+                                  {isEnglish ? "Resort" : "Condomínio"}: {item.condominiumName || (isEnglish ? "Not informed" : "Não informado")}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-300">
+                                  {isEnglish ? "Address" : "Endereço"}: {item.address || (isEnglish ? "Not informed" : "Não informado")}
+                                  {item.building ? ` | ${isEnglish ? "Building" : "Building"} ${item.building}` : ""}
+                                </p>
+                                {item.guestName ? (
+                                  <p className="mt-1 text-xs text-slate-400">
+                                    Guest: {item.guestName}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <div className="w-full max-w-xs xl:flex-shrink-0">
+                                <label className="block text-xs uppercase tracking-[0.2em] text-slate-400">
+                                  {isEnglish ? "Classification" : "Classificação"}
+                                  <select
+                                    value={item.classification}
+                                    disabled={classificationPendingId === item.id}
+                                    onChange={(event) =>
+                                      void handleClassificationChange(
+                                        item.id,
+                                        event.target.value as CheckinClassification,
+                                      )
+                                    }
+                                    className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm font-medium text-white outline-none"
+                                  >
+                                    <option value="CHECKIN">{isEnglish ? "Normal check-in" : "Check-in normal"}</option>
+                                    <option value="OWNER">Owner</option>
+                                    <option value="BLOCKED">Blocked</option>
+                                  </select>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                        {section.emptyMessage}
+                      </div>
+                    )}
+                  </details>
+                );
+              })}
             </div>
           </div>
         ) : null}

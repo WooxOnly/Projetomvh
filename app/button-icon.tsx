@@ -23,7 +23,8 @@ type ButtonIconName =
   | "hide"
   | "warning"
   | "history"
-  | "home";
+  | "home"
+  | "search";
 
 export function ButtonIcon({
   name,
@@ -208,6 +209,13 @@ export function ButtonIcon({
         <svg {...common}>
           <path d="m3 10 9-7 9 7" />
           <path d="M5 9.5V20h14V9.5" />
+        </svg>
+      );
+    case "search":
+      return (
+        <svg {...common}>
+          <circle cx="11" cy="11" r="6" />
+          <path d="m20 20-4.2-4.2" />
         </svg>
       );
   }

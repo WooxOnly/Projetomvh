@@ -1,5 +1,7 @@
 import "server-only";
 
+import { CheckinClassification } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { cleanupExpiredOperationalData } from "@/lib/operations/cleanup";
 import { buildOperationPlan } from "@/lib/operations/ai-distribution";
@@ -88,7 +90,11 @@ export async function runDailyOperation(input: RunOperationInput) {
     throw new Error("Upload nao encontrado.");
   }
 
-  if (upload.checkins.length === 0) {
+  const operationalCheckins = upload.checkins.filter(
+    (checkin) => checkin.classification === CheckinClassification.CHECKIN,
+  );
+
+  if (operationalCheckins.length === 0) {
     throw new Error("Esse upload nao possui check-ins para distribuir.");
   }
 
@@ -181,20 +187,20 @@ export async function runDailyOperation(input: RunOperationInput) {
 
   const basePlan = enforceSmallResortSingleManager(
     await buildOperationPlan({
-      checkins: upload.checkins,
+      checkins: operationalCheckins,
       availableManagers: managersForOperation,
       decisionMode: input.decisionMode,
       preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
       forceEqualCheckins: input.forceEqualCheckins ?? true,
     }),
-    upload.checkins,
+    operationalCheckins,
   );
   const plan = enforceEqualCheckinCounts(
     enforceSmallResortSingleManager(
     input.useHereRouting
       ? await optimizePlanWithHere(
           {
-            checkins: upload.checkins,
+            checkins: operationalCheckins,
             availableManagers: managersForOperation,
             decisionMode: input.decisionMode,
             preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
@@ -203,10 +209,10 @@ export async function runDailyOperation(input: RunOperationInput) {
           basePlan,
         )
       : basePlan,
-      upload.checkins,
+      operationalCheckins,
     ),
     {
-      checkins: upload.checkins,
+      checkins: operationalCheckins,
       availableManagers: managersForOperation,
       decisionMode: input.decisionMode,
       preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
@@ -230,7 +236,7 @@ export async function runDailyOperation(input: RunOperationInput) {
       routeAnalysisSource: null,
       routeAnalysisModel: null,
       routeAnalysisGeneratedAt: null,
-      totalCheckins: upload.checkins.length,
+      totalCheckins: operationalCheckins.length,
       totalAssignments: plan.length,
       expiresAt,
       availablePMs: {

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { CheckinClassification } from "@prisma/client";
+
 import { getSuggestedCondominiumClassification } from "@/lib/condominium-classification";
 import { listOffices } from "@/lib/offices";
 import { prisma } from "@/lib/prisma";
@@ -41,6 +43,8 @@ export async function getActiveUploadSummary() {
       createdAt: true,
       totalRows: true,
       totalCheckins: true,
+      totalOwnerCheckins: true,
+      totalBlockedCheckins: true,
       totalUniqueCondominiums: true,
       totalUniqueProperties: true,
       totalUniquePMs: true,
@@ -80,6 +84,8 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
       createdAt: true,
       totalRows: true,
       totalCheckins: true,
+      totalOwnerCheckins: true,
+      totalBlockedCheckins: true,
       totalUniqueCondominiums: true,
       totalUniqueProperties: true,
       totalUniquePMs: true,
@@ -123,6 +129,8 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
       createdAt: upload.createdAt,
       totalRows: upload.totalRows,
       totalCheckins: upload.totalCheckins,
+      totalOwnerCheckins: upload.totalOwnerCheckins,
+      totalBlockedCheckins: upload.totalBlockedCheckins,
       totalUniqueCondominiums: upload.totalUniqueCondominiums,
       totalUniqueProperties: upload.totalUniqueProperties,
       totalUniquePMs: upload.totalUniquePMs,
@@ -151,6 +159,9 @@ export async function getActiveUploadOfficeBreakdown() {
       createdAt: true,
       totalCheckins: true,
       checkins: {
+        where: {
+          classification: CheckinClassification.CHECKIN,
+        },
         select: {
           condominiumId: true,
           condominiumName: true,
@@ -318,4 +329,72 @@ export async function getActiveUploadOfficeBreakdown() {
       }))
       .sort((left, right) => left.officeName.localeCompare(right.officeName)),
   };
+}
+
+async function getUploadReviewDataById(uploadId: string) {
+  const upload = await prisma.spreadsheetUpload.findUnique({
+    where: { id: uploadId },
+    select: {
+      id: true,
+      fileName: true,
+      operationDate: true,
+      createdAt: true,
+      totalRows: true,
+      totalCheckins: true,
+      totalOwnerCheckins: true,
+      totalBlockedCheckins: true,
+      checkins: {
+        orderBy: [{ sourceRowNumber: "asc" }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          sourceRowNumber: true,
+          classification: true,
+          integratorName: true,
+          condominiumName: true,
+          propertyName: true,
+          building: true,
+          address: true,
+          guestName: true,
+        },
+      },
+    },
+  });
+
+  if (!upload) {
+    return null;
+  }
+
+  const sequenceMap = await getSpreadsheetUploadSequenceMap();
+
+  return attachUploadSequenceNumber(
+    {
+      ...upload,
+      reviewItems: upload.checkins.map((checkin) => ({
+        id: checkin.id,
+        sourceRowNumber: checkin.sourceRowNumber,
+        classification: checkin.classification,
+        integratorName: checkin.integratorName,
+        condominiumName: checkin.condominiumName,
+        propertyName: checkin.propertyName,
+        building: checkin.building,
+        address: checkin.address,
+        guestName: checkin.guestName,
+      })),
+    },
+    sequenceMap,
+  );
+}
+
+export async function getActiveUploadReviewData() {
+  const uploadId = await getActiveUploadBase();
+
+  if (!uploadId) {
+    return null;
+  }
+
+  return getUploadReviewDataById(uploadId);
+}
+
+export async function getSpreadsheetUploadReviewData(uploadId: string) {
+  return getUploadReviewDataById(uploadId);
 }

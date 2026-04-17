@@ -9,6 +9,7 @@ import { listCondominiums, listProperties, listPropertyManagers } from "@/lib/op
 import { cleanupUploadInheritedCondominiumCoordinates } from "@/lib/operations/route-geocoding";
 import {
   getActiveUploadOfficeBreakdown,
+  getActiveUploadReviewData,
   getActiveUploadSummary,
   getUploadHistory,
 } from "@/lib/upload/queries";
@@ -226,6 +227,7 @@ export async function getDashboardSnapshot() {
     properties,
     offices,
     activeUpload,
+    activeUploadReview,
     activeUploadOfficeBreakdown,
     uploadHistory,
     latestOperationRun,
@@ -238,6 +240,7 @@ export async function getDashboardSnapshot() {
     listProperties(),
     listOffices(),
     getActiveUploadSummary(),
+    getActiveUploadReviewData(),
     getActiveUploadOfficeBreakdown(),
     getUploadHistory(),
     getLatestOperationRunForExport(),
@@ -264,6 +267,7 @@ export async function getDashboardSnapshot() {
     properties,
     offices,
     activeUpload,
+    activeUploadReview,
     activeUploadOfficeBreakdown,
     uploadHistory,
     hereApiLockedUntil: getHereRoutingLockedUntil(latestHereRoutingRun?.createdAt ?? null),

@@ -8,12 +8,35 @@ type UploadFilesPanelProps = {
     id: string;
     name: string;
   }>;
+  activeUploadReview: {
+    id: string;
+    sequenceNumber: number | null;
+    fileName: string;
+    operationDate: Date | string;
+    createdAt: Date | string;
+    totalRows: number;
+    totalCheckins: number;
+    totalOwnerCheckins: number;
+    totalBlockedCheckins: number;
+    reviewItems: Array<{
+      id: string;
+      sourceRowNumber: number | null;
+      classification: "CHECKIN" | "OWNER" | "BLOCKED";
+      integratorName: string | null;
+      condominiumName: string | null;
+      propertyName: string | null;
+      building: string | null;
+      address: string | null;
+      guestName: string | null;
+    }>;
+  } | null;
   onOpenDetailsTab?: () => void;
   onOpenPropertiesTab?: () => void;
 };
 
 export function UploadFilesPanel({
   offices,
+  activeUploadReview,
   onOpenDetailsTab,
   onOpenPropertiesTab,
 }: UploadFilesPanelProps) {
@@ -37,6 +60,7 @@ export function UploadFilesPanel({
 
       <UploadPanel
         offices={offices}
+        activeUploadReview={activeUploadReview}
         onOpenDetailsTab={onOpenDetailsTab}
         onReviewMissingBedrooms={onOpenPropertiesTab}
       />

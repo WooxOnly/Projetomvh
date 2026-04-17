@@ -31,6 +31,12 @@ enum LocationReviewEntityType {
   CHECKIN
 }
 
+enum CheckinClassification {
+  CHECKIN
+  OWNER
+  BLOCKED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -127,6 +133,8 @@ model SpreadsheetUpload {
   filePath                String
   totalRows               Int       @default(0)
   totalCheckins           Int       @default(0)
+  totalOwnerCheckins      Int       @default(0)
+  totalBlockedCheckins    Int       @default(0)
   totalUniqueCondominiums Int       @default(0)
   totalUniqueProperties   Int       @default(0)
   totalUniquePMs          Int       @default(0)
@@ -161,6 +169,7 @@ model LocationMaintenanceRun {
 model Checkin {
   id                    String                @id @default(cuid())
   spreadsheetUploadId   String
+  sourceRowNumber       Int?
   operationDate         DateTime
   condominiumId         String?
   condominiumName       String?
@@ -181,6 +190,7 @@ model Checkin {
   hasBbqGrill           Boolean?
   hasEarlyCheckin       Boolean?
   rawDataJson           String?
+  classification        CheckinClassification @default(CHECKIN)
   status                String                @default("pending")
   createdAt             DateTime              @default(now())
   expiresAt             DateTime

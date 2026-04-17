@@ -82,9 +82,33 @@ type DashboardShellProps = {
       createdAt: Date | string;
       totalRows: number;
       totalCheckins: number;
+      totalOwnerCheckins: number;
+      totalBlockedCheckins: number;
       totalUniqueCondominiums: number;
       totalUniqueProperties: number;
       totalUniquePMs: number;
+    } | null;
+    activeUploadReview: {
+      id: string;
+      sequenceNumber: number | null;
+      fileName: string;
+      operationDate: Date | string;
+      createdAt: Date | string;
+      totalRows: number;
+      totalCheckins: number;
+      totalOwnerCheckins: number;
+      totalBlockedCheckins: number;
+      reviewItems: Array<{
+        id: string;
+        sourceRowNumber: number | null;
+        classification: "CHECKIN" | "OWNER" | "BLOCKED";
+        integratorName: string | null;
+        condominiumName: string | null;
+        propertyName: string | null;
+        building: string | null;
+        address: string | null;
+        guestName: string | null;
+      }>;
     } | null;
     activeUploadOfficeBreakdown: {
       id: string;
@@ -313,6 +337,7 @@ export function DashboardShell({ data }: DashboardShellProps) {
       activePanel = (
         <UploadFilesPanel
           offices={data.offices.map((office) => ({ id: office.id, name: office.name }))}
+          activeUploadReview={data.activeUploadReview}
           onOpenDetailsTab={() => selectTab("details")}
           onOpenPropertiesTab={() => router.push("/dashboard/cadastros?tab=properties")}
         />

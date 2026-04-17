@@ -11,6 +11,10 @@ import {
   enrichCondominiumLocationData,
 } from "@/lib/operations/route-geocoding";
 import { mergeKnownCondominiumContext } from "@/lib/known-condominium-context";
+import {
+  classifyIntegratorValue,
+  syncSpreadsheetUploadClassificationTotals,
+} from "@/lib/upload/checkin-classification";
 import { setActiveSpreadsheetUpload } from "@/lib/upload/active-upload";
 import { parseWorkbook, type SuspiciousUploadRow } from "@/lib/upload/parse-workbook";
 import { formatOperationalAddress } from "@/lib/upload/normalize";
@@ -548,6 +552,7 @@ export async function processUpload(input: ProcessUploadInput) {
 
   const checkinsToCreate: Array<{
     spreadsheetUploadId: string;
+    sourceRowNumber: number;
     operationDate: Date;
     condominiumId?: string;
     condominiumName?: string;
@@ -568,6 +573,7 @@ export async function processUpload(input: ProcessUploadInput) {
     hasBbqGrill?: boolean;
     hasEarlyCheckin?: boolean;
     rawDataJson: string;
+    classification: "CHECKIN" | "OWNER" | "BLOCKED";
     status: string;
     expiresAt: Date;
   }> = [];
@@ -609,6 +615,7 @@ export async function processUpload(input: ProcessUploadInput) {
 
     checkinsToCreate.push({
       spreadsheetUploadId: upload.id,
+      sourceRowNumber: row.sourceRowNumber,
       operationDate: row.operationDate,
       condominiumId,
       condominiumName: row.condominiumName || undefined,
@@ -629,6 +636,7 @@ export async function processUpload(input: ProcessUploadInput) {
       hasBbqGrill: row.hasBbqGrill ?? undefined,
       hasEarlyCheckin: row.hasEarlyCheckin ?? undefined,
       rawDataJson: row.rawRowJson,
+      classification: classifyIntegratorValue(row.integratorName),
       status: "pending",
       expiresAt,
     });
@@ -645,7 +653,9 @@ export async function processUpload(input: ProcessUploadInput) {
       id: upload.id,
     },
     data: {
-      totalCheckins: checkinsToCreate.length,
+      totalCheckins: 0,
+      totalOwnerCheckins: 0,
+      totalBlockedCheckins: 0,
       totalUniqueCondominiums: uniqueCondominiums.size,
       totalUniqueProperties: uniqueProperties.size,
       totalUniquePMs: uniquePMs.size,
@@ -656,6 +666,8 @@ export async function processUpload(input: ProcessUploadInput) {
       operationDate: true,
       totalRows: true,
       totalCheckins: true,
+      totalOwnerCheckins: true,
+      totalBlockedCheckins: true,
       totalUniqueCondominiums: true,
       totalUniqueProperties: true,
       totalUniquePMs: true,
@@ -663,11 +675,21 @@ export async function processUpload(input: ProcessUploadInput) {
     },
   });
 
+  const uploadWithClassificationTotals = await syncSpreadsheetUploadClassificationTotals(updatedUpload.id);
+
   await setActiveSpreadsheetUpload(updatedUpload.id);
   const sequenceMap = await getSpreadsheetUploadSequenceMap();
 
   return {
-    upload: attachUploadSequenceNumber(updatedUpload, sequenceMap),
+    upload: attachUploadSequenceNumber(
+      {
+        ...updatedUpload,
+        totalCheckins: uploadWithClassificationTotals.totalCheckins,
+        totalOwnerCheckins: uploadWithClassificationTotals.totalOwnerCheckins,
+        totalBlockedCheckins: uploadWithClassificationTotals.totalBlockedCheckins,
+      },
+      sequenceMap,
+    ),
     missingBedrooms: Array.from(new Set(missingBedrooms)),
     duplicateCheckins,
     newPropertyManagersWithoutOffice: Array.from(newPropertyManagersWithoutOffice.values()),

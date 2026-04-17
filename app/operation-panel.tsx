@@ -308,6 +308,25 @@ type LatestOperationRun = NonNullable<OperationPanelProps["data"]["latestOperati
 type LatestOperationAssignment = LatestOperationRun["assignments"][number];
 type LatestOperationPropertyManager = LatestOperationAssignment["propertyManager"];
 
+type PmCondominiumSummary = {
+  managerId: string;
+  managerName: string;
+  totalCheckins: number;
+  condominiums: Array<{
+    name: string;
+    checkins: number;
+    isShared: boolean;
+  }>;
+};
+
+type AddressSearchResult = {
+  assignmentId: string;
+  routeOrder: number;
+  addressLabel: string;
+  condominiumName: string;
+  propertyManagerName: string;
+};
+
 type IsolatedStopAnalysis = {
   isolatedCount: number;
   worstGapMiles: number;
@@ -944,6 +963,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const [whatsAppExport, setWhatsAppExport] = useState<WhatsAppExportData | null>(null);
   const [copyState, setCopyState] = useState("");
   const [expandedStopManagers, setExpandedStopManagers] = useState<string[]>([]);
+  const [isPmCondominiumModalOpen, setIsPmCondominiumModalOpen] = useState(false);
+  const [isAddressSearchModalOpen, setIsAddressSearchModalOpen] = useState(false);
+  const [addressSearchTerm, setAddressSearchTerm] = useState("");
   const [routeAdjustmentModal, setRouteAdjustmentModal] = useState<RouteAdjustmentModalState>(null);
   const [adjustAssignmentsToFirstManager, setAdjustAssignmentsToFirstManager] = useState<string[]>([]);
   const [adjustAssignmentsToSecondManager, setAdjustAssignmentsToSecondManager] = useState<string[]>([]);
@@ -1275,6 +1297,95 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       ),
     [groupedAssignments],
   );
+
+  const pmCondominiumSummaries = useMemo<PmCondominiumSummary[]>(() => {
+    const condominiumManagerCount = new Map<string, Set<string>>();
+
+    for (const assignment of latestOperationRun?.assignments ?? []) {
+      const condominiumName = assignment.checkin.condominiumName?.trim() || (isEnglish ? "No resort" : "Sem condomínio");
+      const managers = condominiumManagerCount.get(condominiumName) ?? new Set<string>();
+      managers.add(assignment.propertyManager.id);
+      condominiumManagerCount.set(condominiumName, managers);
+    }
+
+    return groupedAssignments.map(({ manager, assignments }) => {
+      const condominiumCheckins = new Map<string, number>();
+
+      for (const assignment of assignments) {
+        const condominiumName = assignment.checkin.condominiumName?.trim() || (isEnglish ? "No resort" : "Sem condomínio");
+        condominiumCheckins.set(condominiumName, (condominiumCheckins.get(condominiumName) ?? 0) + 1);
+      }
+
+      return {
+        managerId: manager.id,
+        managerName: cleanPropertyManagerName(manager.name),
+        totalCheckins: assignments.length,
+        condominiums: Array.from(condominiumCheckins.entries())
+          .map(([name, checkins]) => ({
+            name,
+            checkins,
+            isShared: (condominiumManagerCount.get(name)?.size ?? 0) > 1,
+          }))
+          .sort((left, right) => {
+            if (right.checkins !== left.checkins) {
+              return right.checkins - left.checkins;
+            }
+
+            return left.name.localeCompare(right.name);
+          }),
+      };
+    });
+  }, [groupedAssignments, isEnglish, latestOperationRun?.assignments]);
+
+  const addressSearchResults = useMemo<AddressSearchResult[]>(() => {
+    const normalizedSearch = addressSearchTerm.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return [];
+    }
+
+    const matches: AddressSearchResult[] = [];
+
+    for (const assignment of latestOperationRun?.assignments ?? []) {
+        const addressLabel =
+          formatCheckinAddress(assignment.checkin) ||
+          (isEnglish ? "Address not informed" : "Endereço não informado");
+        const condominiumName =
+          assignment.checkin.condominiumName?.trim() ||
+          (isEnglish ? "Condominium not informed" : "Condomínio não informado");
+        const propertyManagerName = cleanPropertyManagerName(assignment.propertyManager.name);
+        const searchableText = [
+          addressLabel,
+          assignment.checkin.address ?? "",
+          assignment.checkin.building ?? "",
+          assignment.checkin.propertyName ?? "",
+          condominiumName,
+          propertyManagerName,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        if (!searchableText.includes(normalizedSearch)) {
+          continue;
+        }
+
+        matches.push({
+          assignmentId: assignment.id,
+          routeOrder: assignment.routeOrder,
+          addressLabel,
+          condominiumName,
+          propertyManagerName,
+        });
+    }
+
+    return matches.sort((left, right) => {
+      if (left.propertyManagerName !== right.propertyManagerName) {
+        return left.propertyManagerName.localeCompare(right.propertyManagerName);
+      }
+
+      return left.routeOrder - right.routeOrder;
+    });
+  }, [addressSearchTerm, isEnglish, latestOperationRun?.assignments]);
 
   const whatsAppMessagesByManager = useMemo(
     () =>
@@ -2125,6 +2236,182 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
             </div>,
           )
         : null}
+      {isPmCondominiumModalOpen
+        ? renderViewportOverlay(
+            <div className="fixed inset-0 z-[123] overflow-y-auto bg-slate-950/72 px-4 py-8 backdrop-blur-sm">
+              <div className="mx-auto w-full max-w-6xl rounded-[1.75rem] border border-cyan-400/20 bg-slate-950/96 p-5 shadow-2xl shadow-cyan-950/30 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+                      {isEnglish ? "PM x resort" : "PM x condomínio"}
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-white sm:text-xl">
+                      {isEnglish ? "Distribution by PM and resort" : "Distribuição por PM e condomínio"}
+                    </h3>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                      {isEnglish
+                        ? "Quick reading of which resorts stayed with each PM and how many check-ins each one has."
+                        : "Leitura rápida de quais condomínios ficaram com cada PM e quantos check-ins cada um possui."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPmCondominiumModalOpen(false)}
+                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+                  >
+                    {isEnglish ? "Close" : "Fechar"}
+                  </button>
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs leading-5 text-slate-300">
+                  {isEnglish
+                    ? "Resorts highlighted in amber are split between more than one PM."
+                    : "Condomínios destacados em amarelo estão divididos entre mais de um PM."}
+                </div>
+
+                <div className="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                  {pmCondominiumSummaries.map((summary) => (
+                    <section
+                      key={summary.managerId}
+                      className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h4 className="text-base font-semibold text-white">{summary.managerName}</h4>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {summary.condominiums.length} {isEnglish ? "resorts" : "condomínios"} • {summary.totalCheckins} check-ins
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-[11px] text-cyan-100">
+                          {summary.totalCheckins}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        {summary.condominiums.map((condominium) => (
+                          <div
+                            key={`${summary.managerId}-${condominium.name}`}
+                            className={`flex items-start justify-between gap-3 rounded-2xl border px-3 py-2.5 text-sm ${
+                              condominium.isShared
+                                ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
+                                : "border-white/10 bg-slate-950/55 text-slate-100"
+                            }`}
+                          >
+                            <div className="min-w-0">
+                              <p className="break-words font-medium">{condominium.name}</p>
+                              {condominium.isShared ? (
+                                <p className="mt-1 text-[11px] text-amber-200">
+                                  {isEnglish ? "Shared with another PM" : "Dividido com outro PM"}
+                                </p>
+                              ) : null}
+                            </div>
+                            <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px]">
+                              {condominium.checkins}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              </div>
+            </div>,
+          )
+        : null}
+      {isAddressSearchModalOpen
+        ? renderViewportOverlay(
+            <div className="fixed inset-0 z-[124] overflow-y-auto bg-slate-950/72 px-4 py-8 backdrop-blur-sm">
+              <div className="mx-auto w-full max-w-4xl rounded-[1.75rem] border border-cyan-400/20 bg-slate-950/96 p-5 shadow-2xl shadow-cyan-950/30 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+                      {isEnglish ? "Address search" : "Busca por endereço"}
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-white sm:text-xl">
+                      {isEnglish ? "Find the responsible PM" : "Encontrar o PM responsável"}
+                    </h3>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                      {isEnglish
+                        ? "Search by address, building, resort, or property name to see who owns that stop."
+                        : "Busque por endereço, building, condomínio ou nome da propriedade para ver quem está com essa parada."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddressSearchModalOpen(false);
+                      setAddressSearchTerm("");
+                    }}
+                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+                  >
+                    {isEnglish ? "Close" : "Fechar"}
+                  </button>
+                </div>
+
+                <div className="mt-5">
+                  <input
+                    type="text"
+                    value={addressSearchTerm}
+                    onChange={(event) => setAddressSearchTerm(event.target.value)}
+                    placeholder={
+                      isEnglish
+                        ? "Example: Celebration Ave, Storey Lake, 305..."
+                        : "Exemplo: Celebration Ave, Storey Lake, 305..."
+                    }
+                    className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                  />
+                </div>
+
+                {addressSearchTerm.trim() ? (
+                  <div className="mt-5 space-y-3">
+                    <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+                      {addressSearchResults.length} {isEnglish ? "result(s)" : "resultado(s)"}
+                    </p>
+                    {addressSearchResults.length > 0 ? (
+                      <div className="space-y-2">
+                        {addressSearchResults.map((result) => (
+                          <div
+                            key={result.assignmentId}
+                            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                          >
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-white">{result.addressLabel}</p>
+                                <p className="mt-1 text-xs text-slate-300">
+                                  {isEnglish ? "Resort" : "Condomínio"}: {result.condominiumName}
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-cyan-100">
+                                  PM: {result.propertyManagerName}
+                                </span>
+                                <span className="rounded-full border border-white/10 bg-slate-950/55 px-2.5 py-1 text-slate-300">
+                                  Stop {result.routeOrder}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-5 text-sm text-slate-300">
+                        {isEnglish
+                          ? "No address found with that term."
+                          : "Nenhum endereço encontrado com esse termo."}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-5 rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-5 text-sm text-slate-300">
+                    {isEnglish
+                      ? "Type part of the address to see the responsible PM."
+                      : "Digite parte do endereço para ver o PM responsável."}
+                  </div>
+                )}
+              </div>
+            </div>,
+          )
+        : null}
       {mode !== "route" ? (
         <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
           <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
@@ -2484,6 +2771,24 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   {rebuildTarget === "here" ? <SpinnerIcon className="h-5 w-5" /> : null}
                   <ButtonLabel icon="route">
                     {formatCooldownLabel(normalizedHereApiLockedUntil, isEnglish)}
+                  </ButtonLabel>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPmCondominiumModalOpen(true)}
+                  className={topActionButtonClass}
+                >
+                  <ButtonLabel icon="details">
+                    {isEnglish ? "PM x resort" : "PM x condomínio"}
+                  </ButtonLabel>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddressSearchModalOpen(true)}
+                  className={topActionButtonClass}
+                >
+                  <ButtonLabel icon="search">
+                    {isEnglish ? "Find address" : "Buscar endereço"}
                   </ButtonLabel>
                 </button>
               </div>
