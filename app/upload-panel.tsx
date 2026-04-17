@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 
 import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
+import { isOwnerStayIntegrator } from "@/lib/upload/integrator-rules";
 
 type OfficeSummary = {
   id: string;
@@ -485,11 +486,11 @@ export function UploadPanel({
 
   function getClassificationLabel(classification: CheckinClassification) {
     if (classification === "OWNER") {
-      return "CHECK INS";
+      return "OWN";
     }
 
     if (classification === "CANCELLED") {
-      return "Cancelled";
+      return "CANCELLED";
     }
 
     if (classification === "BLOCKED") {
@@ -547,8 +548,14 @@ export function UploadPanel({
         {
           key: "CHECKIN" as const,
           title: "CHECK INS",
-          count: reviewData.totalCheckins + reviewData.totalOwnerCheckins,
+          count: reviewData.totalCheckins,
           emptyMessage: isEnglish ? "No check-ins in this upload." : "Nenhum check-in neste upload.",
+        },
+        {
+          key: "OWNER" as const,
+          title: "OWN",
+          count: reviewData.totalOwnerCheckins,
+          emptyMessage: isEnglish ? "No OWN check-ins in this upload." : "Nenhum check-in OWN neste upload.",
         },
         {
           key: "BLOCKED" as const,
@@ -558,9 +565,9 @@ export function UploadPanel({
         },
         {
           key: "CANCELLED" as const,
-          title: "Cancelled",
+          title: "CANCELLED",
           count: reviewData.totalCancelledCheckins,
-          emptyMessage: isEnglish ? "No Cancelled lines in this upload." : "Nenhuma linha Cancelled neste upload.",
+          emptyMessage: isEnglish ? "No CANCELLED lines in this upload." : "Nenhuma linha CANCELLED neste upload.",
         },
       ]
     : [];
@@ -803,17 +810,31 @@ export function UploadPanel({
             </h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
               {isEnglish
-                ? "Open only the group you want to review. You can move any line between CHECK INS, BLACKED OUT, and Cancelled before running the operation."
-                : "Abra apenas o grupo que quiser revisar. Você pode mover qualquer linha entre CHECK INS, BLACKED OUT e Cancelled antes de rodar a operação."}
+                ? "Open only the group you want to review. You can inspect CHECK INS, OWN, BLACKED OUT, and CANCELLED before running the operation."
+                : "Abra apenas o grupo que quiser revisar. Você pode inspecionar CHECK INS, OWN, BLACKED OUT e CANCELLED antes de rodar a operação."}
             </p>
 
             <div className="mt-5 space-y-4">
               {reviewSections.map((section) => {
-                const items = reviewData.reviewItems.filter((item) =>
-                  section.key === "CHECKIN"
-                    ? item.classification === "CHECKIN" || item.classification === "OWNER"
-                    : item.classification === section.key,
-                );
+                const items = reviewData.reviewItems.filter((item) => {
+                  if (section.key === "CHECKIN") {
+                    return (
+                      item.classification !== "BLOCKED" &&
+                      item.classification !== "CANCELLED" &&
+                      !isOwnerStayIntegrator(item.integratorName)
+                    );
+                  }
+
+                  if (section.key === "OWNER") {
+                    return (
+                      item.classification !== "BLOCKED" &&
+                      item.classification !== "CANCELLED" &&
+                      isOwnerStayIntegrator(item.integratorName)
+                    );
+                  }
+
+                  return item.classification === section.key;
+                });
 
                 return (
                   <details
@@ -847,6 +868,11 @@ export function UploadPanel({
                                   <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getClassificationBadgeClass(item.classification)}`}>
                                     {getClassificationLabel(item.classification)}
                                   </span>
+                                  {isOwnerStayIntegrator(item.integratorName) ? (
+                                    <span className="rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[11px] text-amber-100">
+                                      OWN
+                                    </span>
+                                  ) : null}
                                   {item.sourceRowNumber != null ? (
                                     <span className="rounded-full border border-white/10 bg-slate-950/50 px-2.5 py-1 text-[11px] text-slate-300">
                                       {isEnglish ? "Row" : "Linha"} {item.sourceRowNumber}
@@ -890,7 +916,7 @@ export function UploadPanel({
                                   >
                                     <option value="CHECKIN">CHECK INS</option>
                                     <option value="BLOCKED">BLACKED OUT</option>
-                                    <option value="CANCELLED">Cancelled</option>
+                                    <option value="CANCELLED">CANCELLED</option>
                                   </select>
                                 </label>
                               </div>
