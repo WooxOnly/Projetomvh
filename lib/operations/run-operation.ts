@@ -22,6 +22,7 @@ type RunOperationInput = {
   decisionMode: "default" | "override";
   availablePropertyManagerIds?: string[];
   ownerAssignmentsByCheckinId?: Record<string, string[]>;
+  useSpreadsheetPmAssignments?: boolean;
   preventMixedCondominiumOffices?: boolean;
   forceEqualCheckins?: boolean;
   endRouteNearOffice?: boolean;
@@ -95,6 +96,7 @@ export async function runDailyOperation(input: RunOperationInput) {
   const operationalCheckins = upload.checkins.filter(
     (checkin) => checkin.classification === CheckinClassification.CHECKIN,
   );
+  const useSpreadsheetPmAssignments = input.useSpreadsheetPmAssignments === true;
   const ownerCheckins = operationalCheckins.filter((checkin) =>
     isOwnerStayIntegrator(checkin.integratorName),
   );
@@ -136,6 +138,111 @@ export async function runDailyOperation(input: RunOperationInput) {
   const availableManagerIds = new Set<string>();
   for (const managerRecord of availableManagers) {
     availableManagerIds.add(managerRecord.id);
+  }
+
+  if (useSpreadsheetPmAssignments) {
+    const directAssignmentRows: Array<{
+      checkinId: string;
+      propertyManagerId: string;
+      routeOrder: number;
+      workload: number;
+      clusterLabel: string | null;
+      source: string;
+    }> = [];
+    const routeOrderByManagerId = new Map<string, number>();
+    const missingManagers = new Set<string>();
+    const unavailableManagers = new Set<string>();
+
+    for (const checkin of operationalCheckins) {
+      if (!checkin.propertyManagerId) {
+        missingManagers.add(
+          checkin.propertyManagerName ??
+            checkin.responsibleReference ??
+            checkin.propertyName ??
+            checkin.address ??
+            checkin.id,
+        );
+        continue;
+      }
+
+      if (!availableManagerIds.has(checkin.propertyManagerId)) {
+        unavailableManagers.add(checkin.propertyManagerName ?? checkin.propertyManagerId);
+        continue;
+      }
+
+      const nextRouteOrder = (routeOrderByManagerId.get(checkin.propertyManagerId) ?? 0) + 1;
+      routeOrderByManagerId.set(checkin.propertyManagerId, nextRouteOrder);
+      directAssignmentRows.push({
+        checkinId: checkin.id,
+        propertyManagerId: checkin.propertyManagerId,
+        routeOrder: nextRouteOrder,
+        workload: 1,
+        clusterLabel: checkin.condominiumName ?? null,
+        source: isOwnerStayIntegrator(checkin.integratorName)
+          ? "owner_spreadsheet"
+          : "spreadsheet_direct",
+      });
+    }
+
+    if (missingManagers.size > 0) {
+      throw new Error(
+        `Existem check-ins sem PM definido na planilha: ${Array.from(missingManagers).slice(0, 5).join(", ")}.`,
+      );
+    }
+
+    if (unavailableManagers.size > 0) {
+      throw new Error(
+        `Os seguintes PMs da planilha precisam estar selecionados em DIAS ÚTEIS: ${Array.from(unavailableManagers).slice(0, 5).join(", ")}.`,
+      );
+    }
+
+    const expiresAt = getExpiryDate(upload.operationDate);
+
+    const operationRun = await prisma.operationRun.create({
+      data: {
+        spreadsheetUploadId: upload.id,
+        operationDate: upload.operationDate,
+        decisionMode: input.decisionMode,
+        useSpreadsheetPmAssignments: true,
+        preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+        forceEqualCheckins: input.forceEqualCheckins ?? true,
+        endRouteNearOffice: input.endRouteNearOffice ?? true,
+        status: "ready",
+        notes: null,
+        routeAnalysisJson: null,
+        routeAnalysisSource: null,
+        routeAnalysisModel: null,
+        routeAnalysisGeneratedAt: null,
+        totalCheckins: operationalCheckins.length,
+        totalAssignments: directAssignmentRows.length,
+        expiresAt,
+        availablePMs: {
+          create: availableManagers.map((managerRecord) => ({
+            propertyManagerId: managerRecord.id,
+            temporaryOfficeId: input.temporaryOfficeByManagerId?.[managerRecord.id] ?? null,
+          })),
+        },
+        assignments: {
+          create: directAssignmentRows,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    await prisma.checkin.updateMany({
+      where: {
+        id: {
+          in: operationalCheckins.map((checkin) => checkin.id),
+        },
+      },
+      data: {
+        status: "assigned",
+      },
+    });
+
+    return operationRun;
   }
 
   const ownerAssignmentsByCheckinId = input.ownerAssignmentsByCheckinId ?? {};
@@ -295,6 +402,7 @@ export async function runDailyOperation(input: RunOperationInput) {
       spreadsheetUploadId: upload.id,
       operationDate: upload.operationDate,
       decisionMode: input.decisionMode,
+      useSpreadsheetPmAssignments: false,
       preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
       forceEqualCheckins: input.forceEqualCheckins ?? true,
       endRouteNearOffice: input.endRouteNearOffice ?? true,
@@ -382,6 +490,15 @@ export async function runDailyOperation(input: RunOperationInput) {
 }
 
 export async function refreshOperationRunRouting(operationRunId: string) {
+  const operationRun = await prisma.operationRun.findUnique({
+    where: {
+      id: operationRunId,
+    },
+    select: {
+      useSpreadsheetPmAssignments: true,
+    },
+  });
+
   await prisma.operationRun.update({
     where: {
       id: operationRunId,
@@ -393,6 +510,10 @@ export async function refreshOperationRunRouting(operationRunId: string) {
       routeAnalysisGeneratedAt: null,
     },
   });
+
+  if (operationRun?.useSpreadsheetPmAssignments) {
+    return;
+  }
 
   await resequenceOperationRun(operationRunId);
 }

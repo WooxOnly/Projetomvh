@@ -7,14 +7,14 @@ export function LanguageSwitcher() {
   const { language, isEnglish, setLanguage } = useLanguage();
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1">
+    <div className="theme-pill-group flex items-center gap-2 rounded-full p-1">
       <button
         type="button"
         onClick={() => setLanguage("pt-BR")}
         className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
           !isEnglish
-            ? "bg-cyan-300 text-slate-950"
-            : "text-slate-300 hover:bg-white/8 hover:text-white"
+            ? "theme-pill-active text-slate-950"
+            : "theme-pill-button"
         }`}
       >
         <ButtonLabel icon="language" className="gap-1.5">
@@ -26,8 +26,8 @@ export function LanguageSwitcher() {
         onClick={() => setLanguage("en-US")}
         className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
           isEnglish
-            ? "bg-cyan-300 text-slate-950"
-            : "text-slate-300 hover:bg-white/8 hover:text-white"
+            ? "theme-pill-active text-slate-950"
+            : "theme-pill-button"
         }`}
       >
         <ButtonLabel icon="language" className="gap-1.5">

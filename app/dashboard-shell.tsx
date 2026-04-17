@@ -166,6 +166,7 @@ type DashboardShellProps = {
       id: string;
       operationDate: Date | string;
       decisionMode: string;
+      useSpreadsheetPmAssignments: boolean;
       preventMixedCondominiumOffices: boolean;
       forceEqualCheckins: boolean;
       endRouteNearOffice: boolean;

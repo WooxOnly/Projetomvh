@@ -31,7 +31,7 @@ export function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={pending}
-      className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300/40 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+      className="theme-secondary-button rounded-full px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60"
     >
       <ButtonLabel icon="logout">
         {pending ? (isEnglish ? "Signing out..." : "Saindo...") : isEnglish ? "Sign out" : "Sair"}

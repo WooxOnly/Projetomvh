@@ -79,6 +79,7 @@ type OperationPanelProps = {
       id: string;
       operationDate: Date | string;
       decisionMode: string;
+      useSpreadsheetPmAssignments: boolean;
       preventMixedCondominiumOffices: boolean;
       forceEqualCheckins: boolean;
       endRouteNearOffice: boolean;
@@ -887,6 +888,7 @@ async function runOperation(body: {
   decisionMode: "default" | "override";
   availablePropertyManagerIds: string[];
   ownerAssignmentsByCheckinId: Record<string, string[]>;
+  useSpreadsheetPmAssignments: boolean;
   preventMixedCondominiumOffices: boolean;
   forceEqualCheckins: boolean;
   endRouteNearOffice: boolean;
@@ -987,6 +989,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     decisionMode: "default",
     availablePropertyManagerIds: [] as string[],
     ownerAssignmentsByCheckinId: {} as Record<string, string[]>,
+    useSpreadsheetPmAssignments: false,
     preventMixedCondominiumOffices: true,
     forceEqualCheckins: true,
     endRouteNearOffice: true,
@@ -1252,6 +1255,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
           availablePropertyManagerIds: latestOperationRun.availablePMs.map(
             (item) => item.propertyManagerId,
           ),
+          useSpreadsheetPmAssignments: latestOperationRun.useSpreadsheetPmAssignments,
           ownerAssignmentsByCheckinId: Object.fromEntries(
             selectedUploadOwnerCheckins.map((ownerCheckin) => [
               ownerCheckin.id,
@@ -1281,6 +1285,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
         ownerAssignmentsByCheckinId: Object.fromEntries(
           selectedUploadOwnerCheckins.map((ownerCheckin) => [ownerCheckin.id, []]),
         ),
+        useSpreadsheetPmAssignments: false,
       };
     });
   }, [
@@ -1315,9 +1320,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const ownerResponsibleManagerIds = useMemo(
     () =>
       new Set(
-        Object.values(form.ownerAssignmentsByCheckinId).flatMap((managerIds) => managerIds),
+        form.useSpreadsheetPmAssignments
+          ? []
+          : Object.values(form.ownerAssignmentsByCheckinId).flatMap((managerIds) => managerIds),
       ),
-    [form.ownerAssignmentsByCheckinId],
+    [form.ownerAssignmentsByCheckinId, form.useSpreadsheetPmAssignments],
   );
 
   useEffect(() => {
@@ -2523,6 +2530,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   decisionMode: form.decisionMode === "override" ? "override" : "default",
                   availablePropertyManagerIds: form.availablePropertyManagerIds,
                   ownerAssignmentsByCheckinId: form.ownerAssignmentsByCheckinId,
+                  useSpreadsheetPmAssignments: form.useSpreadsheetPmAssignments,
                   preventMixedCondominiumOffices: form.preventMixedCondominiumOffices,
                   forceEqualCheckins: form.forceEqualCheckins,
                   endRouteNearOffice: form.endRouteNearOffice,
@@ -2716,7 +2724,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     : `Alguns gerentes de propriedades da planilha não foram pré-selecionados automaticamente porque o nome aparece mais de uma vez na base: ${importedManagerSelection.unresolvedNames.join(", ")}.`}
                 </p>
               ) : null}
-              {selectedUploadOwnerCheckins.length > 0 ? (
+              {selectedUploadOwnerCheckins.length > 0 && !form.useSpreadsheetPmAssignments ? (
                 <div className="mt-5 rounded-[1.5rem] border border-amber-300/20 bg-amber-300/8 p-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
@@ -2835,14 +2843,52 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   </div>
                 </div>
               ) : null}
+              {form.useSpreadsheetPmAssignments ? (
+                <div className="mt-5 rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/8 p-4 text-sm text-emerald-50">
+                  <p className="font-medium">
+                    {isEnglish
+                      ? "Weekday mode is active."
+                      : "O modo DIAS ÚTEIS está ativo."}
+                  </p>
+                  <p className="mt-2 leading-6 text-emerald-50/90">
+                    {isEnglish
+                      ? "The operation will use the PM already assigned in the spreadsheet for each check-in, including OWN, without automatic redistribution or route calculation."
+                      : "A operação vai usar o PM já indicado na planilha para cada check-in, inclusive OWN, sem redistribuição automática nem cálculo de rota."}
+                  </p>
+                </div>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="flex flex-col items-start gap-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 <label className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/8 px-3 py-2 text-xs text-slate-100">
                   <input
                     type="checkbox"
+                    checked={form.useSpreadsheetPmAssignments}
+                    onChange={(event) => {
+                      setHasManualSelectionChanges(true);
+                      setHasJustRunOperation(false);
+                      setForm((current) => ({
+                        ...current,
+                        useSpreadsheetPmAssignments: event.target.checked,
+                      }));
+                    }}
+                  />
+                  <span>
+                    {isEnglish ? "WEEKDAYS" : "DIAS ÚTEIS"}
+                  </span>
+                </label>
+                <label
+                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
+                    form.useSpreadsheetPmAssignments
+                      ? "cursor-not-allowed border-white/10 bg-white/5 text-slate-500"
+                      : "border-cyan-300/20 bg-cyan-300/8 text-slate-100"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
                     checked={form.preventMixedCondominiumOffices}
+                    disabled={form.useSpreadsheetPmAssignments}
                     onChange={(event) => {
                       setHasManualSelectionChanges(true);
                       setHasJustRunOperation(false);
@@ -2856,10 +2902,17 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     {isEnglish ? "Do not merge condominiums" : "Não mesclar condomínios"}
                   </span>
                 </label>
-                <label className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/8 px-3 py-2 text-xs text-slate-100">
+                <label
+                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
+                    form.useSpreadsheetPmAssignments
+                      ? "cursor-not-allowed border-white/10 bg-white/5 text-slate-500"
+                      : "border-cyan-300/20 bg-cyan-300/8 text-slate-100"
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={form.forceEqualCheckins}
+                    disabled={form.useSpreadsheetPmAssignments}
                     onChange={(event) => {
                       setHasManualSelectionChanges(true);
                       setHasJustRunOperation(false);
@@ -2873,10 +2926,17 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     {isEnglish ? "Force equal check-ins" : "Forçar igualar check-ins"}
                   </span>
                 </label>
-                <label className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/8 px-3 py-2 text-xs text-slate-100">
+                <label
+                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
+                    form.useSpreadsheetPmAssignments
+                      ? "cursor-not-allowed border-white/10 bg-white/5 text-slate-500"
+                      : "border-cyan-300/20 bg-cyan-300/8 text-slate-100"
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={form.endRouteNearOffice}
+                    disabled={form.useSpreadsheetPmAssignments}
                     onChange={(event) => {
                       setHasManualSelectionChanges(true);
                       setHasJustRunOperation(false);

@@ -205,13 +205,14 @@ model Checkin {
 }
 
 model OperationRun {
-  id                String                 @id @default(cuid())
-  spreadsheetUploadId String
-  operationDate     DateTime
-  decisionMode      String
-  preventMixedCondominiumOffices Boolean   @default(true)
-  forceEqualCheckins Boolean               @default(false)
-  endRouteNearOffice Boolean               @default(true)
+    id                String                 @id @default(cuid())
+    spreadsheetUploadId String
+    operationDate     DateTime
+    decisionMode      String
+    useSpreadsheetPmAssignments Boolean      @default(false)
+    preventMixedCondominiumOffices Boolean   @default(true)
+    forceEqualCheckins Boolean               @default(false)
+    endRouteNearOffice Boolean               @default(true)
   status            String                 @default("ready")
   notes             String?
   routeAnalysisJson String?

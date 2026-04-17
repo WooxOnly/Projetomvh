@@ -84,6 +84,7 @@ export async function POST(request: Request) {
 
         return groupedAssignments;
       })(),
+      useSpreadsheetPmAssignments: latestOperationRun.useSpreadsheetPmAssignments,
       preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
       forceEqualCheckins: latestOperationRun.forceEqualCheckins,
       endRouteNearOffice: latestOperationRun.endRouteNearOffice,

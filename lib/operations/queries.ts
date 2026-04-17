@@ -106,6 +106,7 @@ async function getLatestOperationRunBase() {
       spreadsheetUploadId: true,
       operationDate: true,
       decisionMode: true,
+      useSpreadsheetPmAssignments: true,
       preventMixedCondominiumOffices: true,
       forceEqualCheckins: true,
       endRouteNearOffice: true,
