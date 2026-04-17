@@ -481,7 +481,7 @@ export function UploadPanel({
     }
 
     if (classification === "BLOCKED") {
-      return isEnglish ? "Blocked" : "Blocked";
+      return "BLACKED OUT";
     }
 
     return isEnglish ? "Check-in" : "Check-in";
@@ -542,9 +542,9 @@ export function UploadPanel({
         },
         {
           key: "BLOCKED" as const,
-          title: isEnglish ? "Blocked" : "Blocked",
+          title: "BLACKED OUT",
           count: reviewData.totalBlockedCheckins,
-          emptyMessage: isEnglish ? "No blocked lines in this upload." : "Nenhuma linha blocked neste upload.",
+          emptyMessage: isEnglish ? "No BLACKED OUT lines in this upload." : "Nenhuma linha BLACKED OUT neste upload.",
         },
       ]
     : [];
@@ -649,7 +649,7 @@ export function UploadPanel({
                   <p className="mt-1 text-sm font-semibold text-white">{summary.totalOwnerCheckins}</p>
                 </div>
                 <div className="rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-xs text-rose-100">
-                  <p className="uppercase tracking-[0.2em] text-rose-200">Blocked</p>
+                  <p className="uppercase tracking-[0.2em] text-rose-200">BLACKED OUT</p>
                   <p className="mt-1 text-sm font-semibold text-white">{summary.totalBlockedCheckins}</p>
                 </div>
               </div>
@@ -820,7 +820,7 @@ export function UploadPanel({
                 <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalOwnerCheckins}</p>
               </div>
               <div className="rounded-2xl border border-rose-400/20 bg-rose-400/10 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-rose-200">Blocked</p>
+                <p className="text-xs uppercase tracking-[0.25em] text-rose-200">BLACKED OUT</p>
                 <p className="mt-2 text-2xl font-semibold text-white">{reviewData.totalBlockedCheckins}</p>
               </div>
             </div>
@@ -905,7 +905,7 @@ export function UploadPanel({
                                   >
                                     <option value="CHECKIN">{isEnglish ? "Normal check-in" : "Check-in normal"}</option>
                                     <option value="OWNER">Owner</option>
-                                    <option value="BLOCKED">Blocked</option>
+                                    <option value="BLOCKED">BLACKED OUT</option>
                                   </select>
                                 </label>
                               </div>

@@ -4,14 +4,25 @@ import { CheckinClassification } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-export function classifyIntegratorValue(integratorName: string | null | undefined) {
+export function classifyCheckinFromSpreadsheet(
+  integratorName: string | null | undefined,
+  externalStatus?: string | null | undefined,
+) {
   const normalizedValue = integratorName?.trim().toLowerCase() ?? "";
+  const normalizedStatus = externalStatus?.trim().toLowerCase() ?? "";
 
-  if (normalizedValue === "owner") {
+  if (
+    normalizedValue === "own (owner staying)" ||
+    normalizedValue === "owner"
+  ) {
     return CheckinClassification.OWNER;
   }
 
-  if (normalizedValue === "blocked") {
+  if (
+    normalizedValue === "blacked out (dates blacked out)" ||
+    normalizedValue === "blocked" ||
+    normalizedStatus === "cancelled"
+  ) {
     return CheckinClassification.BLOCKED;
   }
 

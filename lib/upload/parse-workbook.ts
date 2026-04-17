@@ -48,6 +48,7 @@ const COLUMN_ALIASES = {
   email: ["pm email", "manager email", "email"],
   guest: ["guest", "guest description", "guest/description", "guest name", "description"],
   integrator: ["integrator", "integrator name", "channel", "source"],
+  status: ["status", "reservation status", "booking status"],
   numberOfNights: ["# of nights", "nights", "number of nights", "stay nights"],
   doorCode: ["door code", "code", "lock code"],
   hasBbqGrill: ["has bbq grill", "bbq", "bbq grill"],
@@ -77,6 +78,7 @@ type ParsedRow = {
   propertyManagerEmail: string;
   guestName: string;
   integratorName: string;
+  externalStatus: string;
   numberOfNights: number | null;
   doorCode: string;
   hasBbqGrill: boolean | null;
@@ -246,6 +248,7 @@ export function parseWorkbook(buffer: Buffer, fallbackOperationDate: Date) {
     email: findHeaderKey(headers, COLUMN_ALIASES.email),
     guest: findHeaderKey(headers, COLUMN_ALIASES.guest),
     integrator: findHeaderKey(headers, COLUMN_ALIASES.integrator),
+    status: findHeaderKey(headers, COLUMN_ALIASES.status),
     numberOfNights: findHeaderKey(headers, COLUMN_ALIASES.numberOfNights),
     doorCode: findHeaderKey(headers, COLUMN_ALIASES.doorCode),
     hasBbqGrill: findHeaderKey(headers, COLUMN_ALIASES.hasBbqGrill),
@@ -340,6 +343,7 @@ export function parseWorkbook(buffer: Buffer, fallbackOperationDate: Date) {
         propertyManagerEmail: cleanText(mapping.email ? row[mapping.email] : "").toLowerCase(),
         guestName,
         integratorName: cleanText(mapping.integrator ? row[mapping.integrator] : ""),
+        externalStatus: cleanText(mapping.status ? row[mapping.status] : ""),
         numberOfNights,
         doorCode,
         hasBbqGrill: parseOptionalBoolean(

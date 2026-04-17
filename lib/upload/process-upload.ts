@@ -12,7 +12,7 @@ import {
 } from "@/lib/operations/route-geocoding";
 import { mergeKnownCondominiumContext } from "@/lib/known-condominium-context";
 import {
-  classifyIntegratorValue,
+  classifyCheckinFromSpreadsheet,
   syncSpreadsheetUploadClassificationTotals,
 } from "@/lib/upload/checkin-classification";
 import { setActiveSpreadsheetUpload } from "@/lib/upload/active-upload";
@@ -636,7 +636,7 @@ export async function processUpload(input: ProcessUploadInput) {
       hasBbqGrill: row.hasBbqGrill ?? undefined,
       hasEarlyCheckin: row.hasEarlyCheckin ?? undefined,
       rawDataJson: row.rawRowJson,
-      classification: classifyIntegratorValue(row.integratorName),
+      classification: classifyCheckinFromSpreadsheet(row.integratorName, row.externalStatus),
       status: "pending",
       expiresAt,
     });
