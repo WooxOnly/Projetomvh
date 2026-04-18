@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { ButtonLabel } from "@/app/button-icon";
+import { ButtonIcon, ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
 
 type FormErrors = {
@@ -116,14 +116,27 @@ export function LoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword((current) => !current)}
-            className="rounded-xl px-3 py-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-300 transition hover:bg-white/8 hover:text-white"
+            className="rounded-xl p-2 text-slate-300 transition hover:bg-white/8 hover:text-white"
+            aria-label={
+              showPassword
+                ? isEnglish
+                  ? "Hide password"
+                  : "Ocultar senha"
+                : isEnglish
+                  ? "Show password"
+                  : "Mostrar senha"
+            }
+            title={
+              showPassword
+                ? isEnglish
+                  ? "Hide password"
+                  : "Ocultar senha"
+                : isEnglish
+                  ? "Show password"
+                  : "Mostrar senha"
+            }
           >
-            <ButtonLabel
-              icon={showPassword ? "hide" : "show"}
-              className="gap-1.5"
-            >
-              {showPassword ? (isEnglish ? "Hide" : "Ocultar") : isEnglish ? "Show" : "Mostrar"}
-            </ButtonLabel>
+            <ButtonIcon name={showPassword ? "hide" : "show"} />
           </button>
         </div>
         {errors.password ? (
