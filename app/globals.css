@@ -232,6 +232,22 @@ input[type="file"]:active::-webkit-file-upload-button {
   background: var(--surface-strong-bg);
 }
 
+.theme-panel {
+  border: 1px solid var(--shell-border);
+  background: var(--surface-heavy-bg);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.theme-panel-soft {
+  border: 1px solid var(--shell-border);
+  background: var(--surface-bg);
+}
+
+.theme-panel-strong {
+  border: 1px solid var(--shell-border);
+  background: var(--surface-strong-bg);
+}
+
 .theme-divider {
   border-color: var(--shell-border);
 }
@@ -266,6 +282,35 @@ input[type="file"]:active::-webkit-file-upload-button {
 }
 
 .theme-pill-active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.theme-tab-button {
+  border: 1px solid var(--shell-border);
+  background: var(--surface-bg);
+  color: var(--text-muted);
+}
+
+.theme-tab-button-active {
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: var(--shadow-hover);
+}
+
+.theme-badge {
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: color-mix(in srgb, var(--accent) 84%, white 16%);
+}
+
+.theme-metric-pill {
+  border: 1px solid var(--shell-border);
+  background: var(--surface-bg);
+  color: var(--text-muted);
+}
+
+.theme-primary-button {
   background: var(--accent);
   color: var(--accent-text);
 }

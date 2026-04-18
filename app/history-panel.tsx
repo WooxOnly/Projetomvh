@@ -33,15 +33,13 @@ type HistoryPanelProps = {
 
 function MetricPill({ label, value }: { label: string; value: number }) {
   return (
-    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
-      {label}: <span className="font-medium text-white">{value}</span>
+    <span className="theme-metric-pill rounded-full px-3 py-1 text-xs">
+      {label}: <span className="theme-heading font-medium">{value}</span>
     </span>
   );
 }
 
-function formatUploadLabel(
-  upload: { sequenceNumber: number | null; fileName: string },
-) {
+function formatUploadLabel(upload: { sequenceNumber: number | null; fileName: string }) {
   const prefix = upload.sequenceNumber != null ? `#${upload.sequenceNumber} ` : "";
   return `${prefix}${upload.fileName}`;
 }
@@ -177,16 +175,16 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
+      <section className="theme-panel rounded-[1.5rem] p-4 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+            <p className="theme-accent text-xs uppercase tracking-[0.35em]">
               {isEnglish ? "History" : "Histórico"}
             </p>
-            <h3 className="mt-2 text-lg font-semibold text-white sm:text-xl">
+            <h3 className="theme-heading mt-2 text-lg font-semibold sm:text-xl">
               {isEnglish ? "Processed uploads" : "Uploads processados"}
             </h3>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+            <p className="theme-text-muted mt-2 max-w-3xl text-sm leading-6">
               {isEnglish
                 ? "Choose which import should stay active in the system, or leave the system with no active base loaded."
                 : "Escolha qual importação deve ficar ativa no sistema ou deixe tudo sem base carregada."}
@@ -194,12 +192,14 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
           </div>
 
           <div className="flex flex-col gap-3 self-stretch sm:flex-row sm:flex-wrap">
-              <div className="content-safe rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 sm:min-w-64">
+            <div className="theme-panel-soft content-safe rounded-2xl px-4 py-3 text-sm sm:min-w-64">
+              <span className="theme-text-muted">
                 {isEnglish ? "Active base" : "Base ativa"}:{" "}
-                <span className="font-medium text-white">
-                  {data.activeUpload
+              </span>
+              <span className="theme-heading font-medium">
+                {data.activeUpload
                   ? formatUploadLabel(data.activeUpload)
-                    : isEnglish
+                  : isEnglish
                     ? "None"
                     : "Nenhuma"}
               </span>
@@ -208,7 +208,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
               type="button"
               onClick={handleClearActiveUpload}
               disabled={pending}
-              className="min-h-11 rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-100"
+              className="theme-secondary-button min-h-11 rounded-2xl px-4 py-3 text-sm"
             >
               <ButtonLabel icon="clear">
                 {pendingId === "clear"
@@ -223,20 +223,20 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
           </div>
         </div>
 
-        <div className="mt-4 rounded-[1.25rem] border border-cyan-300/15 bg-cyan-300/5 p-4">
-          <p className="text-xs uppercase tracking-[0.28em] text-cyan-300">
+        <div className="theme-panel-soft mt-4 rounded-[1.25rem] px-4 py-4">
+          <p className="theme-accent text-xs uppercase tracking-[0.28em]">
             {isEnglish ? "Date filter" : "Filtro por período"}
           </p>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="theme-text-muted mt-2 text-sm">
             {isEnglish ? (
               <>
                 The history opens with the last 7 days. If you want another range, adjust the dates
-                and click <span className="font-medium text-white">Load</span>.
+                and click <span className="theme-heading font-medium">Load</span>.
               </>
             ) : (
               <>
                 O histórico abre com os últimos 7 dias. Se quiser outro intervalo, ajuste as datas
-                e clique em <span className="font-medium text-white">Carregar</span>.
+                e clique em <span className="theme-heading font-medium">Carregar</span>.
               </>
             )}
           </p>
@@ -246,7 +246,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
             onSubmit={handleLoadHistory}
           >
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-100">
+              <span className="theme-heading mb-2 block text-sm font-medium">
                 {isEnglish ? "Start date" : "Data inicial"}
               </span>
               <input
@@ -259,7 +259,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
               />
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-100">
+              <span className="theme-heading mb-2 block text-sm font-medium">
                 {isEnglish ? "End date" : "Data final"}
               </span>
               <input
@@ -274,7 +274,7 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
             <div className="flex items-end">
               <button
                 type="submit"
-                className="min-h-11 w-full rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 md:w-auto"
+                className="theme-primary-button min-h-11 w-full rounded-2xl px-4 py-3 text-sm font-semibold md:w-auto"
               >
                 <ButtonLabel icon="load">{isEnglish ? "Load" : "Carregar"}</ButtonLabel>
               </button>
@@ -304,24 +304,22 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
               <article
                 key={upload.id}
                 className={`content-safe rounded-[1.5rem] border px-4 py-4 sm:px-5 ${
-                  isActive
-                    ? "border-cyan-300/30 bg-cyan-300/8"
-                    : "border-white/10 bg-slate-950/40"
+                  isActive ? "theme-badge" : "theme-panel"
                 }`}
               >
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h4 className="truncate text-lg font-semibold text-white">
+                      <h4 className="theme-heading truncate text-lg font-semibold">
                         {formatUploadLabel(upload)}
                       </h4>
                       {isActive ? (
-                        <span className="rounded-full border border-cyan-300/30 bg-cyan-300/15 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-cyan-200">
+                        <span className="theme-badge rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.25em]">
                           {isEnglish ? "Active in system" : "Ativo no sistema"}
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="theme-text-soft mt-1 text-sm">
                       {isEnglish ? "Operation" : "Operação"}: {formatDateOnly(upload.operationDate)} |{" "}
                       {isEnglish ? "Processed at" : "Processado em"} {formatDateTime(upload.createdAt)}
                     </p>
@@ -332,39 +330,40 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
                     onClick={() => handleActivate(upload.id)}
                     disabled={pending && pendingId === upload.id}
                     className={`min-h-11 rounded-2xl px-4 py-2.5 text-sm font-medium ${
-                      isActive
-                        ? "border border-cyan-300/30 bg-cyan-300/15 text-cyan-100"
-                        : "border border-white/10 bg-white/5 text-slate-100"
+                      isActive ? "theme-badge" : "theme-secondary-button"
                     }`}
                   >
                     <ButtonLabel icon="activate">
-                      {pending && pendingId === upload.id
+                      {pendingId === upload.id
                         ? isEnglish
-                          ? "Updating..."
-                          : "Atualizando..."
+                          ? "Activating..."
+                          : "Ativando..."
                         : isActive
                           ? isEnglish
-                            ? "Active upload"
-                            : "Upload ativo"
+                            ? "Already active"
+                            : "Já ativo"
                           : isEnglish
-                            ? "Set as active"
-                            : "Tornar ativo"}
+                            ? "Activate in system"
+                            : "Ativar no sistema"}
                     </ButtonLabel>
                   </button>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <MetricPill label="Check-ins" value={upload.totalCheckins} />
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <MetricPill
+                    label={isEnglish ? "Check-ins" : "Check-ins"}
+                    value={upload.totalCheckins}
+                  />
                   <MetricPill
                     label={isEnglish ? "Resorts" : "Condomínios"}
                     value={upload.totalUniqueCondominiums}
                   />
                   <MetricPill
-                    label={isEnglish ? "Houses" : "Casas"}
+                    label={isEnglish ? "Homes" : "Casas"}
                     value={upload.totalUniqueProperties}
                   />
                   <MetricPill
-                    label={isEnglish ? "Property Managers" : "Gerentes de Propriedades"}
+                    label={isEnglish ? "PMs" : "PMs"}
                     value={upload.totalUniquePMs}
                   />
                 </div>
@@ -373,10 +372,10 @@ export function HistoryPanel({ data, filters }: HistoryPanelProps) {
           })}
         </section>
       ) : (
-        <section className="rounded-[1.5rem] border border-dashed border-white/15 bg-slate-950/30 p-6 text-sm text-slate-300">
+        <section className="theme-panel rounded-[1.5rem] p-6 text-sm theme-text-muted">
           {isEnglish
-            ? "No upload has been processed yet. As soon as a file is imported, it will appear here for consultation and future activation."
-            : "Nenhum upload foi processado ainda. Assim que um arquivo for importado, ele aparecerá aqui para consulta e ativação futura."}
+            ? "No processed uploads were found for this period."
+            : "Nenhum upload processado foi encontrado nesse período."}
         </section>
       )}
     </div>

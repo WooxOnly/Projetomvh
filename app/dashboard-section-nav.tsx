@@ -41,10 +41,10 @@ export function DashboardSectionNav() {
           <Link
             key={section.href}
             href={section.href}
-            className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2.5 text-sm font-medium transition sm:px-[1.15rem] ${
+            className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition sm:px-[1.15rem] ${
               isActive
-                ? "border-cyan-200/50 bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30"
-                : "border-white/10 bg-white/5 text-slate-200 hover:border-cyan-300/35 hover:bg-white/10"
+                ? "theme-tab-button-active"
+                : "theme-tab-button"
             }`}
           >
             <ButtonLabel icon={section.icon}>{section.label}</ButtonLabel>

@@ -72,9 +72,9 @@ function CompactMetric({
   value: string | number;
 }) {
   return (
-    <div className="content-safe rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">{label}</p>
-      <p className="mt-1 text-base font-medium text-white">{value}</p>
+    <div className="theme-metric-pill content-safe rounded-2xl px-4 py-3">
+      <p className="theme-text-soft text-[11px] uppercase tracking-[0.2em]">{label}</p>
+      <p className="theme-heading mt-1 text-base font-medium">{value}</p>
     </div>
   );
 }
@@ -101,14 +101,14 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[1.5rem] border border-cyan-400/10 bg-slate-950/40 p-4 sm:p-5">
-        <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+      <section className="theme-panel rounded-[1.5rem] p-4 sm:p-5">
+        <p className="theme-accent text-xs uppercase tracking-[0.35em]">
           {isEnglish ? "Welcome" : "Bem-vindo"}
         </p>
-        <h2 className="mt-3 text-xl font-semibold text-white sm:text-2xl">
+        <h2 className="theme-heading mt-3 text-xl font-semibold sm:text-2xl">
           {isEnglish ? `Hello, ${session.name}` : `Olá, ${session.name}`}
         </h2>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+        <p className="theme-text-muted mt-3 max-w-3xl text-sm leading-6">
           {isEnglish
             ? "This page is reserved for the general view. The operational process continues in the import, details, managers of the day, and best route pages."
             : "Esta página fica reservada para a visão geral. O processo operacional continua nas páginas de importação, detalhamento, gerentes do dia e melhor rota."}
@@ -142,17 +142,17 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
-          <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+        <div className="theme-panel rounded-[1.5rem] p-4 sm:p-5">
+          <p className="theme-accent text-xs uppercase tracking-[0.35em]">
             {isEnglish ? "Current base" : "Base atual"}
           </p>
-          <h3 className="mt-3 text-xl font-semibold text-white">
+          <h3 className="theme-heading mt-3 text-xl font-semibold">
             {isEnglish ? "Active base summary" : "Resumo da base ativa"}
           </h3>
 
           {data.activeUploadOfficeBreakdown ? (
             <>
-              <p className="mt-2 text-sm text-slate-300">
+              <p className="theme-text-muted mt-2 text-sm">
                 {isEnglish ? "Active file" : "Arquivo ativo"}: {formatUploadLabel(data.activeUploadOfficeBreakdown)} |{" "}
                 {isEnglish ? "Operation" : "Operação"}:{" "}
                 {formatDateOnly(data.activeUploadOfficeBreakdown.operationDate)} | Check-ins:{" "}
@@ -163,10 +163,10 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
                 {data.activeUploadOfficeBreakdown.offices.map((office) => (
                   <div
                     key={office.officeName}
-                    className="content-safe rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                    className="theme-panel-soft content-safe rounded-2xl px-4 py-3"
                   >
-                    <p className="text-base font-medium text-white">{office.officeName}</p>
-                    <p className="mt-2 text-sm text-slate-300">
+                    <p className="theme-heading text-base font-medium">{office.officeName}</p>
+                    <p className="theme-text-muted mt-2 text-sm">
                       {office.regions.reduce((total, region) => total + region.condominiumCount, 0)}{" "}
                       {isEnglish ? "resorts" : "condomínios"} |{" "}
                       {office.regions.reduce((total, region) => total + region.houseCount, 0)}{" "}
@@ -182,7 +182,7 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
                   onClick={() => {
                     window.location.href = detailsHref;
                   }}
-                  className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
+                  className="theme-secondary-button rounded-2xl px-4 py-3 text-sm"
                 >
                   <ButtonLabel icon="details">
                     {isEnglish ? "Open full details" : "Abrir detalhamento completo"}
@@ -193,7 +193,7 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
                   onClick={() => {
                     window.location.href = propertiesHref;
                   }}
-                  className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200"
+                  className="theme-secondary-button rounded-2xl px-4 py-3 text-sm"
                 >
                   <ButtonLabel icon="review">
                     {isEnglish ? "Review homes without bedrooms" : "Revisar casas sem quartos"}
@@ -202,7 +202,7 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
               </div>
             </>
           ) : (
-            <p className="mt-4 text-sm text-slate-300">
+            <p className="theme-text-muted mt-4 text-sm">
               {isEnglish
                 ? "There is no processed upload yet. Use the Import File page to load a spreadsheet and unlock the details."
                 : "Ainda não existe upload processado. Use a página Importar Arquivo para carregar uma planilha e liberar o detalhamento da operação."}
@@ -210,29 +210,29 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
           )}
         </div>
 
-        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
-          <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+        <div className="theme-panel rounded-[1.5rem] p-4 sm:p-5">
+          <p className="theme-accent text-xs uppercase tracking-[0.35em]">
             {isEnglish ? "Current status" : "Situação atual"}
           </p>
-          <h3 className="mt-3 text-xl font-semibold text-white">
+          <h3 className="theme-heading mt-3 text-xl font-semibold">
             {isEnglish ? "Quick view" : "Leitura rápida"}
           </h3>
 
           <div className="mt-4 space-y-3">
-            <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+            <div className="theme-panel-soft content-safe rounded-2xl p-4">
+              <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">
                 {isEnglish ? "Email" : "E-mail"}
               </p>
-              <p className="mt-2 text-white">{session.email}</p>
+              <p className="theme-heading mt-2">{session.email}</p>
             </div>
 
             {data.activeUpload ? (
-              <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+              <div className="theme-panel-soft content-safe rounded-2xl p-4">
+                <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">
                   {isEnglish ? "Active upload" : "Upload ativo"}
                 </p>
-                <p className="mt-2 text-white">{formatUploadLabel(data.activeUpload)}</p>
-                <p className="mt-2 text-xs text-slate-400">
+                <p className="theme-heading mt-2">{formatUploadLabel(data.activeUpload)}</p>
+                <p className="theme-text-soft mt-2 text-xs">
                   {isEnglish ? "Processed at" : "Processado em"}{" "}
                   {formatDateTime(data.activeUpload.createdAt)}
                 </p>
@@ -240,41 +240,41 @@ export function OverviewPanel({ session, detailsHref, propertiesHref, data }: Ov
             ) : null}
 
             {data.latestOperationRun ? (
-              <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+              <div className="theme-panel-soft content-safe rounded-2xl p-4">
+                <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">
                   {isEnglish ? "Latest operation" : "Última operação"}
                 </p>
-                <p className="mt-2 text-white">
+                <p className="theme-heading mt-2">
                   {formatUploadLabel(data.latestOperationRun.spreadsheetUpload)}
                 </p>
-                <p className="mt-2 text-xs text-slate-400">
+                <p className="theme-text-soft mt-2 text-xs">
                   {data.latestOperationRun.totalAssignments}{" "}
                   {isEnglish ? "assignments" : "atribuições"} |{" "}
                   {isEnglish ? "mode" : "modo"} {data.latestOperationRun.decisionMode}
                 </p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-4 text-sm text-slate-300">
+              <div className="theme-panel-soft rounded-2xl border-dashed p-4 text-sm theme-text-muted">
                 {isEnglish
                   ? "No operation has been created for this base yet."
                   : "Nenhuma operação foi criada para esta base ainda."}
               </div>
             )}
-            <div className="content-safe rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+            <div className="theme-panel-soft content-safe rounded-2xl p-4">
+              <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">
                 {isEnglish ? "Weekly geo report" : "Relatório geográfico semanal"}
               </p>
-              <p className="mt-2 text-white">
+              <p className="theme-heading mt-2">
                 {data.weeklyLocationMaintenance.totalCheckinsImproved}{" "}
                 {isEnglish ? "check-ins improved" : "check-ins melhorados"}
               </p>
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="theme-text-soft mt-2 text-xs">
                 {data.weeklyLocationMaintenance.totalPropertiesImproved}{" "}
                 {isEnglish ? "homes improved" : "casas melhoradas"} |{" "}
                 {data.weeklyLocationMaintenance.totalCondominiumsImproved}{" "}
                 {isEnglish ? "resorts improved" : "condomínios melhorados"}
               </p>
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="theme-text-soft mt-2 text-xs">
                 {data.weeklyLocationMaintenance.latestRunAt
                   ? `${isEnglish ? "Last run" : "Última execução"} ${formatDateTime(data.weeklyLocationMaintenance.latestRunAt)}`
                   : isEnglish

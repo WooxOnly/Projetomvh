@@ -253,8 +253,8 @@ function TabGroup({
           onClick={() => onSelect(tab.key)}
           className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition ${
             activeTab === tab.key
-              ? "bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30"
-              : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+              ? "theme-tab-button-active"
+              : "theme-tab-button"
           }`}
         >
           <ButtonLabel icon={tab.icon}>{tab.label}</ButtonLabel>
@@ -376,27 +376,27 @@ export function DashboardShell({ data }: DashboardShellProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
+      <section className="theme-panel rounded-[1.5rem] p-4 sm:p-5">
         <div className="space-y-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+            <p className="theme-accent text-xs uppercase tracking-[0.35em]">
               {isEnglish ? "Flow" : "Fluxo"}
             </p>
-            <h2 className="mt-3 text-lg font-semibold text-white sm:text-xl">
+            <h2 className="theme-heading mt-3 text-lg font-semibold sm:text-xl">
               {isEnglish ? "Operational flow" : "Fluxo operacional"}
             </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+            <p className="theme-text-muted mt-2 max-w-3xl text-sm leading-6">
               {isEnglish
                 ? "This page centralizes the flow of the day. The active upload remains global, but the process stays separate from the home page and the history page."
                 : "Esta página concentra o fluxo do dia. O upload ativo continua global, mas o processo fica separado da página inicial e da página de histórico."}
             </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 xl:min-w-80">
-              <p className="text-[11px] uppercase tracking-[0.25em] text-slate-400">
+            <div className="theme-panel-soft rounded-2xl px-4 py-3 xl:min-w-80">
+              <p className="theme-text-soft text-[11px] uppercase tracking-[0.25em]">
                 {isEnglish ? "Active base" : "Base ativa"}
               </p>
-              <p className="mt-1 text-sm font-medium text-white">{activeUploadLabel}</p>
+              <p className="theme-heading mt-1 text-sm font-medium">{activeUploadLabel}</p>
             </div>
           </div>
 
@@ -406,21 +406,21 @@ export function DashboardShell({ data }: DashboardShellProps) {
 
       <section
         key={activeTab}
-        className="dashboard-panel-enter rounded-[1.5rem] border border-white/10 bg-slate-950/25 p-3 sm:p-4"
+        className="theme-panel dashboard-panel-enter rounded-[1.5rem] p-3 sm:p-4"
       >
-        <div className="mb-4 rounded-[1.25rem] border border-white/8 bg-slate-950/45 px-4 py-3">
-          <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+        <div className="theme-panel-strong mb-4 rounded-[1.25rem] px-4 py-3">
+          <p className="theme-accent text-xs uppercase tracking-[0.35em]">
             {activeTabMeta.eyebrow}
           </p>
           <div className="mt-2 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-            <h3 className="text-xl font-semibold text-white">{activeTabMeta.title}</h3>
+            <h3 className="theme-heading text-xl font-semibold">{activeTabMeta.title}</h3>
             {data.activeUpload ? (
-              <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100">
+              <span className="theme-badge rounded-full px-3 py-1 text-xs">
                 {activeUploadLabel}
               </span>
             ) : null}
           </div>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+          <p className="theme-text-muted mt-2 max-w-3xl text-sm leading-6">
             {activeTabMeta.description}
           </p>
         </div>
