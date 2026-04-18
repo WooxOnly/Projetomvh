@@ -19,11 +19,11 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
       <path
-        d="M13.9 15.3a6.6 6.6 0 1 1-3.2-12.5 5.8 5.8 0 0 0 3.2 12.5Z"
+        d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -42,7 +42,7 @@ export function ThemeToggle() {
       role="switch"
       aria-checked={isLight}
       onClick={toggleTheme}
-      className="theme-toggle-button relative inline-flex h-10 w-[4.75rem] items-center rounded-full px-1"
+      className="theme-toggle-button relative inline-grid h-10 w-[4.75rem] grid-cols-2 items-center rounded-full px-1"
       aria-label={isEnglish ? "Toggle color theme" : "Alternar tema de cores"}
       title={
         isLight
@@ -56,14 +56,19 @@ export function ThemeToggle() {
     >
       <span
         aria-hidden="true"
-        className={`absolute top-1 h-8 w-8 rounded-full transition-all duration-200 ${
-          isLight ? "left-[2.55rem] bg-sky-500 text-white" : "left-1 bg-slate-950/80 text-slate-100"
+        className={`absolute top-1/2 h-8 w-8 -translate-y-1/2 rounded-full transition-transform duration-200 ${
+          isLight
+            ? "translate-x-9 bg-sky-500 text-white"
+            : "translate-x-0 bg-slate-950/80 text-slate-100"
         }`}
+        style={{ left: "0.25rem" }}
       />
-      <span className="relative z-10 flex w-full items-center justify-between px-1 text-slate-500">
+      <span className="relative z-10 flex h-full items-center justify-center text-slate-500">
         <span className={isLight ? "text-slate-400" : "text-slate-100"}>
           <MoonIcon />
         </span>
+      </span>
+      <span className="relative z-10 flex h-full items-center justify-center text-slate-500">
         <span className={isLight ? "text-white" : "text-slate-400"}>
           <SunIcon />
         </span>
