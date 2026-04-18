@@ -2384,11 +2384,13 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             className={`flex items-start justify-between gap-3 rounded-2xl border px-3 py-2.5 text-sm ${
                               condominium.isShared
                                 ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
-                                : "theme-panel-strong text-slate-100"
+                                : "theme-panel-strong"
                             }`}
                           >
                             <div className="min-w-0">
-                              <p className="break-words font-medium">{condominium.name}</p>
+                              <p className={`break-words font-medium ${condominium.isShared ? "" : "theme-heading"}`}>
+                                {condominium.name}
+                              </p>
                               {condominium.isShared ? (
                                 <p className="mt-1 text-[11px] text-amber-200">
                                   {isEnglish ? "Shared with another PM" : "Dividido com outro PM"}

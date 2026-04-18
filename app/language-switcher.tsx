@@ -12,26 +12,22 @@ export function LanguageSwitcher() {
         onClick={() => setLanguage("pt-BR")}
         aria-label="Português"
         title="Português"
-        className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+        className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-base leading-none transition ${
           !isEnglish ? "theme-pill-active text-slate-950" : "theme-pill-button"
         }`}
       >
-        <span className="text-sm leading-none" aria-hidden="true">
-          🇧🇷
-        </span>
+        <span aria-hidden="true">🇧🇷</span>
       </button>
       <button
         type="button"
         onClick={() => setLanguage("en-US")}
         aria-label="English"
         title="English"
-        className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+        className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-base leading-none transition ${
           isEnglish ? "theme-pill-active text-slate-950" : "theme-pill-button"
         }`}
       >
-        <span className="text-sm leading-none" aria-hidden="true">
-          🇺🇸
-        </span>
+        <span aria-hidden="true">🇺🇸</span>
       </button>
       <span className="sr-only">{language}</span>
     </div>
