@@ -23,19 +23,22 @@ export default async function DashboardLayout({
     <main className="theme-dashboard-bg mobile-width-guard min-h-screen px-3 py-4 sm:px-4 sm:py-6 lg:py-10">
       <div className="mobile-width-guard mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-7xl items-start">
         <section className="theme-main-shell mobile-safe-bottom mobile-width-guard w-full rounded-[1.5rem] p-4 sm:rounded-[2rem] sm:p-6 lg:p-8">
-          <div className="theme-divider flex flex-col gap-4 border-b pb-5 md:flex-row md:items-center md:justify-between md:pb-6">
+          <div className="theme-divider flex flex-col gap-4 border-b pb-5 md:pb-6">
+            <div className="flex justify-end">
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <LanguageSwitcher />
+                <ThemeToggle />
+                <LogoutButton />
+              </div>
+            </div>
             <div className="space-y-4">
               <div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="theme-accent text-sm uppercase tracking-[0.35em]">
-                    {pickLanguage(language, {
-                      pt: "Dashboard",
-                      en: "Dashboard",
-                    })}
-                  </p>
-                  <LanguageSwitcher />
-                  <ThemeToggle />
-                </div>
+                <p className="theme-accent text-sm uppercase tracking-[0.35em]">
+                  {pickLanguage(language, {
+                    pt: "Dashboard",
+                    en: "Dashboard",
+                  })}
+                </p>
                 <h1 className="theme-heading mt-3 text-2xl font-semibold sm:text-3xl">
                   {pickLanguage(language, {
                     pt: "Otimizar Check-ins",
@@ -68,10 +71,6 @@ export default async function DashboardLayout({
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="w-full md:w-auto">
-              <LogoutButton />
             </div>
           </div>
 

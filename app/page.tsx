@@ -64,9 +64,9 @@ export default async function Home() {
                     })}
                   </h2>
                 </div>
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <LanguageSwitcher />
+                <div className="flex flex-col items-end gap-3">
                   <ThemeToggle />
+                  <LanguageSwitcher />
                 </div>
               </div>
               <p className="theme-text-muted mt-3 text-sm leading-6">
