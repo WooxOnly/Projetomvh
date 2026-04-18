@@ -6,7 +6,7 @@ function BrazilFlag() {
   return (
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] overflow-hidden rounded-full" aria-hidden="true">
       <circle cx="12" cy="12" r="12" fill="#1F8B4C" />
-      <path d="M12 4.7 18.2 12 12 19.3 5.8 12 12 4.7Z" fill="#F4C542" />
+      <path d="M4.7 12 12 6.2 19.3 12 12 17.8 4.7 12Z" fill="#F4C542" />
       <circle cx="12" cy="12" r="3.2" fill="#21468B" />
       <path d="M8.8 11.2c1.3-.9 4.5-1 6.5.2" stroke="#fff" strokeWidth="0.9" strokeLinecap="round" />
     </svg>
