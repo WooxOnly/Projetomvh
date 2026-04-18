@@ -59,7 +59,7 @@ export function ThemeToggle() {
         className={`absolute top-1/2 h-8 w-8 -translate-y-1/2 rounded-full transition-[left] duration-200 ${
           isLight ? "bg-sky-500 text-white" : "bg-slate-950/80 text-slate-100"
         }`}
-        style={{ left: isLight ? "2.5625rem" : "0.1875rem" }}
+        style={{ left: isLight ? "calc(100% - 2.25rem)" : "0.25rem" }}
       />
       <span className="relative z-10 flex h-full items-center justify-center text-slate-500">
         <span className={isLight ? "text-slate-400" : "text-slate-100"}>
