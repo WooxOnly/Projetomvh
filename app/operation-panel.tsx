@@ -951,7 +951,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
   const { isEnglish } = useLanguage();
   const locale = isEnglish ? "en-US" : "pt-BR";
   const actionButtonClass =
-    "inline-flex items-center justify-center rounded-2xl border border-cyan-300/40 bg-cyan-400/14 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.06),0_10px_30px_rgba(34,211,238,0.08)] transition hover:scale-[1.02] hover:border-cyan-200/70 hover:bg-cyan-300/26 hover:text-white disabled:cursor-not-allowed disabled:border-cyan-300/12 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none disabled:hover:scale-100";
+    "theme-accent-button inline-flex items-center justify-center rounded-2xl transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:hover:scale-100";
   const iconActionButtonClass = `${actionButtonClass} h-14 w-14 sm:h-16 sm:w-16`;
   const topActionButtonClass = `${actionButtonClass} min-h-11 w-full px-5 py-3 text-sm font-medium sm:w-auto`;
   const currentTab = searchParams.get("tab");
@@ -2503,14 +2503,14 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
           )
         : null}
       {mode !== "route" ? (
-        <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4 sm:p-6">
-          <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+        <section className="theme-panel rounded-[1.75rem] p-4 sm:p-6">
+          <p className="theme-accent text-xs uppercase tracking-[0.35em]">
             {isEnglish ? "Operational decision" : "Decisão operacional"}
           </p>
-          <h3 className="mt-3 text-lg font-semibold text-white sm:text-xl">
+          <h3 className="theme-heading mt-3 text-lg font-semibold sm:text-xl">
             {isEnglish ? "Property Managers available today" : "Gerentes de Propriedades disponíveis no dia"}
           </h3>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="theme-text-muted mt-2 text-sm">
             {isEnglish ? "Choose who is available for this operation and assemble the check-in separation." : "Escolha quem está disponível para esta operação e monte a separação dos check-ins."}
           </p>
           <form
@@ -2560,7 +2560,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
           >
             <div className="grid gap-4">
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-200">
+                <span className="theme-text-muted mb-2 block text-sm font-medium">
                   {isEnglish ? "Base upload" : "Upload base"}
                 </span>
                 <select
@@ -2573,7 +2573,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       spreadsheetUploadId: event.target.value,
                     }));
                   }}
-                  className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
+                  className="theme-input w-full rounded-2xl px-4 py-3 text-sm outline-none"
                 >
                   <option value="">{isEnglish ? "Select an upload" : "Selecione um upload"}</option>
                   {data.uploadHistory.map((item) => (
@@ -2586,16 +2586,16 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
             </div>
 
             {!selectedUpload ? (
-              <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              <div className="theme-info-card theme-text-muted rounded-2xl border border-dashed px-4 py-3 text-sm">
                 {isEnglish ? "No active upload selected. Choose a file on this screen or activate a base in the" : "Nenhum upload ativo selecionado. Escolha um arquivo nesta tela ou ative uma base na aba"}{" "}
-                <span className="font-medium text-white">
+                <span className="theme-heading font-medium">
                   {isEnglish ? "History" : "Histórico"}
                 </span>.
               </div>
             ) : null}
 
             <div>
-              <p className="mb-3 text-sm font-medium text-slate-200">
+              <p className="theme-text-muted mb-3 text-sm font-medium">
                 {isEnglish ? "Property Managers available today" : "Gerentes de Propriedades disponíveis no dia"}
               </p>
               <div className="mb-3 flex flex-wrap gap-3">
@@ -2844,7 +2844,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                 </div>
               ) : null}
               {form.useSpreadsheetPmAssignments ? (
-                <div className="mt-5 rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/8 p-4 text-sm text-emerald-50">
+                <div className="theme-success-surface mt-5 rounded-[1.5rem] p-4 text-sm">
                   <p className="font-medium">
                     {isEnglish
                       ? "Weekday mode is active."
@@ -2861,7 +2861,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="grid gap-2 sm:grid-cols-2">
-                <label className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/8 px-3 py-2 text-xs text-slate-100">
+                <label className="theme-accent-button flex items-center gap-2 rounded-xl px-3 py-2 text-xs">
                   <input
                     type="checkbox"
                     checked={form.useSpreadsheetPmAssignments}
@@ -2881,8 +2881,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                 <label
                   className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
                     form.useSpreadsheetPmAssignments
-                      ? "cursor-not-allowed border-white/10 bg-white/5 text-slate-500"
-                      : "border-cyan-300/20 bg-cyan-300/8 text-slate-100"
+                      ? "theme-secondary-button cursor-not-allowed text-slate-500"
+                      : "theme-accent-button"
                   }`}
                 >
                   <input
@@ -2905,8 +2905,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                 <label
                   className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
                     form.useSpreadsheetPmAssignments
-                      ? "cursor-not-allowed border-white/10 bg-white/5 text-slate-500"
-                      : "border-cyan-300/20 bg-cyan-300/8 text-slate-100"
+                      ? "theme-secondary-button cursor-not-allowed text-slate-500"
+                      : "theme-accent-button"
                   }`}
                 >
                   <input
@@ -2929,8 +2929,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                 <label
                   className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
                     form.useSpreadsheetPmAssignments
-                      ? "cursor-not-allowed border-white/10 bg-white/5 text-slate-500"
-                      : "border-cyan-300/20 bg-cyan-300/8 text-slate-100"
+                      ? "theme-secondary-button cursor-not-allowed text-slate-500"
+                      : "theme-accent-button"
                   }`}
                 >
                   <input
@@ -2957,8 +2957,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   disabled={pending || operationPending || hasJustRunOperation || !form.spreadsheetUploadId}
                   className={`min-h-11 rounded-2xl px-5 py-3 text-sm font-semibold transition ${
                     hasJustRunOperation
-                      ? "cursor-not-allowed border border-white/10 bg-white/5 text-slate-500"
-                      : "bg-cyan-300 text-slate-950"
+                      ? "theme-secondary-button cursor-not-allowed text-slate-500"
+                      : "theme-primary-button"
                   }`}
                 >
                   <ButtonLabel icon="route">
@@ -2971,8 +2971,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     onClick={onOpenRouteTab}
                     className={`min-h-11 rounded-2xl px-5 py-3 text-sm font-medium transition ${
                       hasJustRunOperation
-                        ? "bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30"
-                        : "border border-white/10 text-slate-200"
+                        ? "theme-primary-button shadow-lg shadow-cyan-950/30"
+                        : "theme-secondary-button"
                     }`}
                   >
                     <ButtonLabel icon="details">
@@ -2989,12 +2989,12 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
       ) : null}
 
       {mode !== "availability" ? (
-        <section className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:p-5">
+        <section className="theme-panel rounded-[1.5rem] p-4 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{isEnglish ? "Best route" : "Melhor rota"}</p>
-              <h3 className="mt-2 text-lg font-semibold text-white">{isEnglish ? "Operation finalization" : "Finalização da operação"}</h3>
-              <p className="mt-1 max-w-2xl text-xs text-slate-300">
+              <p className="theme-accent text-xs uppercase tracking-[0.35em]">{isEnglish ? "Best route" : "Melhor rota"}</p>
+              <h3 className="theme-heading mt-2 text-lg font-semibold">{isEnglish ? "Operation finalization" : "Finalização da operação"}</h3>
+              <p className="theme-text-muted mt-1 max-w-2xl text-xs">
                 {isEnglish
                   ? "Review the final route here with a visual score, live map, AI reading, and output ready for PDF and WhatsApp."
                   : "Aqui você revisa a rota final com score visual, mapa ao vivo, leitura de IA e saída pronta para PDF e WhatsApp."}
@@ -3080,30 +3080,30 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
           {latestOperationRun ? (
             <>
               <div className="mt-3 grid gap-2 lg:grid-cols-3">
-                <div className="content-safe rounded-xl border border-white/10 bg-white/5 p-2.5">
-                  <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "File" : "Arquivo"}</p>
-                  <p className="mt-1 text-sm text-white">
+                <div className="content-safe theme-info-card rounded-xl p-2.5">
+                  <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">{isEnglish ? "File" : "Arquivo"}</p>
+                  <p className="theme-heading mt-1 text-sm">
                     {formatUploadLabel(latestOperationRun.spreadsheetUpload)}
                   </p>
                 </div>
-                <div className="content-safe rounded-xl border border-white/10 bg-white/5 p-2.5">
-                  <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+                <div className="content-safe theme-info-card rounded-xl p-2.5">
+                  <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">
                     {isEnglish ? "Operation" : "Operação"}
                   </p>
-                  <p className="mt-1 text-sm text-white">
+                  <p className="theme-heading mt-1 text-sm">
                     {formatPanelDateOnly(latestOperationRun.operationDate)}
                   </p>
                 </div>
-                <div className="content-safe rounded-xl border border-white/10 bg-white/5 p-2.5">
-                  <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Generated" : "Gerado"}</p>
-                  <p className="mt-1 text-sm text-white">
+                <div className="content-safe theme-info-card rounded-xl p-2.5">
+                  <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">{isEnglish ? "Generated" : "Gerado"}</p>
+                  <p className="theme-heading mt-1 text-sm">
                     {formatPanelDateTime(latestOperationRun.createdAt)}
                   </p>
                 </div>
               </div>
 
               <div className="mt-2 grid gap-2 xl:grid-cols-[1.25fr_0.75fr]">
-                <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-3">
+                <div className="theme-info-card rounded-[1.25rem] p-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full border border-cyan-400/20 bg-slate-950/80">
                       <div className="text-center">
@@ -3114,17 +3114,17 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       </div>
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
-                      <p className="text-xs text-slate-300">
+                      <p className="theme-text-muted text-xs">
                         {displayedAnalysis?.overallSummary ?? (isEnglish ? "Route AI is still loading. In the meantime, the local heuristic remains valid." : "A IA da rota ainda está carregando. Enquanto isso, a heurística local continua válida.")}
                       </p>
-                      <div className="flex flex-wrap gap-1.5 text-[11px] text-slate-300">
-                        <span className="rounded-full border border-white/10 px-2.5 py-1">
+                      <div className="theme-text-muted flex flex-wrap gap-1.5 text-[11px]">
+                        <span className="theme-pill-group rounded-full px-2.5 py-1">
                           {isEnglish ? "Source" : "Fonte"}: {displayedAnalysis?.source === "openai" ? "OpenAI" : isEnglish ? "Local AI" : "IA local"}
                         </span>
-                        <span className="rounded-full border border-white/10 px-2.5 py-1">
+                        <span className="theme-pill-group rounded-full px-2.5 py-1">
                           {isEnglish ? "Coordinates" : "Coordenadas"}: {displayedAnalysis?.coordinateCoveragePercent ?? 0}%
                         </span>
-                        <span className="rounded-full border border-white/10 px-2.5 py-1">
+                        <span className="theme-pill-group rounded-full px-2.5 py-1">
                           {isEnglish ? "Estimated distance" : "Distância estimada"}: {displayedAnalysis?.totalEstimatedDistanceKm ?? 0} mi
                         </span>
                       </div>
@@ -3138,8 +3138,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   ) : null}
                 </div>
 
-                <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-3">
-                  <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{isEnglish ? "Final checklist" : "Checklist final"}</p>
+                <div className="theme-info-card rounded-[1.25rem] p-3">
+                  <p className="theme-accent text-xs uppercase tracking-[0.35em]">{isEnglish ? "Final checklist" : "Checklist final"}</p>
                   <div className="mt-2 space-y-2">
                     {(displayedAnalysis?.routeHighlights ?? []).map((highlight) => (
                       <div
@@ -3164,11 +3164,11 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
               <div className="mt-2 rounded-[1.25rem] border border-cyan-400/15 bg-cyan-400/5 p-3">
                 <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+                    <p className="theme-accent text-xs uppercase tracking-[0.35em]">
                       {isEnglish ? "Final exports" : "Exportações finais"}
                     </p>
-                    <h4 className="mt-1 text-sm font-semibold text-white">{isEnglish ? "Printable PDF and message for sending" : "PDF para imprimir e mensagem para envio"}</h4>
-                    <p className="mt-1 text-xs text-slate-300">
+                    <h4 className="theme-heading mt-1 text-sm font-semibold">{isEnglish ? "Printable PDF and message for sending" : "PDF para imprimir e mensagem para envio"}</h4>
+                    <p className="theme-text-muted mt-1 text-xs">
                       {isEnglish ? "Use these buttons to generate the final output of the operation. The PDF opens ready to download or print." : "Use estes botões para gerar a saída final da operação. O PDF abre pronto para baixar ou imprimir."}
                     </p>
                   </div>
@@ -3224,32 +3224,32 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   return (
                     <div
                       key={manager.id}
-                      className={`content-safe flex h-full flex-col rounded-[1.5rem] border bg-white/5 p-4 sm:p-5 ${scoreStyle.border}`}
+                      className={`content-safe theme-info-card flex h-full flex-col rounded-[1.5rem] border p-4 sm:p-5 ${scoreStyle.border}`}
                     >
                       <div className="flex flex-col gap-3">
                       <div className="grid w-full gap-2.5 text-left xl:grid-cols-[minmax(0,1fr)_9rem] xl:items-start">
                         <div className="flex flex-col gap-3">
                           <div>
-                            <p className="text-base font-semibold text-white">
+                            <p className="theme-heading text-base font-semibold">
                               {cleanPropertyManagerName(manager.name)}
                             </p>
-                            <p className="mt-1 text-xs text-slate-300">
+                            <p className="theme-text-muted mt-1 text-xs">
                               {isEnglish ? "Route origin" : "Origem da rota"}: {getOfficeAddress(effectiveOffice)}
                             </p>
-                            <p className="mt-1 text-xs text-slate-300">
+                            <p className="theme-text-muted mt-1 text-xs">
                               {isEnglish ? "Stops" : "Paradas"}: {assignments.length}
                             </p>
                             {managerAnalysis?.phone ? (
-                              <p className="mt-1 text-xs text-slate-300">
+                              <p className="theme-text-muted mt-1 text-xs">
                                 {isEnglish ? "Phone" : "Telefone"}: {managerAnalysis.phone}
                               </p>
                             ) : null}
                           </div>
-                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-2.5">
-                            <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">
+                          <div className="content-safe theme-panel-strong rounded-2xl p-2.5">
+                            <p className="theme-accent text-xs uppercase tracking-[0.22em]">
                               {isEnglish ? "Route information" : "Informacoes da rota"}
                             </p>
-                            <p className="mt-1 text-[11px] leading-4.5 text-slate-200">
+                            <p className="theme-text-muted mt-1 text-[11px] leading-4.5">
                               {managerAnalysis?.summary ?? (isEnglish ? "No additional AI reading for this property manager." : "Sem leitura de IA adicional para este gerente de propriedades.")}
                             </p>
                             <p className="mt-1.5 text-[10px] leading-4 text-amber-200">
@@ -3259,7 +3259,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               {isEnglish ? "Adjustment" : "Ajuste"}: {managerAnalysis?.hint ?? (isEnglish ? "No suggested adjustment" : "Sem ajuste sugerido")}
                             </p>
                             {hasInferredMapPoints ? (
-                              <p className="mt-1 text-[9px] leading-3.5 text-slate-400">
+                              <p className="theme-text-soft mt-1 text-[9px] leading-3.5">
                                 {isEnglish
                                   ? "Map view includes automatically positioned points while the real coordinate base is still being enriched."
                                   : "A visualização do mapa inclui pontos posicionados automaticamente enquanto a base real de coordenadas ainda está sendo enriquecida."}
@@ -3267,8 +3267,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             ) : null}
                           </div>
                         </div>
-                        <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/70 p-2.5">
-                          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Route score" : "Score da rota"}</p>
+                        <div className="content-safe theme-panel-strong rounded-2xl p-2.5">
+                          <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">{isEnglish ? "Route score" : "Score da rota"}</p>
                           <p className={`mt-1 text-[1.65rem] font-semibold leading-none ${scoreStyle.text}`}>
                             {managerAnalysis?.routeScore ?? "--"}
                           </p>
@@ -3278,7 +3278,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               style={{ width: `${managerAnalysis?.routeScore ?? 0}%` }}
                             />
                           </div>
-                          <div className="mt-1.5 space-y-1 text-[10px] leading-4 text-slate-400">
+                          <div className="theme-text-soft mt-1.5 space-y-1 text-[10px] leading-4">
                             <p>
                               {isEnglish ? "Estimated distance" : "Distância estimada"}: {managerAnalysis?.estimatedDistanceKm ?? 0} mi
                             </p>
@@ -3291,7 +3291,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       </div>
 
                       {isolatedStops.isolatedCount > 0 ? (
-                        <div className="mt-4 rounded-2xl border border-amber-400/25 bg-amber-400/8 px-4 py-3">
+                        <div className="theme-warning-surface mt-4 rounded-2xl px-4 py-3">
                           <p className="text-sm font-medium text-amber-100">
                             {isEnglish ? `Isolated stop alert: ${isolatedStops.isolatedCount} ${isolatedStops.isolatedCount === 1 ? "point seems isolated" : "points seem isolated"} in this route.` : `Alerta de stop isolado: ${isolatedStops.isolatedCount} ${isolatedStops.isolatedCount === 1 ? "ponto parece isolado" : "pontos parecem isolados"} nesta rota.`}
                           </p>
@@ -3307,10 +3307,10 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           points={managerAnalysis?.mapPoints ?? buildFallbackMapPoints(manager, assignments, isEnglish, effectiveOffice)}
                         />
                         <div className="flex flex-col gap-2.5">
-                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-2.5">
-                            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{isEnglish ? "Resorts" : "Condomínios"}</p>
-                            <p className="mt-1 text-sm leading-5 text-white">{uniqueResorts.length}</p>
-                            <div className="mt-1 grid gap-x-4 gap-y-1 text-[11px] leading-4 text-slate-400 sm:grid-cols-2">
+                          <div className="content-safe theme-panel-strong rounded-2xl p-2.5">
+                            <p className="theme-text-soft text-xs uppercase tracking-[0.25em]">{isEnglish ? "Resorts" : "Condomínios"}</p>
+                            <p className="theme-heading mt-1 text-sm leading-5">{uniqueResorts.length}</p>
+                            <div className="theme-text-soft mt-1 grid gap-x-4 gap-y-1 text-[11px] leading-4 sm:grid-cols-2">
                               {uniqueResorts.map((resort) => (
                                 <p key={resort} className="break-normal whitespace-normal">
                                   {resort}
@@ -3318,8 +3318,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               ))}
                             </div>
                           </div>
-                          <div className="content-safe rounded-2xl border border-white/10 bg-slate-950/60 p-2.5">
-                            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
+                          <div className="content-safe theme-panel-strong rounded-2xl p-2.5">
+                            <p className="theme-accent text-xs uppercase tracking-[0.25em]">
                               {isEnglish ? "Export" : "Exportar"}
                             </p>
                             <div className="mt-1.5 flex flex-wrap gap-3">

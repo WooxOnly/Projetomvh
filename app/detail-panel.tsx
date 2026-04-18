@@ -270,20 +270,20 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
 
   return (
     <div className="mobile-width-guard space-y-4 sm:space-y-6">
-      <section className="mobile-width-guard overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
-        <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+      <section className="mobile-width-guard theme-panel overflow-hidden rounded-[1.5rem] p-4 sm:rounded-[1.75rem] sm:p-6">
+        <p className="theme-accent text-xs uppercase tracking-[0.35em]">
           {isEnglish ? "Details" : "Detalhamento"}
         </p>
-        <h3 className="mt-3 text-xl font-semibold text-white sm:text-2xl">
+        <h3 className="theme-heading mt-3 text-xl font-semibold sm:text-2xl">
           {isEnglish ? "Visual analysis of the imported file" : "Análise visual do arquivo importado"}
         </h3>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+        <p className="theme-text-muted mt-2 max-w-3xl text-sm leading-6">
           {isEnglish ? (
             <>
               Here you can analyze the file more clearly before moving forward to the property managers
               available for the day. The pie chart lets you break the operation down by{" "}
-              <span className="font-medium text-white">Office</span> or{" "}
-              <span className="font-medium text-white">Resorts</span>, with hover and quick side reading.
+              <span className="theme-heading font-medium">Office</span> or{" "}
+              <span className="theme-heading font-medium">Resorts</span>, with hover and quick side reading.
             </>
           ) : (
             <>
@@ -295,7 +295,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
           )}
         </p>
         {data.activeUploadOfficeBreakdown ? (
-          <p className="mt-3 text-sm text-slate-400">
+          <p className="theme-text-soft mt-3 text-sm">
             {isEnglish ? "Active file" : "Arquivo ativo"}: {formatUploadLabel(data.activeUploadOfficeBreakdown)} |{" "}
             {isEnglish ? "Operation" : "Operação"}:{" "}
             {formatDateOnly(data.activeUploadOfficeBreakdown.operationDate)} | Check-ins:{" "}
@@ -306,27 +306,27 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
 
       {data.activeUploadOfficeBreakdown ? (
         <>
-          <section className="mobile-width-guard overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
+          <section className="mobile-width-guard theme-panel overflow-hidden rounded-[1.5rem] p-4 sm:rounded-[1.75rem] sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-3xl">
-                <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+                <p className="theme-accent text-xs uppercase tracking-[0.35em]">
                   {isEnglish ? "Next step" : "Próximo passo"}
                 </p>
-                <h4 className="mt-3 text-xl font-semibold text-white">
+                <h4 className="theme-heading mt-3 text-xl font-semibold">
                   {isEnglish
                     ? "Move forward to the managers of the day"
                     : "Avançar para os gerentes do dia"}
                 </h4>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
+                <p className="theme-text-muted mt-2 text-sm leading-6">
                   {isEnglish
                     ? "After the analysis, the next step is defining who is available for the day to separate the check-ins."
                     : "Depois da análise, o próximo passo é definir quem está disponível no dia para a separação dos check-ins."}
                 </p>
-                <p className="mt-3 text-sm text-slate-400">
+                <p className="theme-text-soft mt-3 text-sm">
                   {isEnglish
                     ? "Active property managers registered"
                     : "Gerentes de propriedades ativos cadastrados"}
-                  : <span className="font-medium text-white"> {activeManagerCount}</span>
+                  : <span className="theme-heading font-medium"> {activeManagerCount}</span>
                 </p>
               </div>
               {onOpenAvailabilityTab ? (
@@ -334,7 +334,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                   <button
                     type="button"
                     onClick={onOpenAvailabilityTab}
-                    className="min-h-11 w-full rounded-2xl bg-cyan-300 px-5 py-3 text-center text-sm font-semibold text-slate-950 sm:w-auto"
+                    className="theme-primary-button min-h-11 w-full rounded-2xl px-5 py-3 text-center text-sm font-semibold sm:w-auto"
                   >
                     <ButtonLabel icon="managers">
                       {isEnglish ? "Go to managers of the day" : "Avançar para os gerentes do dia"}
@@ -345,7 +345,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
             </div>
           </section>
 
-          <section className="mobile-width-guard grid gap-3 overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-3 sm:gap-4 sm:rounded-[1.75rem] sm:p-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <section className="mobile-width-guard theme-panel grid gap-3 overflow-hidden rounded-[1.5rem] p-3 sm:gap-4 sm:rounded-[1.75rem] sm:p-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
             <div className="min-w-0">
               <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:gap-3">
                 <button
@@ -353,8 +353,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                   onClick={() => setBreakdownMode("resorts")}
                   className={`inline-flex min-h-10 items-center justify-center rounded-full px-3 py-2 text-sm font-medium transition sm:min-h-11 sm:px-4 sm:py-2.5 ${
                     breakdownMode === "resorts"
-                      ? "bg-cyan-300 text-slate-950"
-                      : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                      ? "theme-pill-active"
+                      : "theme-pill-button"
                   }`}
                 >
                   <ButtonLabel icon="route">
@@ -366,8 +366,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                   onClick={() => setBreakdownMode("offices")}
                   className={`inline-flex min-h-10 items-center justify-center rounded-full px-3 py-2 text-sm font-medium transition sm:min-h-11 sm:px-4 sm:py-2.5 ${
                     breakdownMode === "offices"
-                      ? "bg-cyan-300 text-slate-950"
-                      : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                      ? "theme-pill-active"
+                      : "theme-pill-button"
                   }`}
                 >
                   <ButtonLabel icon="office">
@@ -378,14 +378,14 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
 
               {breakdownMode === "resorts" ? (
                 <div className="mt-4">
-                  <label className="block text-sm text-slate-300">
+                  <label className="theme-text-muted block text-sm">
                     <span className="mb-2 block">
                       {isEnglish ? "Filter resorts by office" : "Filtrar condomínios por escritório"}
                     </span>
                     <select
                       value={officeFilter}
                       onChange={(event) => setOfficeFilter(event.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none sm:rounded-2xl"
+                      className="theme-input w-full rounded-xl px-4 py-3 text-sm outline-none sm:rounded-2xl"
                     >
                       <option value="all">{isEnglish ? "All offices" : "Todos os escritórios"}</option>
                       {data.offices.map((office) => (
@@ -398,7 +398,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 </div>
               ) : null}
 
-              <div className="mobile-width-guard mt-4 overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/5 p-3 sm:mt-6 sm:rounded-[1.75rem] sm:p-6">
+              <div className="mobile-width-guard theme-chart-card mt-4 overflow-hidden rounded-[1.35rem] p-3 sm:mt-6 sm:rounded-[1.75rem] sm:p-6">
                 {chartData.slices.length > 0 ? (
                   <div
                     className="relative flex items-center justify-center"
@@ -474,7 +474,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                     </svg>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-white/15 bg-slate-950/40 p-8 text-sm text-slate-300">
+                  <div className="theme-panel-strong theme-text-muted rounded-2xl border border-dashed p-8 text-sm">
                     {isEnglish
                       ? "There is not enough data to build the chart with this filter."
                       : "Não há dados suficientes para montar o gráfico com esse filtro."}
@@ -484,28 +484,28 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
             </div>
 
             <div className="min-w-0 space-y-3 sm:space-y-4">
-              <div className="mobile-width-guard overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/5 p-4 sm:rounded-[1.5rem] sm:p-5">
-                <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
+              <div className="mobile-width-guard theme-info-card overflow-hidden rounded-[1.35rem] p-4 sm:rounded-[1.5rem] sm:p-5">
+                <p className="theme-accent text-xs uppercase tracking-[0.3em]">
                   {isEnglish ? "Tap / focus" : "Toque / foco"}
                 </p>
                 {activeSlice ? (
                   <div className="mt-3 flex h-[8.75rem] flex-col overflow-y-auto pr-1 sm:h-[9.5rem]">
-                    <h4 className="line-clamp-2 overflow-hidden text-lg font-semibold leading-6 text-white sm:text-xl sm:leading-7">
+                    <h4 className="theme-heading line-clamp-2 overflow-hidden text-lg font-semibold leading-6 sm:text-xl sm:leading-7">
                       {activeSlice.label}
                     </h4>
-                    <p className="mt-2 text-sm text-slate-300">
-                      Check-ins: <span className="font-medium text-white">{activeSlice.metricValue}</span>
+                    <p className="theme-text-muted mt-2 text-sm">
+                      Check-ins: <span className="theme-heading font-medium">{activeSlice.metricValue}</span>
                     </p>
-                    <p className="mt-2 line-clamp-2 overflow-hidden text-sm text-slate-300">
+                    <p className="theme-text-muted mt-2 line-clamp-2 overflow-hidden text-sm">
                       {activeSlice.sublabel}
                     </p>
-                    <p className="mt-3 text-sm leading-6 text-slate-400">
+                    <p className="theme-text-soft mt-3 text-sm leading-6">
                       {activeSlice.details}
                     </p>
                   </div>
                 ) : (
                   <div className="mt-3 flex h-[8.75rem] items-start sm:h-[9.5rem]">
-                    <p className="text-sm leading-6 text-slate-300">
+                    <p className="theme-text-muted text-sm leading-6">
                       {isEnglish
                         ? "Tap a slice or legend item to see the details."
                         : "Toque em uma fatia ou item da legenda para ver os detalhes."}
@@ -514,8 +514,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 )}
               </div>
 
-              <div className="mobile-width-guard overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/5 p-3.5 sm:rounded-[1.5rem] sm:p-5">
-                <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
+              <div className="mobile-width-guard theme-info-card overflow-hidden rounded-[1.35rem] p-3.5 sm:rounded-[1.5rem] sm:p-5">
+                <p className="theme-accent text-xs uppercase tracking-[0.3em]">
                   {isEnglish ? "Legend" : "Legenda"}
                 </p>
                 <div
@@ -532,7 +532,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                       className={`flex w-full items-start gap-2 rounded-xl border px-2.5 py-2 text-left transition sm:rounded-lg sm:px-2.5 sm:py-2 ${
                         activeSlice?.id === slice.id
                           ? "border-cyan-300/50 bg-cyan-300/10"
-                          : "border-white/10 bg-slate-950/40 hover:bg-white/5"
+                          : "theme-panel-strong"
                       }`}
                     >
                       <span
@@ -541,14 +541,14 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                       />
                       <span className="min-w-0 flex-1">
                         <span className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2">
-                          <span className="truncate text-[13px] font-medium text-white sm:text-[13px]">
+                          <span className="theme-heading truncate text-[13px] font-medium sm:text-[13px]">
                             {slice.label}
                           </span>
-                          <span className="shrink-0 text-[13px] font-semibold text-cyan-200 sm:text-[13px]">
+                          <span className="theme-accent shrink-0 text-[13px] font-semibold sm:text-[13px]">
                             {slice.metricValue}
                           </span>
                         </span>
-                        <span className="mt-0.5 block truncate text-[10px] text-slate-400 sm:text-[10px]">
+                        <span className="theme-text-soft mt-0.5 block truncate text-[10px] sm:text-[10px]">
                           {slice.sublabel}
                         </span>
                       </span>
@@ -559,8 +559,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
             </div>
           </section>
 
-          <section className="mobile-width-guard overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-4 sm:rounded-[1.75rem] sm:p-6">
-            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+          <section className="mobile-width-guard theme-panel overflow-hidden rounded-[1.5rem] p-4 sm:rounded-[1.75rem] sm:p-6">
+            <p className="theme-accent text-xs uppercase tracking-[0.35em]">
               {isEnglish ? "Details by office" : "Detalhamento por escritório"}
             </p>
             <div className="mt-5 space-y-5">
@@ -580,12 +580,12 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                 return (
                   <div
                     key={office.officeId ?? office.officeName}
-                    className="mobile-width-guard overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5"
+                    className="mobile-width-guard theme-info-card overflow-hidden rounded-[1.5rem] p-4 sm:p-5"
                   >
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div>
-                        <h4 className="text-xl font-semibold text-white">{office.officeName}</h4>
-                        <p className="mt-2 text-sm text-slate-300">
+                        <h4 className="theme-heading text-xl font-semibold">{office.officeName}</h4>
+                        <p className="theme-text-muted mt-2 text-sm">
                           {isEnglish
                             ? `${totalResorts} resorts | ${totalHouses} houses | ${totalCheckins} check-ins`
                             : `${totalResorts} condomínios | ${totalHouses} casas | ${totalCheckins} check-ins`}
@@ -601,13 +601,13 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                           return (
                           <div
                             key={`${office.officeId ?? office.officeName}-${region.region}`}
-                            className="rounded-2xl border border-cyan-400/10 bg-slate-950/50 p-4"
+                            className="theme-panel-strong rounded-2xl p-4"
                           >
-                            <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
+                            <p className="theme-accent text-xs uppercase tracking-[0.2em]">
                               {regionLabelMap[region.region]?.[isEnglish ? "en" : "pt"] ?? region.region}
                             </p>
-                            <p className="mt-2 text-lg font-semibold text-white">{regionCheckins}</p>
-                            <p className="text-xs text-slate-400">
+                            <p className="theme-heading mt-2 text-lg font-semibold">{regionCheckins}</p>
+                            <p className="theme-text-soft text-xs">
                               {region.condominiumCount} {isEnglish ? "resorts" : "condomínios"}
                             </p>
                           </div>
@@ -617,9 +617,9 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                     </div>
 
                     <div className="mt-5 hidden overflow-x-auto md:block">
-                      <table className="min-w-full text-left text-sm text-slate-300">
+                      <table className="theme-text-muted min-w-full text-left text-sm">
                         <thead>
-                          <tr className="border-b border-white/10 text-xs uppercase tracking-[0.2em] text-slate-500">
+                          <tr className="theme-divider theme-text-soft border-b text-xs uppercase tracking-[0.2em]">
                             <th className="px-3 py-3">{isEnglish ? "Region" : "Região"}</th>
                             <th className="px-3 py-3">{isEnglish ? "Resort" : "Condomínio"}</th>
                             <th className="px-3 py-3">{isEnglish ? "Houses" : "Casas"}</th>
@@ -630,14 +630,14 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                         <tbody>
                           {office.regions.flatMap((region) =>
                             region.condominiums.map((condominium) => (
-                              <tr key={condominium.condominiumId} className="border-b border-white/5">
+                              <tr key={condominium.condominiumId} className="theme-divider border-b">
                                 <td className="px-3 py-3">
                                   {regionLabelMap[region.region]?.[isEnglish ? "en" : "pt"] ?? region.region}
                                 </td>
-                                <td className="px-3 py-3 text-white">{condominium.condominiumName}</td>
+                                <td className="theme-heading px-3 py-3">{condominium.condominiumName}</td>
                                 <td className="px-3 py-3">{condominium.houseCount}</td>
                                 <td className="px-3 py-3">{condominium.checkinCount}</td>
-                                <td className="px-3 py-3 text-xs text-slate-400">
+                                <td className="theme-text-soft px-3 py-3 text-xs">
                                   {condominium.houseNames.slice(0, 4).join(", ")}
                                   {condominium.houseNames.length > 4 ? "..." : ""}
                                 </td>
@@ -653,23 +653,23 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                         region.condominiums.map((condominium) => (
                           <div
                             key={`${office.officeId ?? office.officeName}-${condominium.condominiumId}`}
-                            className="rounded-2xl border border-white/10 bg-slate-950/45 p-4"
+                            className="theme-panel-strong rounded-2xl p-4"
                           >
-                            <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
+                            <p className="theme-accent text-xs uppercase tracking-[0.2em]">
                               {regionLabelMap[region.region]?.[isEnglish ? "en" : "pt"] ?? region.region}
                             </p>
-                            <p className="mt-2 text-sm font-semibold text-white">
+                            <p className="theme-heading mt-2 text-sm font-semibold">
                               {condominium.condominiumName}
                             </p>
-                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
-                              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+                            <div className="theme-text-muted mt-3 flex flex-wrap gap-2 text-xs">
+                              <span className="theme-pill-group rounded-full px-2.5 py-1">
                                 {condominium.houseCount} {isEnglish ? "houses" : "casas"}
                               </span>
-                              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+                              <span className="theme-pill-group rounded-full px-2.5 py-1">
                                 {condominium.checkinCount} check-ins
                               </span>
                             </div>
-                            <p className="mt-3 text-xs leading-5 text-slate-400">
+                            <p className="theme-text-soft mt-3 text-xs leading-5">
                               {condominium.houseNames.slice(0, 4).join(", ")}
                               {condominium.houseNames.length > 4 ? "..." : ""}
                             </p>
@@ -684,7 +684,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
           </section>
         </>
       ) : (
-        <section className="mobile-width-guard overflow-hidden rounded-[1.75rem] border border-dashed border-white/15 bg-slate-950/30 p-8 text-sm text-slate-300">
+        <section className="mobile-width-guard theme-panel-strong theme-text-muted overflow-hidden rounded-[1.75rem] border border-dashed p-8 text-sm">
           {isEnglish
             ? "No upload has been processed yet. As soon as a file is imported, this page will show the visual details with charts, office view, and resort view."
             : "Nenhum upload foi processado ainda. Assim que um arquivo for importado, esta aba passará a mostrar o detalhamento visual com gráficos, leitura por escritório e leitura por condomínios."}
