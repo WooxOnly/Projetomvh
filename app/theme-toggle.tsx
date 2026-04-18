@@ -56,12 +56,10 @@ export function ThemeToggle() {
     >
       <span
         aria-hidden="true"
-        className={`absolute top-1/2 h-8 w-8 -translate-y-1/2 rounded-full transition-transform duration-200 ${
-          isLight
-            ? "translate-x-9 bg-sky-500 text-white"
-            : "translate-x-0 bg-slate-950/80 text-slate-100"
+        className={`absolute top-1/2 h-8 w-8 -translate-y-1/2 rounded-full transition-[left] duration-200 ${
+          isLight ? "bg-sky-500 text-white" : "bg-slate-950/80 text-slate-100"
         }`}
-        style={{ left: "0.25rem" }}
+        style={{ left: isLight ? "2.4375rem" : "0.3125rem" }}
       />
       <span className="relative z-10 flex h-full items-center justify-center text-slate-500">
         <span className={isLight ? "text-slate-400" : "text-slate-100"}>

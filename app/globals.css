@@ -312,6 +312,18 @@ html[data-theme="light"] .theme-toggle-button {
   color: color-mix(in srgb, var(--accent) 84%, white 16%);
 }
 
+.theme-count-badge {
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: #ecfeff;
+}
+
+html[data-theme="light"] .theme-count-badge {
+  border-color: rgba(14, 165, 233, 0.2);
+  background: rgba(224, 242, 254, 0.96);
+  color: #0f4c6b;
+}
+
 .theme-metric-pill {
   border: 1px solid var(--shell-border);
   background: var(--surface-bg);
@@ -369,6 +381,24 @@ html[data-theme="light"] .theme-toggle-button {
   box-shadow: none;
 }
 
+.theme-danger-button {
+  border: 1px solid color-mix(in srgb, #f43f5e 26%, transparent);
+  background: color-mix(in srgb, #f43f5e 10%, transparent);
+  color: #fecdd3;
+}
+
+html[data-theme="light"] .theme-danger-button {
+  border-color: rgba(244, 63, 94, 0.22);
+  background: rgba(255, 241, 242, 0.96);
+  color: #be123c;
+}
+
+html[data-theme="light"] .theme-accent-button {
+  border-color: rgba(14, 165, 233, 0.24);
+  background: rgba(224, 242, 254, 0.92);
+  color: #0f4c6b;
+}
+
 html[data-theme="light"] [class*="text-white"] {
   color: var(--text-primary) !important;
 }
@@ -418,9 +448,14 @@ html[data-theme="light"] [class*="shadow-cyan-950/20"] {
   box-shadow: var(--shadow-shell) !important;
 }
 
-html[data-theme="light"] [class*="bg-cyan-300"] {
+html[data-theme="light"] [class~="bg-cyan-300"] {
   background-color: #0ea5e9 !important;
   color: #effbff !important;
+}
+
+html[data-theme="light"] [class*="bg-cyan-300/"],
+html[data-theme="light"] [class*="bg-cyan-400/"] {
+  background-color: rgba(14, 165, 233, 0.12) !important;
 }
 
 html[data-theme="light"] [class*="text-cyan-300"],

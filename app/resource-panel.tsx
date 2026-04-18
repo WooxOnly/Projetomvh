@@ -836,7 +836,7 @@ export function ResourcePanel({ kind, data }: ResourcePanelProps) {
                   </button>
                   <button
                     type="button"
-                    className="min-h-11 rounded-xl border border-rose-400/20 px-3 py-2 text-sm text-rose-200"
+                    className="theme-danger-button min-h-11 rounded-xl px-3 py-2 text-sm"
                     onClick={() =>
                       handleAction(
                         () => sendJson(`${config.route}/${item.id}`, "DELETE"),

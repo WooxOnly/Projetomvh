@@ -2347,13 +2347,13 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   <button
                     type="button"
                     onClick={() => setIsPmCondominiumModalOpen(false)}
-                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+                    className="theme-secondary-button inline-flex min-h-11 items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-medium"
                   >
                     {isEnglish ? "Close" : "Fechar"}
                   </button>
                 </div>
 
-                <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs leading-5 text-slate-300">
+                <div className="theme-info-card theme-text-muted mt-5 rounded-2xl px-4 py-3 text-xs leading-5">
                   {isEnglish
                     ? "Resorts highlighted in amber are split between more than one PM."
                     : "Condomínios destacados em amarelo estão divididos entre mais de um PM."}
@@ -2363,16 +2363,16 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                   {pmCondominiumSummaries.map((summary) => (
                     <section
                       key={summary.managerId}
-                      className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4"
+                      className="theme-info-card rounded-[1.5rem] p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h4 className="text-base font-semibold text-white">{summary.managerName}</h4>
-                          <p className="mt-1 text-xs text-slate-400">
+                          <h4 className="theme-heading text-base font-semibold">{summary.managerName}</h4>
+                          <p className="theme-text-soft mt-1 text-xs">
                             {summary.condominiums.length} {isEnglish ? "resorts" : "condomínios"} • {summary.totalCheckins} check-ins
                           </p>
                         </div>
-                        <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-[11px] text-cyan-100">
+                        <span className="theme-count-badge rounded-full px-2.5 py-1 text-[11px] font-medium">
                           {summary.totalCheckins}
                         </span>
                       </div>
@@ -2384,7 +2384,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             className={`flex items-start justify-between gap-3 rounded-2xl border px-3 py-2.5 text-sm ${
                               condominium.isShared
                                 ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
-                                : "border-white/10 bg-slate-950/55 text-slate-100"
+                                : "theme-panel-strong text-slate-100"
                             }`}
                           >
                             <div className="min-w-0">
@@ -2395,7 +2395,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 </p>
                               ) : null}
                             </div>
-                            <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px]">
+                            <span className="theme-count-badge shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium">
                               {condominium.checkins}
                             </span>
                           </div>
@@ -2432,7 +2432,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       setIsAddressSearchModalOpen(false);
                       setAddressSearchTerm("");
                     }}
-                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+                    className="theme-secondary-button inline-flex min-h-11 items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-medium"
                   >
                     {isEnglish ? "Close" : "Fechar"}
                   </button>
@@ -2639,8 +2639,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     key={item.id}
                     className={`flex min-h-[4.75rem] items-start gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
                       importedManagerIdsForUploadSet.has(item.id)
-                        ? "border-cyan-300/30 bg-cyan-300/10 text-slate-100"
-                        : "border-white/10 bg-white/5 text-slate-200"
+                        ? "theme-panel-soft border-cyan-300/35 text-slate-100"
+                        : "theme-info-card text-slate-200"
                     }`}
                   >
                     <input
@@ -2694,7 +2694,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             }));
                           }}
                           disabled={!form.availablePropertyManagerIds.includes(item.id)}
-                          className="rounded-xl border border-white/10 bg-slate-950/80 px-3 py-1.5 text-xs text-slate-100 disabled:cursor-not-allowed disabled:opacity-0"
+                          className="theme-input rounded-xl px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-0"
                         >
                           <option value="">
                             {isEnglish ? "Base office" : "Escritório base"}
@@ -3376,7 +3376,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                 : [...current, manager.id],
                             )
                           }
-                          className="inline-flex min-h-[3.35rem] w-full flex-col items-center justify-center gap-1 rounded-2xl border border-cyan-300/35 bg-cyan-400/10 px-2 py-2 text-center text-[11px] font-medium leading-4 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.05),0_8px_20px_rgba(34,211,238,0.07)] transition hover:border-cyan-200/70 hover:bg-cyan-300/18 hover:text-white sm:min-h-9 sm:flex-row sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[13px]"
+                          className="theme-accent-button inline-flex min-h-[3.35rem] w-full flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-center text-[11px] font-medium leading-4 sm:min-h-9 sm:flex-row sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[13px]"
                         >
                           <RouteDetailsIcon className="h-4 w-4 shrink-0" />
                           <span>
@@ -3392,7 +3392,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         <button
                           type="button"
                           onClick={() => openSwapFullModal(manager.id)}
-                          className="inline-flex min-h-[3.35rem] w-full flex-col items-center justify-center gap-1 rounded-2xl border border-cyan-300/35 bg-cyan-400/10 px-2 py-2 text-center text-[11px] font-medium leading-4 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.05),0_8px_20px_rgba(34,211,238,0.07)] transition hover:border-cyan-200/70 hover:bg-cyan-300/18 hover:text-white sm:min-h-9 sm:flex-row sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[13px]"
+                          className="theme-accent-button inline-flex min-h-[3.35rem] w-full flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-center text-[11px] font-medium leading-4 sm:min-h-9 sm:flex-row sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[13px]"
                         >
                           <SwapRouteIcon className="h-4 w-4 shrink-0" />
                           {isEnglish ? "Swap Full Route" : "Trocar rota completa"}
@@ -3400,7 +3400,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         <button
                           type="button"
                           onClick={() => openAdjustBetweenModal(manager.id)}
-                          className="inline-flex min-h-[3.35rem] w-full flex-col items-center justify-center gap-1 rounded-2xl border border-cyan-300/35 bg-cyan-400/10 px-2 py-2 text-center text-[11px] font-medium leading-4 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.05),0_8px_20px_rgba(34,211,238,0.07)] transition hover:border-cyan-200/70 hover:bg-cyan-300/18 hover:text-white sm:min-h-9 sm:flex-row sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[13px]"
+                          className="theme-accent-button inline-flex min-h-[3.35rem] w-full flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-center text-[11px] font-medium leading-4 sm:min-h-9 sm:flex-row sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[13px]"
                         >
                           <AdjustRouteIcon className="h-4 w-4 shrink-0" />
                           {isEnglish ? "Adjust Routes Between PMs" : "Ajustar rotas entre PMs"}

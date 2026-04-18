@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
+import { useTheme } from "@/app/theme-provider";
 
 type DetailPanelProps = {
   onOpenAvailabilityTab?: () => void;
@@ -142,6 +143,7 @@ function truncateCenterLabel(value: string, maxLength: number) {
 
 export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
   const { isEnglish } = useLanguage();
+  const { theme } = useTheme();
   const [breakdownMode, setBreakdownMode] = useState<BreakdownMode>("resorts");
   const [officeFilter, setOfficeFilter] = useState("all");
   const [activeSliceId, setActiveSliceId] = useState<string | null>(null);
@@ -267,6 +269,14 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
     () => chartData.legendItems.find((slice) => slice.id === activeSliceId) ?? null,
     [activeSliceId, chartData.legendItems],
   );
+  const isLightTheme = theme === "light";
+  const chartSliceStroke = isLightTheme ? "#f8fafc" : "#020617";
+  const chartSliceActiveStroke = isLightTheme ? "#e0f2fe" : "#e2e8f0";
+  const chartCenterFill = isLightTheme ? "#ecf5fb" : "#020617";
+  const chartCenterRing = isLightTheme ? "#d7e7f2" : "#0f172a";
+  const chartCenterLabelFill = isLightTheme ? "#64748b" : "#94a3b8";
+  const chartCenterValueFill = isLightTheme ? "#142031" : "#ffffff";
+  const chartCenterDetailFill = isLightTheme ? "#475569" : "#cbd5e1";
 
   return (
     <div className="mobile-width-guard space-y-4 sm:space-y-6">
@@ -422,7 +432,7 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                               key={slice.id}
                               d={path}
                               fill={slice.color}
-                              stroke={activeSlice?.id === slice.id ? "#e2e8f0" : "#020617"}
+                              stroke={activeSlice?.id === slice.id ? chartSliceActiveStroke : chartSliceStroke}
                               strokeWidth={activeSlice?.id === slice.id ? 4 : 2}
                               className="cursor-pointer transition-opacity duration-200 hover:opacity-90"
                               onMouseEnter={() => setActiveSliceId(slice.id)}
@@ -435,12 +445,14 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                           );
                         });
                       })()}
-                      <circle cx="160" cy="160" r="68" fill="#020617" />
+                      <circle cx="160" cy="160" r="71" fill={chartCenterRing} opacity={isLightTheme ? 0.55 : 1} />
+                      <circle cx="160" cy="160" r="68" fill={chartCenterFill} />
                       <text
                         x="160"
                         y="132"
                         textAnchor="middle"
-                        className="fill-slate-400 text-[9px] uppercase tracking-[0.28em]"
+                        style={{ fill: chartCenterLabelFill }}
+                        className="text-[9px] uppercase tracking-[0.28em]"
                       >
                         {truncateCenterLabel(activeSlice ? activeSlice.label : "Check-ins", 18)}
                       </text>
@@ -448,7 +460,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                         x="160"
                         y="172"
                         textAnchor="middle"
-                        className="fill-white text-4xl font-semibold"
+                        style={{ fill: chartCenterValueFill }}
+                        className="text-4xl font-semibold"
                       >
                         {activeSlice ? activeSlice.metricValue : chartData.total}
                       </text>
@@ -456,7 +469,8 @@ export function DetailPanel({ data, onOpenAvailabilityTab }: DetailPanelProps) {
                         x="160"
                         y="196"
                         textAnchor="middle"
-                        className="fill-slate-300 text-[11px]"
+                        style={{ fill: chartCenterDetailFill }}
+                        className="text-[11px]"
                       >
                         {truncateCenterLabel(
                           activeSlice
