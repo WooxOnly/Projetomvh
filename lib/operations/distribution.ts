@@ -52,6 +52,7 @@ export type PlannedAssignment = {
 
 const MAX_MANAGER_COUNT_GAP = 5;
 const SMALL_RESORT_LOCK_THRESHOLD = 10;
+const FAR_FOCUS_RESORTS = new Set(["paradiso grande", "vista cay"]);
 
 function getForceEqualTargetGap(totalCheckins: number, managerCount: number) {
   if (managerCount <= 1) {
@@ -118,6 +119,10 @@ function getResortLabel(checkin: CheckinInput) {
   return normalizeText(checkin.condominiumName ?? "") || "sem-resort";
 }
 
+function isFarFocusResortLabel(resortLabel: string) {
+  return FAR_FOCUS_RESORTS.has(resortLabel);
+}
+
 function getResortGroupKey(checkin: CheckinInput) {
   return checkin.condominiumId ?? getResortLabel(checkin);
 }
@@ -182,6 +187,198 @@ export function enforceSmallResortSingleManager(
       if (assignment.source !== "default_pm") {
         assignment.source = "distribution_resort_locked";
       }
+    }
+  }
+
+  return plan;
+}
+
+export function enforceFarResortLimitedMix(plan: PlannedAssignment[], input: PlanInput) {
+  if (plan.length === 0 || input.availableManagers.length <= 1) {
+    return plan;
+  }
+
+  const checkinById = new Map(input.checkins.map((checkin) => [checkin.id, checkin]));
+  const assignmentsByManager = new Map<string, PlannedAssignment[]>();
+
+  for (const manager of input.availableManagers) {
+    assignmentsByManager.set(manager.id, []);
+  }
+
+  for (const assignment of plan) {
+    const existing = assignmentsByManager.get(assignment.propertyManagerId) ?? [];
+    existing.push(assignment);
+    assignmentsByManager.set(assignment.propertyManagerId, existing);
+  }
+
+  function getAssignmentCheckin(assignment: PlannedAssignment) {
+    return checkinById.get(assignment.checkinId) ?? null;
+  }
+
+  function getManagerAssignedCondominiumOfficeIds(managerId: string, excludingCheckinIds = new Set<string>()) {
+    const officeIds = new Set(
+      (assignmentsByManager.get(managerId) ?? [])
+        .filter((assignment) => !excludingCheckinIds.has(assignment.checkinId))
+        .map(getAssignmentCheckin)
+        .map((checkin) => checkin?.condominium?.officeId ?? null)
+        .filter((value): value is string => Boolean(value)),
+    );
+
+    const managerOfficeId =
+      input.availableManagers.find((manager) => manager.id === managerId)?.officeId ?? null;
+
+    if (managerOfficeId) {
+      officeIds.add(managerOfficeId);
+    }
+
+    return officeIds;
+  }
+
+  function getManagerResortBuckets(managerId: string) {
+    const buckets = new Map<string, PlannedAssignment[]>();
+
+    for (const assignment of assignmentsByManager.get(managerId) ?? []) {
+      const checkin = getAssignmentCheckin(assignment);
+      if (!checkin) {
+        continue;
+      }
+
+      const resortLabel = getResortLabel(checkin);
+      const bucket = buckets.get(resortLabel) ?? [];
+      bucket.push(assignment);
+      buckets.set(resortLabel, bucket);
+    }
+
+    return buckets;
+  }
+
+  function moveAssignments(assignments: PlannedAssignment[], targetManagerId: string) {
+    const movedIds = new Set(assignments.map((assignment) => assignment.checkinId));
+
+    for (const assignment of assignments) {
+      assignmentsByManager.set(
+        assignment.propertyManagerId,
+        (assignmentsByManager.get(assignment.propertyManagerId) ?? []).filter(
+          (item) => item.checkinId !== assignment.checkinId,
+        ),
+      );
+      assignment.propertyManagerId = targetManagerId;
+      if (assignment.source !== "default_pm") {
+        assignment.source = "distribution_far_resort_focus";
+      }
+    }
+
+    const targetAssignments = (assignmentsByManager.get(targetManagerId) ?? []).filter(
+      (item) => !movedIds.has(item.checkinId),
+    );
+    targetAssignments.push(...assignments);
+    assignmentsByManager.set(targetManagerId, targetAssignments);
+  }
+
+  function canManagerReceiveResortGroup(
+    managerId: string,
+    assignments: PlannedAssignment[],
+    sourceManagerId: string,
+  ) {
+    const sampleCheckin = getAssignmentCheckin(assignments[0]!);
+    if (!sampleCheckin) {
+      return false;
+    }
+
+    const excludingIds =
+      managerId === sourceManagerId ? new Set(assignments.map((assignment) => assignment.checkinId)) : new Set<string>();
+    const candidateOfficeIds = getManagerAssignedCondominiumOfficeIds(managerId, excludingIds);
+    const candidateOfficeId = sampleCheckin.condominium?.officeId ?? null;
+
+    if (
+      input.preventMixedCondominiumOffices &&
+      candidateOfficeId &&
+      candidateOfficeIds.size > 0 &&
+      !candidateOfficeIds.has(candidateOfficeId)
+    ) {
+      return false;
+    }
+
+    const currentBuckets = getManagerResortBuckets(managerId);
+    if (managerId === sourceManagerId) {
+      currentBuckets.delete(getResortLabel(sampleCheckin));
+    }
+
+    const existingResorts = Array.from(currentBuckets.keys());
+    const incomingResortLabel = getResortLabel(sampleCheckin);
+    const combinedResorts = new Set(existingResorts);
+    combinedResorts.add(incomingResortLabel);
+
+    const hasFarFocusResort = Array.from(combinedResorts).some(isFarFocusResortLabel);
+    if (!hasFarFocusResort) {
+      return true;
+    }
+
+    const nonSpecialResortCount = Array.from(combinedResorts).filter(
+      (resortLabel) => !isFarFocusResortLabel(resortLabel),
+    ).length;
+
+    return nonSpecialResortCount <= 1;
+  }
+
+  for (let pass = 0; pass < 24; pass += 1) {
+    let moveApplied = false;
+
+    for (const manager of input.availableManagers) {
+      const resortBuckets = getManagerResortBuckets(manager.id);
+      const resortLabels = Array.from(resortBuckets.keys());
+      const hasFarFocusResort = resortLabels.some(isFarFocusResortLabel);
+
+      if (!hasFarFocusResort) {
+        continue;
+      }
+
+      const nonSpecialResorts = resortLabels
+        .filter((resortLabel) => !isFarFocusResortLabel(resortLabel))
+        .map((resortLabel) => ({
+          resortLabel,
+          assignments: resortBuckets.get(resortLabel) ?? [],
+        }))
+        .sort((left, right) => left.assignments.length - right.assignments.length);
+
+      if (nonSpecialResorts.length <= 1) {
+        continue;
+      }
+
+      for (const resortGroup of nonSpecialResorts.slice(1)) {
+        const targetManager = input.availableManagers
+          .filter((candidate) => candidate.id !== manager.id)
+          .map((candidate) => ({
+            manager: candidate,
+            sameResortCount:
+              getManagerResortBuckets(candidate.id).get(resortGroup.resortLabel)?.length ?? 0,
+            totalAssignments: (assignmentsByManager.get(candidate.id) ?? []).length,
+          }))
+          .filter((candidate) =>
+            canManagerReceiveResortGroup(candidate.manager.id, resortGroup.assignments, manager.id),
+          )
+          .sort(
+            (left, right) =>
+              right.sameResortCount - left.sameResortCount ||
+              left.totalAssignments - right.totalAssignments,
+          )[0];
+
+        if (!targetManager) {
+          continue;
+        }
+
+        moveAssignments(resortGroup.assignments, targetManager.manager.id);
+        moveApplied = true;
+        break;
+      }
+
+      if (moveApplied) {
+        break;
+      }
+    }
+
+    if (!moveApplied) {
+      break;
     }
   }
 

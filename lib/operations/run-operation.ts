@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { cleanupExpiredOperationalData } from "@/lib/operations/cleanup";
 import { buildOperationPlan } from "@/lib/operations/ai-distribution";
 import {
+  enforceFarResortLimitedMix,
   enforceEqualCheckinCounts,
   enforceSmallResortSingleManager,
 } from "@/lib/operations/distribution";
@@ -356,34 +357,61 @@ export async function runDailyOperation(input: RunOperationInput) {
 
   const basePlan =
     distributionCheckins.length > 0
-      ? enforceSmallResortSingleManager(
-          await buildOperationPlan({
+      ? enforceFarResortLimitedMix(
+          enforceSmallResortSingleManager(
+            await buildOperationPlan({
+              checkins: distributionCheckins,
+              availableManagers: managersForDistribution,
+              decisionMode: input.decisionMode,
+              preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+              forceEqualCheckins: input.forceEqualCheckins ?? true,
+            }),
+            distributionCheckins,
+          ),
+          {
             checkins: distributionCheckins,
             availableManagers: managersForDistribution,
             decisionMode: input.decisionMode,
             preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
             forceEqualCheckins: input.forceEqualCheckins ?? true,
-          }),
-          distributionCheckins,
+          },
         )
       : [];
   const plan =
     distributionCheckins.length > 0
-      ? enforceEqualCheckinCounts(
-          enforceSmallResortSingleManager(
-            input.useHereRouting
-              ? await optimizePlanWithHere(
-                  {
-                    checkins: distributionCheckins,
-                    availableManagers: managersForDistribution,
-                    decisionMode: input.decisionMode,
-                    preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
-                    forceEqualCheckins: input.forceEqualCheckins ?? true,
-                  },
-                  basePlan,
-                )
-              : basePlan,
-            distributionCheckins,
+      ? enforceFarResortLimitedMix(
+          enforceEqualCheckinCounts(
+            enforceFarResortLimitedMix(
+              enforceSmallResortSingleManager(
+                input.useHereRouting
+                  ? await optimizePlanWithHere(
+                      {
+                        checkins: distributionCheckins,
+                        availableManagers: managersForDistribution,
+                        decisionMode: input.decisionMode,
+                        preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+                        forceEqualCheckins: input.forceEqualCheckins ?? true,
+                      },
+                      basePlan,
+                    )
+                  : basePlan,
+                distributionCheckins,
+              ),
+              {
+                checkins: distributionCheckins,
+                availableManagers: managersForDistribution,
+                decisionMode: input.decisionMode,
+                preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+                forceEqualCheckins: input.forceEqualCheckins ?? true,
+              },
+            ),
+            {
+              checkins: distributionCheckins,
+              availableManagers: managersForDistribution,
+              decisionMode: input.decisionMode,
+              preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+              forceEqualCheckins: input.forceEqualCheckins ?? true,
+            },
           ),
           {
             checkins: distributionCheckins,
