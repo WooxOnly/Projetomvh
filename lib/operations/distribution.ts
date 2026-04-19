@@ -53,6 +53,7 @@ export type PlannedAssignment = {
 const MAX_MANAGER_COUNT_GAP = 5;
 const SMALL_RESORT_LOCK_THRESHOLD = 10;
 const FAR_FOCUS_RESORTS = new Set(["paradiso grande", "vista cay"]);
+const NO_OFFICE_GROUP = "__no-office__";
 
 function getForceEqualTargetGap(totalCheckins: number, managerCount: number) {
   if (managerCount <= 1) {
@@ -60,6 +61,122 @@ function getForceEqualTargetGap(totalCheckins: number, managerCount: number) {
   }
 
   return totalCheckins % managerCount === 0 ? 0 : 1;
+}
+
+function getOfficeGroupKey(officeId: string | null | undefined) {
+  return officeId?.trim() || NO_OFFICE_GROUP;
+}
+
+function getOfficeDistributionTargets(
+  checkins: CheckinInput[],
+  availableManagers: ManagerInput[],
+  forceEqualCheckins: boolean,
+) {
+  const officeStats = new Map<
+    string,
+    {
+      checkinCount: number;
+      workload: number;
+      managerCount: number;
+      targetCheckinsPerManager: number;
+      targetWorkloadPerManager: number;
+      maxAllowedCountGap: number;
+      minimumTargetCount: number;
+      extraSlots: number;
+    }
+  >();
+
+  for (const manager of availableManagers) {
+    const officeKey = getOfficeGroupKey(manager.officeId);
+    const current = officeStats.get(officeKey) ?? {
+      checkinCount: 0,
+      workload: 0,
+      managerCount: 0,
+      targetCheckinsPerManager: 0,
+      targetWorkloadPerManager: 0,
+      maxAllowedCountGap: forceEqualCheckins ? 0 : MAX_MANAGER_COUNT_GAP,
+      minimumTargetCount: 0,
+      extraSlots: 0,
+    };
+    current.managerCount += 1;
+    officeStats.set(officeKey, current);
+  }
+
+  for (const checkin of checkins) {
+    const officeKey = getOfficeGroupKey(checkin.condominium?.officeId ?? null);
+    const current = officeStats.get(officeKey) ?? {
+      checkinCount: 0,
+      workload: 0,
+      managerCount: 0,
+      targetCheckinsPerManager: 0,
+      targetWorkloadPerManager: 0,
+      maxAllowedCountGap: forceEqualCheckins ? 0 : MAX_MANAGER_COUNT_GAP,
+      minimumTargetCount: 0,
+      extraSlots: 0,
+    };
+    current.checkinCount += 1;
+    current.workload += getWorkload(checkin);
+    officeStats.set(officeKey, current);
+  }
+
+  for (const stats of officeStats.values()) {
+    const managerCount = Math.max(1, stats.managerCount);
+    stats.targetCheckinsPerManager = stats.checkinCount / managerCount;
+    stats.targetWorkloadPerManager = stats.workload / managerCount;
+    stats.maxAllowedCountGap = forceEqualCheckins
+      ? getForceEqualTargetGap(stats.checkinCount, managerCount)
+      : MAX_MANAGER_COUNT_GAP;
+    stats.minimumTargetCount = Math.floor(stats.checkinCount / managerCount);
+    stats.extraSlots = stats.checkinCount % managerCount;
+  }
+
+  return officeStats;
+}
+
+function getMostImbalancedOfficePair<T extends { managerId: string; assignments: PlannedAssignment[] }>(
+  managerLoads: T[],
+  managerOfficeKeyById: Map<string, string>,
+  gapByOfficeKey: Map<string, number>,
+) {
+  const loadsByOffice = new Map<string, T[]>();
+
+  for (const item of managerLoads) {
+    const officeKey = managerOfficeKeyById.get(item.managerId) ?? NO_OFFICE_GROUP;
+    const current = loadsByOffice.get(officeKey) ?? [];
+    current.push(item);
+    loadsByOffice.set(officeKey, current);
+  }
+
+  let bestPair: { overloaded: T; underloaded: T; countGap: number; officeKey: string } | null = null;
+
+  for (const [officeKey, officeLoads] of loadsByOffice.entries()) {
+    if (officeLoads.length <= 1) {
+      continue;
+    }
+
+    const sortedLoads = officeLoads
+      .slice()
+      .sort((left, right) => right.assignments.length - left.assignments.length);
+    const overloaded = sortedLoads[0];
+    const underloaded = sortedLoads[sortedLoads.length - 1];
+
+    if (!overloaded || !underloaded) {
+      continue;
+    }
+
+    const countGap = overloaded.assignments.length - underloaded.assignments.length;
+    const allowedGap = gapByOfficeKey.get(officeKey) ?? MAX_MANAGER_COUNT_GAP;
+
+    if (countGap <= allowedGap) {
+      continue;
+    }
+
+    if (!bestPair || countGap > bestPair.countGap) {
+      bestPair = { overloaded, underloaded, countGap, officeKey };
+    }
+  }
+
+  return bestPair;
 }
 
 function getClusterLabel(checkin: CheckinInput) {
@@ -626,10 +743,16 @@ export function buildDistributionPlan(input: PlanInput) {
   const totalWorkload = input.checkins.reduce((total, checkin) => total + getWorkload(checkin), 0);
   const targetCheckinsPerManager = totalCheckins / input.availableManagers.length;
   const targetWorkloadPerManager = totalWorkload / input.availableManagers.length;
+  const officeTargets = getOfficeDistributionTargets(
+    input.checkins,
+    input.availableManagers,
+    input.forceEqualCheckins ?? false,
+  );
+  const managerOfficeKeyById = new Map(
+    input.availableManagers.map((manager) => [manager.id, getOfficeGroupKey(manager.officeId)]),
+  );
   const forcedEqualTargetGap = getForceEqualTargetGap(totalCheckins, input.availableManagers.length);
-  const maxAllowedCountGap = input.forceEqualCheckins
-    ? forcedEqualTargetGap
-    : MAX_MANAGER_COUNT_GAP;
+  const maxAllowedCountGap = input.forceEqualCheckins ? forcedEqualTargetGap : MAX_MANAGER_COUNT_GAP;
 
   const managerStats = new Map(
     input.availableManagers.map((manager) => [
@@ -746,13 +869,26 @@ export function buildDistributionPlan(input: PlanInput) {
     groupPoint: { lat: number; lng: number } | null;
     checkins: CheckinInput[];
   }) {
-    let bestManagerId = input.availableManagers[0]?.id;
+    let bestManagerId: string | null = null;
     let bestScore = Number.POSITIVE_INFINITY;
 
     for (const manager of input.availableManagers) {
       const stats = managerStats.get(manager.id);
 
       if (!stats) continue;
+      const managerOfficeKey = managerOfficeKeyById.get(manager.id) ?? NO_OFFICE_GROUP;
+      const preferredOfficeKey = getOfficeGroupKey(args.preferredOfficeId);
+      const officeScopedTarget = officeTargets.get(managerOfficeKey);
+      const managerTargetCheckins = officeScopedTarget?.targetCheckinsPerManager ?? targetCheckinsPerManager;
+      const managerTargetWorkload = officeScopedTarget?.targetWorkloadPerManager ?? targetWorkloadPerManager;
+
+      if (
+        input.preventMixedCondominiumOffices &&
+        args.preferredOfficeId &&
+        managerOfficeKey !== preferredOfficeKey
+      ) {
+        continue;
+      }
 
       const clusterPenalty = stats.clusters.has(args.clusterLabel) ? -120 : stats.clusters.size * 22;
       const resortContinuityPenalty = stats.resorts.has(args.resortLabel) ? -64 : 0;
@@ -823,24 +959,24 @@ export function buildDistributionPlan(input: PlanInput) {
       const nextCheckins = stats.totalCheckins + args.checkins.length;
       const nextWorkload = stats.totalWorkload + args.checkins.reduce((total, checkin) => total + getWorkload(checkin), 0);
       const overloadCheckinsPenalty =
-        nextCheckins > targetCheckinsPerManager * 1.18
-          ? 320 + (nextCheckins - targetCheckinsPerManager * 1.18) * 65
-          : nextCheckins > targetCheckinsPerManager
-            ? (nextCheckins - targetCheckinsPerManager) * 28
+        nextCheckins > managerTargetCheckins * 1.18
+          ? 320 + (nextCheckins - managerTargetCheckins * 1.18) * 65
+          : nextCheckins > managerTargetCheckins
+            ? (nextCheckins - managerTargetCheckins) * 28
             : 0;
       const overloadWorkloadPenalty =
-        nextWorkload > targetWorkloadPerManager * 1.18
-          ? 260 + (nextWorkload - targetWorkloadPerManager * 1.18) * 30
-          : nextWorkload > targetWorkloadPerManager
-            ? (nextWorkload - targetWorkloadPerManager) * 16
+        nextWorkload > managerTargetWorkload * 1.18
+          ? 260 + (nextWorkload - managerTargetWorkload * 1.18) * 30
+          : nextWorkload > managerTargetWorkload
+            ? (nextWorkload - managerTargetWorkload) * 16
             : 0;
       const hardOverloadPenalty =
-        nextCheckins > Math.ceil(targetCheckinsPerManager + 6)
-          ? 520 + (nextCheckins - Math.ceil(targetCheckinsPerManager + 6)) * 90
+        nextCheckins > Math.ceil(managerTargetCheckins + 6)
+          ? 520 + (nextCheckins - Math.ceil(managerTargetCheckins + 6)) * 90
           : 0;
       const imbalancePenalty =
-        Math.max(0, nextCheckins - targetCheckinsPerManager) * 22 +
-        Math.max(0, nextWorkload - targetWorkloadPerManager) * 8;
+        Math.max(0, nextCheckins - managerTargetCheckins) * 22 +
+        Math.max(0, nextWorkload - managerTargetWorkload) * 8;
       const score =
         clusterPenalty +
         resortContinuityPenalty +
@@ -1218,13 +1354,16 @@ export function buildDistributionPlan(input: PlanInput) {
       const currentNearest = getNearestDistanceToAnyPoint(item.point, currentPoints) ?? currentCost;
       const currentFarthest = getFarthestDistanceToAnyPoint(item.point, currentPoints) ?? currentNearest;
       const currentLoad = (assignmentsByManager.get(item.assignment.propertyManagerId) ?? []).length;
+      const currentTargetCheckins =
+        officeTargets.get(managerOfficeKeyById.get(item.assignment.propertyManagerId) ?? NO_OFFICE_GROUP)
+          ?.targetCheckinsPerManager ?? targetCheckinsPerManager;
 
       let bestTargetManagerId: string | null = null;
       let bestTargetScore =
         currentCost +
         currentNearest * 2.2 +
         currentFarthest * 1.15 +
-        Math.max(0, currentLoad - targetCheckinsPerManager) * 3.5;
+        Math.max(0, currentLoad - currentTargetCheckins) * 3.5;
 
       for (const manager of input.availableManagers) {
         if (manager.id === item.assignment.propertyManagerId) {
@@ -1251,6 +1390,9 @@ export function buildDistributionPlan(input: PlanInput) {
         const candidateNearest = getNearestDistanceToAnyPoint(item.point, candidatePoints) ?? candidateCost;
         const candidateFarthest = getFarthestDistanceToAnyPoint(item.point, candidatePoints) ?? candidateNearest;
         const candidateLoad = candidateAssignments.length;
+        const candidateTargetCheckins =
+          officeTargets.get(managerOfficeKeyById.get(manager.id) ?? NO_OFFICE_GROUP)?.targetCheckinsPerManager ??
+          targetCheckinsPerManager;
         const candidateHasSameResort = hasSameResortAssignment(
           candidateAssignments,
           currentCheckin,
@@ -1260,7 +1402,7 @@ export function buildDistributionPlan(input: PlanInput) {
           candidateCost +
           candidateNearest * 2.1 +
           candidateFarthest * 0.8 +
-          Math.max(0, candidateLoad - targetCheckinsPerManager) * 2.8 +
+          Math.max(0, candidateLoad - candidateTargetCheckins) * 2.8 +
           (candidateHasSameResort ? -18 : 0);
 
         if (candidateScore + 2 < bestTargetScore) {
@@ -1287,19 +1429,15 @@ export function buildDistributionPlan(input: PlanInput) {
         assignments: assignmentsByManager.get(manager.id) ?? [],
       }))
       .sort((left, right) => right.assignments.length - left.assignments.length);
+    const officeGapByKey = new Map(
+      [...officeTargets.entries()].map(([officeKey, stats]) => [officeKey, stats.maxAllowedCountGap]),
+    );
+    const imbalancePair = getMostImbalancedOfficePair(managerLoads, managerOfficeKeyById, officeGapByKey);
 
-    const overloaded = managerLoads[0];
-    const underloaded = managerLoads[managerLoads.length - 1];
-
-    if (!overloaded || !underloaded) {
+    if (!imbalancePair) {
       break;
     }
-
-    const countGap = overloaded.assignments.length - underloaded.assignments.length;
-
-    if (countGap <= maxAllowedCountGap) {
-      break;
-    }
+    const { overloaded, underloaded, countGap } = imbalancePair;
 
     const underloadedManager = input.availableManagers.find(
       (manager) => manager.id === underloaded.managerId,
@@ -1546,18 +1684,15 @@ export function buildDistributionPlan(input: PlanInput) {
         assignments: assignmentsByManager.get(manager.id) ?? [],
       }))
       .sort((left, right) => right.assignments.length - left.assignments.length);
+    const officeGapByKey = new Map(
+      [...officeTargets.entries()].map(([officeKey]) => [officeKey, MAX_MANAGER_COUNT_GAP]),
+    );
+    const imbalancePair = getMostImbalancedOfficePair(managerLoads, managerOfficeKeyById, officeGapByKey);
 
-    const overloaded = managerLoads[0];
-    const underloaded = managerLoads[managerLoads.length - 1];
-
-    if (!overloaded || !underloaded) {
+    if (!imbalancePair) {
       break;
     }
-
-    const countGap = overloaded.assignments.length - underloaded.assignments.length;
-    if (countGap <= MAX_MANAGER_COUNT_GAP) {
-      break;
-    }
+    const { overloaded, underloaded, countGap } = imbalancePair;
 
     const overloadedManager = input.availableManagers.find((manager) => manager.id === overloaded.managerId);
     const underloadedManager = input.availableManagers.find((manager) => manager.id === underloaded.managerId);
@@ -1654,33 +1789,62 @@ export function buildDistributionPlan(input: PlanInput) {
   }
 
   if (input.forceEqualCheckins) {
-    const minimumTarget = Math.floor(totalCheckins / input.availableManagers.length);
-    const managersByCurrentLoad = input.availableManagers
-      .map((manager) => ({
-        managerId: manager.id,
-        count: (assignmentsByManager.get(manager.id) ?? []).length,
-      }))
-      .sort((left, right) => right.count - left.count);
-    const extraSlots = totalCheckins % input.availableManagers.length;
     const targetCountByManager = new Map<string, number>();
 
-    managersByCurrentLoad.forEach((item, index) => {
-      targetCountByManager.set(item.managerId, minimumTarget + (index < extraSlots ? 1 : 0));
-    });
-
-    for (let pass = 0; pass < 40; pass += 1) {
-      const managerLoads = input.availableManagers
+    for (const [officeKey, officeStats] of officeTargets.entries()) {
+      const managersByCurrentLoad = input.availableManagers
+        .filter((manager) => (managerOfficeKeyById.get(manager.id) ?? NO_OFFICE_GROUP) === officeKey)
         .map((manager) => ({
           managerId: manager.id,
-          assignments: assignmentsByManager.get(manager.id) ?? [],
-          targetCount: targetCountByManager.get(manager.id) ?? minimumTarget,
+          count: (assignmentsByManager.get(manager.id) ?? []).length,
         }))
-        .sort((left, right) => right.assignments.length - left.assignments.length);
+        .sort((left, right) => right.count - left.count);
 
-      const overloaded = managerLoads.find((item) => item.assignments.length > item.targetCount);
-      const underloaded = [...managerLoads]
-        .reverse()
-        .find((item) => item.assignments.length < item.targetCount);
+      managersByCurrentLoad.forEach((item, index) => {
+        targetCountByManager.set(
+          item.managerId,
+          officeStats.minimumTargetCount + (index < officeStats.extraSlots ? 1 : 0),
+        );
+      });
+    }
+
+    for (let pass = 0; pass < 40; pass += 1) {
+      let overloaded:
+        | {
+            managerId: string;
+            assignments: PlannedAssignment[];
+            targetCount: number;
+          }
+        | undefined;
+      let underloaded:
+        | {
+            managerId: string;
+            assignments: PlannedAssignment[];
+            targetCount: number;
+          }
+        | undefined;
+
+      for (const officeKey of officeTargets.keys()) {
+        const managerLoads = input.availableManagers
+          .filter((manager) => (managerOfficeKeyById.get(manager.id) ?? NO_OFFICE_GROUP) === officeKey)
+          .map((manager) => ({
+            managerId: manager.id,
+            assignments: assignmentsByManager.get(manager.id) ?? [],
+            targetCount: targetCountByManager.get(manager.id) ?? 0,
+          }))
+          .sort((left, right) => right.assignments.length - left.assignments.length);
+
+        const officeOverloaded = managerLoads.find((item) => item.assignments.length > item.targetCount);
+        const officeUnderloaded = [...managerLoads]
+          .reverse()
+          .find((item) => item.assignments.length < item.targetCount);
+
+        if (officeOverloaded && officeUnderloaded) {
+          overloaded = officeOverloaded;
+          underloaded = officeUnderloaded;
+          break;
+        }
+      }
 
       if (!overloaded || !underloaded) {
         break;
@@ -2046,6 +2210,14 @@ export function enforceEqualCheckinCounts(
   }
 
   const resolvedMaxGap = maxGap ?? getForceEqualTargetGap(input.checkins.length, input.availableManagers.length);
+  const officeTargets = getOfficeDistributionTargets(
+    input.checkins,
+    input.availableManagers,
+    input.forceEqualCheckins ?? false,
+  );
+  const managerOfficeKeyById = new Map(
+    input.availableManagers.map((manager) => [manager.id, getOfficeGroupKey(manager.officeId)]),
+  );
 
   const checkinById = new Map(input.checkins.map((checkin) => [checkin.id, checkin]));
   const resortCheckinCounts = getResortCheckinCounts(input.checkins);
@@ -2128,14 +2300,26 @@ export function enforceEqualCheckinCounts(
         assignments: assignmentsByManager.get(manager.id) ?? [],
       }))
       .sort((left, right) => right.assignments.length - left.assignments.length);
+    const officeGapByKey = new Map(
+      [...officeTargets.entries()].map(([officeKey, stats]) => [
+        officeKey,
+        maxGap ?? stats.maxAllowedCountGap ?? resolvedMaxGap,
+      ]),
+    );
 
     let moveApplied = false;
 
     for (const overloaded of managerLoads) {
+      const overloadedOfficeKey = managerOfficeKeyById.get(overloaded.manager.id) ?? NO_OFFICE_GROUP;
+      const officeResolvedMaxGap = officeGapByKey.get(overloadedOfficeKey) ?? resolvedMaxGap;
       const underloadedCandidates = managerLoads
-        .filter((candidate) => candidate.manager.id !== overloaded.manager.id)
+        .filter(
+          (candidate) =>
+            candidate.manager.id !== overloaded.manager.id &&
+            (managerOfficeKeyById.get(candidate.manager.id) ?? NO_OFFICE_GROUP) === overloadedOfficeKey,
+        )
         .reverse()
-        .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > resolvedMaxGap);
+        .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > officeResolvedMaxGap);
 
       if (underloadedCandidates.length === 0) {
         continue;
@@ -2326,14 +2510,26 @@ export function enforceEqualCheckinCounts(
         assignments: assignmentsByManager.get(manager.id) ?? [],
       }))
       .sort((left, right) => right.assignments.length - left.assignments.length);
+    const officeGapByKey = new Map(
+      [...officeTargets.entries()].map(([officeKey, stats]) => [
+        officeKey,
+        maxGap ?? stats.maxAllowedCountGap ?? resolvedMaxGap,
+      ]),
+    );
 
     let moveApplied = false;
 
     for (const overloaded of managerLoads) {
+      const overloadedOfficeKey = managerOfficeKeyById.get(overloaded.manager.id) ?? NO_OFFICE_GROUP;
+      const officeResolvedMaxGap = officeGapByKey.get(overloadedOfficeKey) ?? resolvedMaxGap;
       const underloadedCandidates = managerLoads
-        .filter((candidate) => candidate.manager.id !== overloaded.manager.id)
+        .filter(
+          (candidate) =>
+            candidate.manager.id !== overloaded.manager.id &&
+            (managerOfficeKeyById.get(candidate.manager.id) ?? NO_OFFICE_GROUP) === overloadedOfficeKey,
+        )
         .reverse()
-        .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > resolvedMaxGap);
+        .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > officeResolvedMaxGap);
 
       if (underloadedCandidates.length === 0) {
         continue;
