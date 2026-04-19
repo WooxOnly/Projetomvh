@@ -3216,12 +3216,19 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                     (point) => point.inferred,
                   );
                   const uniqueResorts = Array.from(
-                    new Set(
-                      assignments
-                        .map((assignment) => assignment.checkin.condominiumName)
-                        .filter((value): value is string => Boolean(value)),
-                    ),
-                  ).sort((left, right) => left.localeCompare(right));
+                    assignments.reduce((map, assignment) => {
+                      const resortName = assignment.checkin.condominiumName?.trim();
+
+                      if (!resortName) {
+                        return map;
+                      }
+
+                      map.set(resortName, (map.get(resortName) ?? 0) + 1);
+                      return map;
+                    }, new Map<string, number>()),
+                  )
+                    .map(([name, totalCheckins]) => ({ name, totalCheckins }))
+                    .sort((left, right) => left.name.localeCompare(right.name));
 
                   return (
                     <div
@@ -3314,9 +3321,14 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             <p className="theme-heading mt-1 text-sm leading-5">{uniqueResorts.length}</p>
                             <div className="theme-text-soft mt-1 grid gap-x-4 gap-y-1 text-[11px] leading-4 sm:grid-cols-2">
                               {uniqueResorts.map((resort) => (
-                                <p key={resort} className="break-normal whitespace-normal">
-                                  {resort}
-                                </p>
+                                <div key={resort.name} className="flex items-start justify-between gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-2.5 py-1.5">
+                                  <p className="break-normal whitespace-normal">
+                                    {resort.name}
+                                  </p>
+                                  <span className="theme-count-badge flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold">
+                                    {resort.totalCheckins}
+                                  </span>
+                                </div>
                               ))}
                             </div>
                           </div>
