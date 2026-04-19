@@ -110,6 +110,15 @@ function detectDuplicateCheckins(rows: ReturnType<typeof parseWorkbook>["rows"])
   >();
 
   for (const row of rows) {
+    const classification = classifyCheckinFromSpreadsheet(
+      row.integratorName,
+      row.externalStatus,
+    );
+
+    if (classification !== "CHECKIN") {
+      continue;
+    }
+
     const operationDateKey = row.operationDate.toISOString().slice(0, 10);
     const condominiumName = row.condominiumName.trim();
     const propertyName = row.propertyName.trim();
