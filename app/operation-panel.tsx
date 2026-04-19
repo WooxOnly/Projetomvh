@@ -3107,9 +3107,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
               <div className="mt-2 grid gap-2 xl:grid-cols-[1.25fr_0.75fr]">
                 <div className="theme-info-card rounded-[1.25rem] p-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-cyan-400/20 bg-slate-950/80">
+                    <div className="theme-score-badge flex h-16 w-16 items-center justify-center rounded-full">
                       <div className="text-center">
-                        <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Score</p>
+                        <p className="theme-score-kicker text-[11px] uppercase tracking-[0.3em]">Score</p>
                         <p className={`text-xl font-semibold ${getScoreStyle(displayedAnalysis?.overallScore ?? 0).text}`}>
                           {displayedAnalysis?.overallScore ?? "--"}
                         </p>
@@ -3120,13 +3120,13 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         {displayedAnalysis?.overallSummary ?? (isEnglish ? "Route AI is still loading. In the meantime, the local heuristic remains valid." : "A IA da rota ainda está carregando. Enquanto isso, a heurística local continua válida.")}
                       </p>
                       <div className="theme-text-muted flex flex-wrap gap-1.5 text-[11px]">
-                        <span className="theme-pill-group rounded-full px-2.5 py-1">
+                        <span className="theme-meta-pill-source rounded-full px-2.5 py-1">
                           {isEnglish ? "Source" : "Fonte"}: {displayedAnalysis?.source === "openai" ? "OpenAI" : isEnglish ? "Local AI" : "IA local"}
                         </span>
-                        <span className="theme-pill-group rounded-full px-2.5 py-1">
+                        <span className="theme-meta-pill-coordinates rounded-full px-2.5 py-1">
                           {isEnglish ? "Coordinates" : "Coordenadas"}: {displayedAnalysis?.coordinateCoveragePercent ?? 0}%
                         </span>
-                        <span className="theme-pill-group rounded-full px-2.5 py-1">
+                        <span className="theme-meta-pill-distance rounded-full px-2.5 py-1">
                           {isEnglish ? "Estimated distance" : "Distância estimada"}: {displayedAnalysis?.totalEstimatedDistanceKm ?? 0} mi
                         </span>
                       </div>

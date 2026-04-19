@@ -108,6 +108,34 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
           address: true,
         },
       },
+      operationRuns: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+        select: {
+          id: true,
+          totalCheckins: true,
+          totalAssignments: true,
+          availablePMs: {
+            select: {
+              propertyManagerId: true,
+            },
+          },
+          assignments: {
+            select: {
+              checkin: {
+                select: {
+                  condominiumId: true,
+                  condominiumName: true,
+                  propertyId: true,
+                  propertyName: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -132,19 +160,55 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
       ).values(),
     ).sort((left, right) => left.name.localeCompare(right.name));
 
+    const latestOperationRun = upload.operationRuns[0] ?? null;
+    const operationCondominiums = new Set(
+      latestOperationRun?.assignments.map(
+        ({ checkin }) => checkin.condominiumId ?? checkin.condominiumName ?? "",
+      ) ?? [],
+    );
+    operationCondominiums.delete("");
+
+    const operationProperties = new Set(
+      latestOperationRun?.assignments.map(
+        ({ checkin }) => checkin.propertyId ?? checkin.propertyName ?? "",
+      ) ?? [],
+    );
+    operationProperties.delete("");
+
+    const selectedPropertyManagers = new Set(
+      latestOperationRun?.availablePMs.map((availablePm) => availablePm.propertyManagerId) ?? [],
+    );
+
+    const historyMetrics = latestOperationRun
+      ? {
+          totalCheckins:
+            latestOperationRun.totalAssignments > 0
+              ? latestOperationRun.totalAssignments
+              : latestOperationRun.totalCheckins,
+          totalUniqueCondominiums: operationCondominiums.size,
+          totalUniqueProperties: operationProperties.size,
+          totalUniquePMs: selectedPropertyManagers.size,
+        }
+      : {
+          totalCheckins: upload.totalCheckins,
+          totalUniqueCondominiums: upload.totalUniqueCondominiums,
+          totalUniqueProperties: upload.totalUniqueProperties,
+          totalUniquePMs: upload.totalUniquePMs,
+        };
+
     return {
       id: upload.id,
       fileName: upload.fileName,
       operationDate: upload.operationDate,
       createdAt: upload.createdAt,
       totalRows: upload.totalRows,
-      totalCheckins: upload.totalCheckins,
+      totalCheckins: historyMetrics.totalCheckins,
       totalOwnerCheckins: upload.totalOwnerCheckins,
       totalBlockedCheckins: upload.totalBlockedCheckins,
       totalCancelledCheckins: upload.totalCancelledCheckins,
-      totalUniqueCondominiums: upload.totalUniqueCondominiums,
-      totalUniqueProperties: upload.totalUniqueProperties,
-      totalUniquePMs: upload.totalUniquePMs,
+      totalUniqueCondominiums: historyMetrics.totalUniqueCondominiums,
+      totalUniqueProperties: historyMetrics.totalUniqueProperties,
+      totalUniquePMs: historyMetrics.totalUniquePMs,
       importedPropertyManagers,
       ownerCheckins: upload.checkins
         .filter((checkin) => isOwnerStayIntegrator(checkin.integratorName))
