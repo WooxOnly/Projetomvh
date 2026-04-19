@@ -124,6 +124,7 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
           },
           assignments: {
             select: {
+              propertyManagerId: true,
               checkin: {
                 select: {
                   condominiumId: true,
@@ -175,8 +176,8 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
     );
     operationProperties.delete("");
 
-    const selectedPropertyManagers = new Set(
-      latestOperationRun?.availablePMs.map((availablePm) => availablePm.propertyManagerId) ?? [],
+    const assignedPropertyManagers = new Set(
+      latestOperationRun?.assignments.map((assignment) => assignment.propertyManagerId) ?? [],
     );
 
     const historyMetrics = latestOperationRun
@@ -187,7 +188,7 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
               : latestOperationRun.totalCheckins,
           totalUniqueCondominiums: operationCondominiums.size,
           totalUniqueProperties: operationProperties.size,
-          totalUniquePMs: selectedPropertyManagers.size,
+          totalUniquePMs: assignedPropertyManagers.size,
         }
       : {
           totalCheckins: upload.totalCheckins,
