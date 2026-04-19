@@ -189,6 +189,7 @@ export function UploadPanel({
   const [reviewData, setReviewData] = useState<UploadReviewData | null>(activeUploadReview);
   const [classificationPendingId, setClassificationPendingId] = useState<string | null>(null);
   const [isReviewExpanded, setIsReviewExpanded] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState("");
 
   useEffect(() => {
     setReviewData(activeUploadReview);
@@ -367,6 +368,7 @@ export function UploadPanel({
       setReviewState(null);
       openOfficeAssignmentModal(data);
       form.reset();
+      setSelectedFileName("");
       persistUploadFeedback({
         message: nextMessage,
         summary: nextSummary,
@@ -439,6 +441,11 @@ export function UploadPanel({
           }
         : current,
     );
+  }
+
+  function handleFileSelection(event: React.ChangeEvent<HTMLInputElement>) {
+    const nextFileName = event.target.files?.[0]?.name ?? "";
+    setSelectedFileName(nextFileName);
   }
 
   const pendingAssignmentsCount = officeAssignmentState
@@ -655,12 +662,22 @@ export function UploadPanel({
               <span className="mb-2 block text-sm font-medium text-slate-200">
                 {isEnglish ? "CSV or XLSX file" : "Arquivo CSV ou XLSX"}
               </span>
-              <input
-                type="file"
-                name="file"
-                accept=".csv,.xlsx,.xls"
-                className="w-full rounded-2xl border border-dashed border-white/15 bg-slate-950/70 px-4 py-3 text-sm text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-300 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-slate-950"
-              />
+              <label className="flex min-h-[56px] cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-white/15 bg-slate-950/70 px-4 py-3 transition hover:border-cyan-300/40 hover:bg-slate-950/80">
+                <input
+                  type="file"
+                  name="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleFileSelection}
+                  className="sr-only"
+                />
+                <span className="inline-flex min-h-10 items-center rounded-xl bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950">
+                  {isEnglish ? "Choose file" : "Escolher arquivo"}
+                </span>
+                <span className="min-w-0 truncate text-sm text-slate-300">
+                  {selectedFileName ||
+                    (isEnglish ? "No file selected." : "Nenhum arquivo selecionado.")}
+                </span>
+              </label>
             </label>
           </div>
 
