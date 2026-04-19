@@ -5,6 +5,7 @@ import { CheckinClassification } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   isBlackedOutIntegrator,
+  isBlockedStatus,
   isCancelledStatus,
 } from "@/lib/upload/integrator-rules";
 
@@ -13,6 +14,10 @@ export function classifyCheckinFromSpreadsheet(
   externalStatus?: string | null | undefined,
 ) {
   if (isBlackedOutIntegrator(integratorName)) {
+    return CheckinClassification.BLOCKED;
+  }
+
+  if (isBlockedStatus(externalStatus)) {
     return CheckinClassification.BLOCKED;
   }
 

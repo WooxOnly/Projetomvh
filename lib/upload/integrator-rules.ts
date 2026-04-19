@@ -22,3 +22,7 @@ export function isBlackedOutIntegrator(integratorName: string | null | undefined
 export function isCancelledStatus(externalStatus: string | null | undefined) {
   return normalizeExternalStatusValue(externalStatus) === "cancelled";
 }
+
+export function isBlockedStatus(externalStatus: string | null | undefined) {
+  return normalizeExternalStatusValue(externalStatus) === "blocked";
+}

@@ -6,7 +6,10 @@ import { createPortal } from "react-dom";
 
 import { ButtonLabel } from "@/app/button-icon";
 import { useLanguage } from "@/app/language-provider";
-import { isOwnerStayIntegrator } from "@/lib/upload/integrator-rules";
+import {
+  isBlackedOutIntegrator,
+  isOwnerStayIntegrator,
+} from "@/lib/upload/integrator-rules";
 
 type OfficeSummary = {
   id: string;
@@ -47,6 +50,7 @@ type UploadReviewData = {
     sourceRowNumber: number | null;
     classification: CheckinClassification;
     integratorName: string | null;
+    hasEarlyCheckin: boolean | null;
     condominiumName: string | null;
     propertyName: string | null;
     building: string | null;
@@ -54,6 +58,8 @@ type UploadReviewData = {
     guestName: string | null;
   }>;
 };
+
+type ReviewSectionKey = CheckinClassification | "EARLY";
 
 type DuplicateUploadCheckin = {
   operationDate: string;
@@ -494,10 +500,26 @@ export function UploadPanel({
     }
 
     if (classification === "BLOCKED") {
-      return "BLACKED OUT";
+      return "BLOCKED";
     }
 
     return "CHECK INS";
+  }
+
+  function getReviewBadgeLabel(section: ReviewSectionKey) {
+    if (section === "EARLY") {
+      return "EARLY CHECK-IN";
+    }
+
+    return getClassificationLabel(section);
+  }
+
+  function getReviewBadgeClass(section: ReviewSectionKey) {
+    if (section === "EARLY") {
+      return "border-sky-400/25 bg-sky-400/10 text-sky-100";
+    }
+
+    return getClassificationBadgeClass(section);
   }
 
   function getClassificationBadgeClass(classification: CheckinClassification) {
@@ -543,6 +565,9 @@ export function UploadPanel({
     }
   }
 
+  const totalEarlyCheckins =
+    reviewData?.reviewItems.filter((item) => item.hasEarlyCheckin).length ?? 0;
+
   const reviewSections = reviewData
     ? [
         {
@@ -559,15 +584,25 @@ export function UploadPanel({
         },
         {
           key: "BLOCKED" as const,
-          title: "BLACKED OUT",
+          title: "BLOCKED / BLACKED OUT",
           count: reviewData.totalBlockedCheckins,
-          emptyMessage: isEnglish ? "No BLACKED OUT lines in this upload." : "Nenhuma linha BLACKED OUT neste upload.",
+          emptyMessage: isEnglish
+            ? "No BLOCKED or BLACKED OUT lines in this upload."
+            : "Nenhuma linha BLOCKED ou BLACKED OUT neste upload.",
         },
         {
           key: "CANCELLED" as const,
           title: "CANCELLED",
           count: reviewData.totalCancelledCheckins,
           emptyMessage: isEnglish ? "No CANCELLED lines in this upload." : "Nenhuma linha CANCELLED neste upload.",
+        },
+        {
+          key: "EARLY" as const,
+          title: "EARLY CHECK-IN",
+          count: totalEarlyCheckins,
+          emptyMessage: isEnglish
+            ? "No EARLY CHECK-IN lines in this upload."
+            : "Nenhuma linha com EARLY CHECK-IN neste upload.",
         },
       ]
     : [];
@@ -658,7 +693,7 @@ export function UploadPanel({
               </p>
             ) : null}
             {summary ? (
-              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
                 <div className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
                   <p className="uppercase tracking-[0.2em] text-slate-400">{isEnglish ? "Imported" : "Importado"}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{summary.totalRows}</p>
@@ -668,8 +703,16 @@ export function UploadPanel({
                   <p className="mt-1 text-sm font-semibold text-white">{summary.totalCheckins + summary.totalOwnerCheckins}</p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
-                  <p className="uppercase tracking-[0.2em] text-rose-200">BLACKED OUT / CANCELLED</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalBlockedCheckins + summary.totalCancelledCheckins}</p>
+                  <p className="uppercase tracking-[0.2em] text-rose-200">BLOCKED / BLACKED OUT</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalBlockedCheckins}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
+                  <p className="uppercase tracking-[0.2em] text-orange-200">CANCELLED</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{summary.totalCancelledCheckins}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
+                  <p className="uppercase tracking-[0.2em] text-sky-200">EARLY CHECK-IN</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{totalEarlyCheckins}</p>
                 </div>
               </div>
             ) : null}
@@ -810,13 +853,17 @@ export function UploadPanel({
             </h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
               {isEnglish
-                ? "Open only the group you want to review. You can inspect CHECK INS, OWN, BLACKED OUT, and CANCELLED before running the operation."
-                : "Abra apenas o grupo que quiser revisar. Você pode inspecionar CHECK INS, OWN, BLACKED OUT e CANCELLED antes de rodar a operação."}
+                ? "Open only the group you want to review. You can inspect CHECK INS, OWN, BLOCKED / BLACKED OUT, CANCELLED, and EARLY CHECK-IN before running the operation."
+                : "Abra apenas o grupo que quiser revisar. Você pode inspecionar CHECK INS, OWN, BLOCKED / BLACKED OUT, CANCELLED e EARLY CHECK-IN antes de rodar a operação."}
             </p>
 
             <div className="mt-5 space-y-4">
               {reviewSections.map((section) => {
                 const items = reviewData.reviewItems.filter((item) => {
+                  if (section.key === "EARLY") {
+                    return item.hasEarlyCheckin === true;
+                  }
+
                   if (section.key === "CHECKIN") {
                     return (
                       item.classification !== "BLOCKED" &&
@@ -849,8 +896,8 @@ export function UploadPanel({
                             {section.count} {isEnglish ? "line(s)" : "linha(s)"}
                           </p>
                         </div>
-                        <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getClassificationBadgeClass(section.key)}`}>
-                          {getClassificationLabel(section.key)}
+                        <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getReviewBadgeClass(section.key)}`}>
+                          {getReviewBadgeLabel(section.key)}
                         </span>
                       </div>
                     </summary>
@@ -871,6 +918,23 @@ export function UploadPanel({
                                   {isOwnerStayIntegrator(item.integratorName) ? (
                                     <span className="rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[11px] text-amber-100">
                                       OWN
+                                    </span>
+                                  ) : null}
+                                  {item.classification === "BLOCKED" &&
+                                  isBlackedOutIntegrator(item.integratorName) ? (
+                                    <span className="rounded-full border border-rose-300/25 bg-rose-300/10 px-2.5 py-1 text-[11px] text-rose-100">
+                                      BLACKED OUT
+                                    </span>
+                                  ) : null}
+                                  {item.classification === "BLOCKED" &&
+                                  !isBlackedOutIntegrator(item.integratorName) ? (
+                                    <span className="rounded-full border border-rose-300/25 bg-rose-300/10 px-2.5 py-1 text-[11px] text-rose-100">
+                                      STATUS BLOCKED
+                                    </span>
+                                  ) : null}
+                                  {item.hasEarlyCheckin ? (
+                                    <span className="rounded-full border border-sky-300/25 bg-sky-300/10 px-2.5 py-1 text-[11px] text-sky-100">
+                                      EARLY CHECK-IN
                                     </span>
                                   ) : null}
                                   {item.sourceRowNumber != null ? (

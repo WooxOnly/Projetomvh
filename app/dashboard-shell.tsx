@@ -105,6 +105,7 @@ type DashboardShellProps = {
         sourceRowNumber: number | null;
         classification: "CHECKIN" | "OWNER" | "BLOCKED" | "CANCELLED";
         integratorName: string | null;
+        hasEarlyCheckin: boolean | null;
         condominiumName: string | null;
         propertyName: string | null;
         building: string | null;
