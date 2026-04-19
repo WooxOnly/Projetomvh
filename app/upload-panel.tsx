@@ -971,14 +971,15 @@ export function UploadPanel({
                                 <p className="mt-1 text-xs text-slate-300">
                                   {isEnglish ? "Resort" : "Condomínio"}: {item.condominiumName || (isEnglish ? "Not informed" : "Não informado")}
                                 </p>
-                                <p className="mt-1 text-xs text-slate-300">
-                                  {isEnglish ? "Address" : "Endereço"}: {item.address || (isEnglish ? "Not informed" : "Não informado")}
-                                  {item.building ? ` | ${isEnglish ? "Building" : "Building"} ${item.building}` : ""}
-                                </p>
                                 {item.guestName ? (
-                                  <p className="mt-1 text-xs text-slate-400">
-                                    Guest: {item.guestName}
-                                  </p>
+                                  <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-cyan-50">
+                                    <span className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/90">
+                                      Guest
+                                    </span>
+                                    <span className="truncate text-sm font-semibold text-white">
+                                      {item.guestName}
+                                    </span>
+                                  </div>
                                 ) : null}
                               </div>
                               <div className="w-full max-w-xs xl:flex-shrink-0">
