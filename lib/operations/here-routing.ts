@@ -323,13 +323,22 @@ export async function optimizePlanWithHere(input: PlanInput, basePlan: PlannedAs
   }
 
   function getManagerAssignedCondominiumOfficeIds(managerId: string, excludingCheckinId?: string) {
-    return new Set(
+    const officeIds = new Set(
       (assignmentsByManager.get(managerId) ?? [])
         .filter((assignment) => assignment.checkinId !== excludingCheckinId)
         .map(getAssignmentCheckin)
         .map((checkin) => checkin?.condominium?.officeId ?? null)
         .filter((value): value is string => Boolean(value)),
     );
+
+    const managerOfficeId =
+      input.availableManagers.find((manager) => manager.id === managerId)?.officeId ?? null;
+
+    if (managerOfficeId) {
+      officeIds.add(managerOfficeId);
+    }
+
+    return officeIds;
   }
 
   function moveAssignment(assignment: PlannedAssignment, targetManagerId: string) {

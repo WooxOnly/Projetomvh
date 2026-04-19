@@ -757,13 +757,22 @@ export function buildDistributionPlan(input: PlanInput) {
   }
 
   function getManagerAssignedCondominiumOfficeIds(managerId: string, excludingAssignmentId?: string) {
-    return new Set(
+    const officeIds = new Set(
       (assignmentsByManager.get(managerId) ?? [])
         .filter((assignment) => assignment.checkinId !== excludingAssignmentId)
         .map(getAssignmentCheckin)
         .map((checkin) => checkin?.condominium?.officeId ?? null)
         .filter((value): value is string => Boolean(value)),
     );
+
+    const managerOfficeId =
+      input.availableManagers.find((manager) => manager.id === managerId)?.officeId ?? null;
+
+    if (managerOfficeId) {
+      officeIds.add(managerOfficeId);
+    }
+
+    return officeIds;
   }
 
   for (const assignment of plannedAssignments) {
@@ -1869,13 +1878,22 @@ export function enforceEqualCheckinCounts(
   }
 
   function getManagerAssignedCondominiumOfficeIds(managerId: string, excludingAssignmentId?: string) {
-    return new Set(
+    const officeIds = new Set(
       (assignmentsByManager.get(managerId) ?? [])
         .filter((assignment) => assignment.checkinId !== excludingAssignmentId)
         .map(getAssignmentCheckin)
         .map((checkin) => checkin?.condominium?.officeId ?? null)
         .filter((value): value is string => Boolean(value)),
     );
+
+    const managerOfficeId =
+      input.availableManagers.find((manager) => manager.id === managerId)?.officeId ?? null;
+
+    if (managerOfficeId) {
+      officeIds.add(managerOfficeId);
+    }
+
+    return officeIds;
   }
 
   function moveAssignment(assignment: PlannedAssignment, targetManagerId: string) {
