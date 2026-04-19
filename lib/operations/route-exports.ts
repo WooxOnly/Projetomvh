@@ -293,22 +293,22 @@ export async function buildOperationPdf(
       });
     }
 
-    const infoY = isFirstPage ? 500 : 542;
+    const infoY = isFirstPage ? 514 : 542;
     const dateLabel = isEnglish ? "Date" : "Data";
     const dateValue = formatDateOnly(filteredRun.operationDate, language);
 
     page.drawText(`${dateLabel}:`, {
       x: 36,
       y: infoY,
-      size: 9,
-      font: regularFont,
-      color: PDF_THEME.textSecondary,
+      size: 10.5,
+      font: boldFont,
+      color: PDF_THEME.title,
     });
 
     page.drawText(dateValue, {
-      x: 64,
-      y: infoY - 1,
-      size: 11.5,
+      x: 70,
+      y: infoY,
+      size: 10.5,
       font: boldFont,
       color: PDF_THEME.title,
     });
