@@ -44,6 +44,7 @@ type RouteAssignment = {
     numberOfNights: number | null;
     doorCode: string | null;
     hasBbqGrill: boolean | null;
+    hasEarlyCheckin: boolean | null;
     lat: number | null;
     lng: number | null;
   };

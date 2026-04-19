@@ -91,13 +91,14 @@ function getPdfColumns(isEnglish: boolean, isSingleManagerPdf: boolean): PdfColu
   if (isSingleManagerPdf) {
     return [
       { label: isEnglish ? "Stop" : "Stop", x: 36, maxWidth: 34, align: "right" },
-      { label: isEnglish ? "Resort" : "Condomínio", x: 82, maxWidth: 170 },
-      { label: isEnglish ? "Address" : "Endereço", x: 258, maxWidth: 150 },
-      { label: isEnglish ? "Guest" : "Hóspede", x: 414, maxWidth: 112 },
-      { label: isEnglish ? "Nights" : "Dias", x: 532, maxWidth: 40, align: "right" },
-      { label: isEnglish ? "Door" : "Porta", x: 586, maxWidth: 52 },
-      { label: "BBQ", x: 646, maxWidth: 36 },
-      { label: isEnglish ? "Integrator" : "Integrador", x: 692, maxWidth: 110 },
+      { label: isEnglish ? "Resort" : "Condomínio", x: 78, maxWidth: 150 },
+      { label: isEnglish ? "Address" : "Endereço", x: 234, maxWidth: 148 },
+      { label: isEnglish ? "Guest" : "Hóspede", x: 388, maxWidth: 98 },
+      { label: isEnglish ? "Nights" : "Dias", x: 492, maxWidth: 34, align: "right" },
+      { label: isEnglish ? "Door" : "Porta", x: 536, maxWidth: 44 },
+      { label: "BBQ", x: 588, maxWidth: 30 },
+      { label: isEnglish ? "Early" : "Early", x: 626, maxWidth: 40 },
+      { label: isEnglish ? "Integrator" : "Integrador", x: 674, maxWidth: 128 },
     ];
   }
 
@@ -276,7 +277,7 @@ export async function buildOperationPdf(
     const isFirstPage = pageNumber === 1;
 
     if (isFirstPage) {
-      page.drawText(isEnglish ? "Daily operation - Reservations" : "Operação diária - Reservas", {
+      page.drawText("CHECK-INS", {
         x: 36,
         y: 544,
         size: 20,
@@ -432,7 +433,8 @@ export async function buildOperationPdf(
         { text: String(assignment.checkin.numberOfNights ?? "N/D"), column: headers[4]! },
         { text: assignment.checkin.doorCode ?? notInformed, column: headers[5]! },
         { text: getBooleanLabel(assignment.checkin.hasBbqGrill, isEnglish), column: headers[6]! },
-        { text: assignment.checkin.integratorName ?? notInformed, column: headers[7]! },
+        { text: getBooleanLabel(assignment.checkin.hasEarlyCheckin, isEnglish), column: headers[7]! },
+        { text: assignment.checkin.integratorName ?? notInformed, column: headers[8]! },
       ];
 
       row.forEach(({ text, column }, columnIndex) => {

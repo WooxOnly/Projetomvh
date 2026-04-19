@@ -201,6 +201,7 @@ async function getLatestOperationRunBase() {
               numberOfNights: true,
               doorCode: true,
               hasBbqGrill: true,
+              hasEarlyCheckin: true,
               lat: true,
               lng: true,
             },
