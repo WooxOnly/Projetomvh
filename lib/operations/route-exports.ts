@@ -97,7 +97,7 @@ function getPdfColumns(isEnglish: boolean, isSingleManagerPdf: boolean): PdfColu
       { label: isEnglish ? "Nights" : "Dias", x: 492, maxWidth: 34, align: "right" },
       { label: isEnglish ? "Door" : "Porta", x: 536, maxWidth: 44 },
       { label: "BBQ", x: 588, maxWidth: 30 },
-      { label: isEnglish ? "Early" : "Early", x: 626, maxWidth: 40 },
+      { label: "EC", x: 626, maxWidth: 40 },
       { label: isEnglish ? "Integrator" : "Integrador", x: 674, maxWidth: 128 },
     ];
   }
@@ -251,10 +251,6 @@ export async function buildOperationPdf(
       .map((assignment) => safePdfText(assignment.checkin.condominiumName))
       .filter(Boolean),
   ).size;
-  const totalNights = filteredRun.assignments.reduce((sum, assignment) => {
-    return sum + (assignment.checkin.numberOfNights ?? 0);
-  }, 0);
-
   const createPage = () => {
     const page = pdf.addPage([842, 595]);
     page.drawRectangle({
@@ -323,16 +319,6 @@ export async function buildOperationPdf(
         boldFont,
         isEnglish ? "Reservations" : "Reservas",
         String(filteredRun.assignments.length),
-        406,
-        484,
-        122,
-      );
-      drawInfoCard(
-        page,
-        regularFont,
-        boldFont,
-        isEnglish ? "Nights" : "Noites",
-        String(totalNights),
         540,
         484,
         122,
@@ -368,13 +354,6 @@ export async function buildOperationPdf(
           color: PDF_THEME.textSecondary,
         },
       );
-      page.drawText(`${isEnglish ? "Total nights" : "Total de noites"}: ${totalNights}`, {
-        x: 580,
-        y: infoY - 28,
-        size: 10,
-        font: regularFont,
-        color: PDF_THEME.textSecondary,
-      });
     }
 
     return isFirstPage ? 456 : 514;
