@@ -284,19 +284,6 @@ export async function buildOperationPdf(
         color: PDF_THEME.title,
       });
 
-      page.drawText(
-        isEnglish
-          ? "Printable summary with optimized contrast and low ink usage"
-          : "Resumo para impressao com contraste otimizado e baixo consumo de tinta",
-        {
-          x: 36,
-          y: 527,
-          size: 9,
-          font: regularFont,
-          color: PDF_THEME.textSecondary,
-        },
-      );
-
       page.drawLine({
         start: { x: 36, y: 538 },
         end: { x: 806, y: 538 },
