@@ -147,7 +147,9 @@ function getMostImbalancedOfficePair<T extends { managerId: string; assignments:
     loadsByOffice.set(officeKey, current);
   }
 
-  let bestPair: { overloaded: T; underloaded: T; countGap: number; officeKey: string } | null = null;
+  let bestPair:
+    | { overloaded: T; underloaded: T; countGap: number; officeKey: string; allowedGap: number }
+    | null = null;
 
   for (const [officeKey, officeLoads] of loadsByOffice.entries()) {
     if (officeLoads.length <= 1) {
@@ -172,7 +174,7 @@ function getMostImbalancedOfficePair<T extends { managerId: string; assignments:
     }
 
     if (!bestPair || countGap > bestPair.countGap) {
-      bestPair = { overloaded, underloaded, countGap, officeKey };
+      bestPair = { overloaded, underloaded, countGap, officeKey, allowedGap };
     }
   }
 
@@ -782,10 +784,13 @@ export function buildDistributionPlan(input: PlanInput) {
     groupedCheckins.set(clusterLabel, existing);
   }
 
-  const maxChunkSize = Math.max(4, Math.min(10, Math.ceil(targetCheckinsPerManager * 0.55)));
   const distributionGroups = Array.from(groupedCheckins.entries()).flatMap(([clusterLabel, checkins]) => {
     const resortKey = getResortGroupKey(checkins[0]!);
     const resortCount = resortCheckinCounts.get(resortKey) ?? checkins.length;
+    const officeKey = getOfficeGroupKey(checkins[0]?.condominium?.officeId ?? null);
+    const officeTargetCheckins =
+      officeTargets.get(officeKey)?.targetCheckinsPerManager ?? targetCheckinsPerManager;
+    const maxChunkSize = Math.max(4, Math.min(10, Math.ceil(officeTargetCheckins * 0.55)));
 
     if (resortCount < 10 || checkins.length <= maxChunkSize) {
       return [[clusterLabel, checkins] as [string, CheckinInput[]]];
@@ -1177,15 +1182,17 @@ export function buildDistributionPlan(input: PlanInput) {
         assignments: assignmentsByManager.get(manager.id) ?? [],
       }))
       .sort((left, right) => right.assignments.length - left.assignments.length);
+    const officeGapByKey = new Map(
+      [...officeTargets.entries()].map(([officeKey]) => [officeKey, 4]),
+    );
+    const imbalancePair = getMostImbalancedOfficePair(managerLoads, managerOfficeKeyById, officeGapByKey);
 
-    const overloaded = managerLoads[0];
-    const underloaded = managerLoads[managerLoads.length - 1];
-
-    if (!overloaded || !underloaded) {
+    if (!imbalancePair) {
       break;
     }
+    const { overloaded, underloaded, countGap } = imbalancePair;
 
-    if (overloaded.assignments.length - underloaded.assignments.length < 5) {
+    if (countGap < 5) {
       break;
     }
 
@@ -1437,7 +1444,7 @@ export function buildDistributionPlan(input: PlanInput) {
     if (!imbalancePair) {
       break;
     }
-    const { overloaded, underloaded, countGap } = imbalancePair;
+    const { overloaded, underloaded, countGap, allowedGap } = imbalancePair;
 
     const underloadedManager = input.availableManagers.find(
       (manager) => manager.id === underloaded.managerId,
@@ -1543,7 +1550,7 @@ export function buildDistributionPlan(input: PlanInput) {
         return false;
       }
 
-      return candidate.score < (countGap > MAX_MANAGER_COUNT_GAP + 4 ? 55 : 0);
+      return candidate.score < (countGap > allowedGap + 4 ? 55 : 0);
     });
 
     if (!bestMove) {
@@ -2077,16 +2084,24 @@ export function buildDistributionPlan(input: PlanInput) {
           assignments: assignmentsByManager.get(manager.id) ?? [],
         }))
         .sort((left, right) => right.assignments.length - left.assignments.length);
+      const officeGapByKey = new Map(
+        [...officeTargets.entries()].map(([officeKey, stats]) => [officeKey, stats.maxAllowedCountGap]),
+      );
+      const imbalancePair = getMostImbalancedOfficePair(managerLoads, managerOfficeKeyById, officeGapByKey);
 
-      const overloaded = managerLoads[0];
-      if (!overloaded) {
+      if (!imbalancePair) {
         break;
       }
+      const { overloaded, allowedGap, officeKey } = imbalancePair;
 
       const underloadedCandidates = managerLoads
-        .slice(1)
+        .filter(
+          (candidate) =>
+            candidate.managerId !== overloaded.managerId &&
+            (managerOfficeKeyById.get(candidate.managerId) ?? NO_OFFICE_GROUP) === officeKey,
+        )
         .reverse()
-        .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > forcedEqualTargetGap);
+        .filter((candidate) => overloaded.assignments.length - candidate.assignments.length > allowedGap);
 
       if (underloadedCandidates.length === 0) {
         break;
