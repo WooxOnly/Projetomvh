@@ -1446,6 +1446,34 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     );
   }
 
+  function setReservedCheckinsForGroup(
+    groupId: string,
+    checkinIds: string[],
+    nextChecked: boolean,
+  ) {
+    updateOwnerRouteGroups((currentGroups) =>
+      currentGroups.map((group) => {
+        if (group.id !== groupId) {
+          return nextChecked
+            ? {
+                ...group,
+                reservedCheckinIds: group.reservedCheckinIds.filter(
+                  (value) => !checkinIds.includes(value),
+                ),
+              }
+            : group;
+        }
+
+        return {
+          ...group,
+          reservedCheckinIds: nextChecked
+            ? Array.from(new Set([...group.reservedCheckinIds, ...checkinIds]))
+            : group.reservedCheckinIds.filter((value) => !checkinIds.includes(value)),
+        };
+      }),
+    );
+  }
+
   async function handleWhatsAppCopy(target: string, managerName?: string) {
     const existingMessage =
       target === "global"
@@ -1780,6 +1808,54 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     selectedUploadCheckinById,
     selectedUploadRegularCheckins,
   ]);
+  const ownerPreRouteIssues = useMemo(() => {
+    if (form.useSpreadsheetPmAssignments || selectedUploadOwnerCheckins.length === 0) {
+      return [] as string[];
+    }
+
+    const issues: string[] = [];
+
+    if (ungroupedOwnerCheckins.length > 0) {
+      issues.push(
+        isEnglish
+          ? "There are OWN check-ins still outside any group."
+          : "Ainda existem check-ins OWN fora de qualquer grupo.",
+      );
+    }
+
+    for (const [groupIndex, group] of form.ownerRouteGroups.entries()) {
+      if (group.ownerCheckinIds.length === 0 && group.propertyManagerIds.length === 0 && group.reservedCheckinIds.length === 0) {
+        continue;
+      }
+
+      if (group.ownerCheckinIds.length === 0) {
+        issues.push(
+          isEnglish
+            ? `Owner group ${groupIndex + 1} needs at least one OWN check-in.`
+            : `O grupo OWNER ${groupIndex + 1} precisa de pelo menos um check-in OWN.`,
+        );
+      }
+
+      if (group.ownerCheckinIds.length > 0 && group.propertyManagerIds.length === 0) {
+        issues.push(
+          isEnglish
+            ? `Owner group ${groupIndex + 1} needs at least one PM.`
+            : `O grupo OWNER ${groupIndex + 1} precisa de pelo menos um PM.`,
+        );
+      }
+    }
+
+    return issues;
+  }, [
+    form.ownerRouteGroups,
+    form.useSpreadsheetPmAssignments,
+    isEnglish,
+    selectedUploadOwnerCheckins.length,
+    ungroupedOwnerCheckins.length,
+  ]);
+  const canRunOperation = useMemo(() => {
+    return form.useSpreadsheetPmAssignments || ownerPreRouteIssues.length === 0;
+  }, [form.useSpreadsheetPmAssignments, ownerPreRouteIssues.length]);
 
   useEffect(() => {
     if (!message && !error && !copyState) return;
@@ -2973,6 +3049,15 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
             className="mt-5 space-y-5"
             onSubmit={async (event) => {
               event.preventDefault();
+              if (!canRunOperation) {
+                setError(
+                  ownerPreRouteIssues[0] ??
+                    (isEnglish
+                      ? "Finish the OWNER pre-route before running the operation."
+                      : "Finalize a pré-rota OWNER antes de rodar a operação."),
+                );
+                return;
+              }
               setOperationPending(true);
               try {
                 setMessage("");
@@ -3208,6 +3293,17 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       >
                         {isEnglish ? "Create group" : "Criar grupo"}
                       </button>
+                      {ungroupedOwnerCheckins.length > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            addOwnerRouteGroup(ungroupedOwnerCheckins.map((checkin) => checkin.id))
+                          }
+                          className="rounded-full border border-cyan-300/35 bg-cyan-300/15 px-3 py-1 text-xs text-cyan-50 transition hover:border-cyan-200/55 hover:bg-cyan-300/20"
+                        >
+                          {isEnglish ? "Group remaining OWN" : "Agrupar OWN restantes"}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
 
@@ -3238,6 +3334,20 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                           )
                           .join(" • ")}
                       </p>
+                    </div>
+                  ) : null}
+                  {ownerPreRouteIssues.length > 0 ? (
+                    <div className="mt-4 rounded-2xl border border-rose-300/25 bg-rose-300/10 px-4 py-3 text-xs text-rose-100">
+                      <p className="font-semibold">
+                        {isEnglish
+                          ? "Finish the OWNER pre-route before running the operation."
+                          : "Finalize a pré-rota OWNER antes de rodar a operação."}
+                      </p>
+                      <div className="mt-2 space-y-1">
+                        {ownerPreRouteIssues.map((issue) => (
+                          <p key={issue}>{issue}</p>
+                        ))}
+                      </div>
                     </div>
                   ) : null}
 
@@ -3312,6 +3422,32 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               .map((manager) => cleanPropertyManagerName(manager.name))
                               .join(" • ")}
                           </p>
+                        ) : null}
+                        {reservedCheckins.length > 0 ? (
+                          <div className="mt-3">
+                            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                              {isEnglish ? "Reserved in this group" : "Reservados neste grupo"}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {reservedCheckins.map((checkin) => (
+                                <button
+                                  key={`${group.id}-reserved-${checkin.id}`}
+                                  type="button"
+                                  onClick={() =>
+                                    toggleReservedCheckinInGroup(group.id, checkin.id, false)
+                                  }
+                                  className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-50 transition hover:border-cyan-200/45 hover:bg-cyan-300/15"
+                                >
+                                  {(checkin.propertyName ||
+                                    formatCheckinAddress({
+                                      address: checkin.address,
+                                      building: checkin.building,
+                                    }) ||
+                                    checkin.id) + " ×"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         ) : null}
 
                         <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr,0.95fr]">
@@ -3494,6 +3630,27 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                     </button>
                                     {isExpanded ? (
                                       <div className="border-t border-white/10 px-4 py-3">
+                                        <div className="mb-3 flex justify-end">
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              setReservedCheckinsForGroup(
+                                                group.id,
+                                                condominium.checkins
+                                                  .map((checkin) => checkin.id)
+                                                  .filter(
+                                                    (checkinId) =>
+                                                      !reservedCheckinGroupIdByCheckinId.get(checkinId) ||
+                                                      reservedCheckinGroupIdByCheckinId.get(checkinId) === group.id,
+                                                  ),
+                                                true,
+                                              )
+                                            }
+                                            className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-50 transition hover:border-cyan-200/45 hover:bg-cyan-300/15"
+                                          >
+                                            {isEnglish ? "Reserve all in this resort" : "Reservar todas deste condomínio"}
+                                          </button>
+                                        </div>
                                         <div className="space-y-2">
                                           {condominium.checkins.map((checkin) => {
                                             const checked = group.reservedCheckinIds.includes(checkin.id);
@@ -3693,7 +3850,13 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
                 <button
                   type="submit"
-                  disabled={pending || operationPending || hasJustRunOperation || !form.spreadsheetUploadId}
+                  disabled={
+                    pending ||
+                    operationPending ||
+                    hasJustRunOperation ||
+                    !form.spreadsheetUploadId ||
+                    !canRunOperation
+                  }
                   className={`min-h-11 rounded-2xl px-5 py-3 text-sm font-semibold transition ${
                     hasJustRunOperation
                       ? "theme-secondary-button cursor-not-allowed text-slate-500"
