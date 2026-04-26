@@ -1474,6 +1474,27 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     );
   }
 
+  function reserveNearestCheckinsForGroup(groupId: string, count: number) {
+    const card = ownerGroupCardById.get(groupId);
+    if (!card) {
+      return;
+    }
+
+    const nextCheckinIds = card.availableCheckinsOrdered
+      .map((checkin) => checkin.id)
+      .filter((checkinId) => {
+        const reservedGroupId = reservedCheckinGroupIdByCheckinId.get(checkinId);
+        return !reservedGroupId || reservedGroupId === groupId;
+      })
+      .slice(0, count);
+
+    if (nextCheckinIds.length === 0) {
+      return;
+    }
+
+    setReservedCheckinsForGroup(groupId, nextCheckinIds, true);
+  }
+
   async function handleWhatsAppCopy(target: string, managerName?: string) {
     const existingMessage =
       target === "global"
@@ -1787,12 +1808,15 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
           return left.name.localeCompare(right.name);
         });
 
+      const availableCheckinsOrdered = condominiums.flatMap((condominium) => condominium.checkins);
+
       return {
         group,
         ownerCheckins,
         reservedCheckins,
         ownerCentroid,
         condominiums,
+        availableCheckinsOrdered,
         selectedManagers: selectedAvailableManagers.filter((manager) =>
           group.propertyManagerIds.includes(manager.id),
         ),
@@ -1834,6 +1858,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     selectedUploadRegularCheckins.length,
     ungroupedOwnerCheckins.length,
   ]);
+  const ownerGroupCardById = useMemo(() => {
+    return new Map(ownerGroupCards.map((card) => [card.group.id, card]));
+  }, [ownerGroupCards]);
   const ownerPreRouteIssues = useMemo(() => {
     if (form.useSpreadsheetPmAssignments || selectedUploadOwnerCheckins.length === 0) {
       return [] as string[];
@@ -3479,6 +3506,22 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                               .join(" • ")}
                           </p>
                         ) : null}
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => reserveNearestCheckinsForGroup(group.id, 3)}
+                            className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-50 transition hover:border-cyan-200/45 hover:bg-cyan-300/15"
+                          >
+                            {isEnglish ? "Reserve nearest 3" : "Reservar 3 mais próximos"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => reserveNearestCheckinsForGroup(group.id, 5)}
+                            className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-50 transition hover:border-cyan-200/45 hover:bg-cyan-300/15"
+                          >
+                            {isEnglish ? "Reserve nearest 5" : "Reservar 5 mais próximos"}
+                          </button>
+                        </div>
                         {reservedCheckins.length > 0 ? (
                           <div className="mt-3">
                             <div className="flex items-center justify-between gap-3">
