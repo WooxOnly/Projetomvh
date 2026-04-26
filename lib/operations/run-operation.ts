@@ -23,6 +23,12 @@ type RunOperationInput = {
   decisionMode: "default" | "override";
   availablePropertyManagerIds?: string[];
   ownerAssignmentsByCheckinId?: Record<string, string[]>;
+  ownerRouteGroups?: Array<{
+    id: string;
+    ownerCheckinIds: string[];
+    propertyManagerIds: string[];
+    reservedCheckinIds: string[];
+  }>;
   useSpreadsheetPmAssignments?: boolean;
   preventMixedCondominiumOffices?: boolean;
   forceEqualCheckins?: boolean;
@@ -52,6 +58,29 @@ type RouteSortableAssignment = {
 type RoutePoint = {
   lat: number;
   lng: number;
+};
+
+type AvailableManagerRecord = {
+  id: string;
+  name: string;
+  officeId: string | null;
+  office: {
+    lat: number | null;
+    lng: number | null;
+  } | null;
+};
+
+type OperationManagerRecord = AvailableManagerRecord & {
+  office: {
+    id?: string;
+    name?: string;
+    address?: string | null;
+    city?: string | null;
+    state?: string | null;
+    zipCode?: string | null;
+    lat: number | null;
+    lng: number | null;
+  } | null;
 };
 
 function getExpiryDate(operationDate: Date) {
@@ -247,8 +276,10 @@ export async function runDailyOperation(input: RunOperationInput) {
   }
 
   const ownerAssignmentsByCheckinId = input.ownerAssignmentsByCheckinId ?? {};
+  const ownerRouteGroups = input.ownerRouteGroups ?? [];
   const ownerCheckinIds = new Set(ownerCheckins.map((checkin) => checkin.id));
   const reservedOwnerManagerIds = new Set<string>();
+  const reservedManualCheckinIds = new Set<string>();
   const ownerAssignmentRows: Array<{
     checkinId: string;
     propertyManagerId: string;
@@ -258,39 +289,7 @@ export async function runDailyOperation(input: RunOperationInput) {
     source: string;
   }> = [];
 
-  for (const ownerCheckin of ownerCheckins) {
-    const selectedManagerIds = Array.from(
-      new Set((ownerAssignmentsByCheckinId[ownerCheckin.id] ?? []).filter(Boolean)),
-    );
-
-    if (selectedManagerIds.length === 0) {
-      throw new Error(
-        `Defina ao menos um PM responsável para o OWN ${ownerCheckin.propertyName ?? ownerCheckin.address ?? ownerCheckin.id}.`,
-      );
-    }
-
-    selectedManagerIds.forEach((propertyManagerId, index) => {
-      if (!availableManagerIds.has(propertyManagerId)) {
-        throw new Error("Os PMs definidos para OWN precisam estar selecionados como disponíveis no dia.");
-      }
-
-      reservedOwnerManagerIds.add(propertyManagerId);
-      ownerAssignmentRows.push({
-        checkinId: ownerCheckin.id,
-        propertyManagerId,
-        routeOrder: index + 1,
-        workload: 1,
-        clusterLabel: ownerCheckin.condominiumName ?? null,
-        source: "owner_manual",
-      });
-    });
-  }
-
-  for (const checkinId of Object.keys(ownerAssignmentsByCheckinId)) {
-    if (!ownerCheckinIds.has(checkinId)) {
-      throw new Error("Foi encontrada uma atribuição de OWN para um check-in que não pertence mais ao upload atual.");
-    }
-  }
+  const checkinById = new Map(operationalCheckins.map((checkin) => [checkin.id, checkin]));
 
   const temporaryOfficeEntries: Array<[string, string]> = [];
   for (const [propertyManagerId, officeId] of Object.entries(input.temporaryOfficeByManagerId ?? {})) {
@@ -330,7 +329,7 @@ export async function runDailyOperation(input: RunOperationInput) {
     temporaryOfficeById.set(officeRecord.id, officeRecord);
   }
 
-  const managersForOperation = [];
+  const managersForOperation: OperationManagerRecord[] = [];
   for (const managerRecord of availableManagers) {
     const overrideOfficeId = input.temporaryOfficeByManagerId?.[managerRecord.id];
     const overrideOffice = overrideOfficeId ? temporaryOfficeById.get(overrideOfficeId) : null;
@@ -347,29 +346,197 @@ export async function runDailyOperation(input: RunOperationInput) {
     });
   }
 
+  const managersForOperationById = new Map(managersForOperation.map((managerRecord) => [managerRecord.id, managerRecord]));
+
+  if (ownerRouteGroups.length > 0) {
+    const groupedOwnerIds = new Set<string>();
+
+    for (const group of ownerRouteGroups) {
+      const normalizedOwnerCheckinIds = Array.from(new Set(group.ownerCheckinIds.filter(Boolean)));
+      const normalizedPropertyManagerIds = Array.from(new Set(group.propertyManagerIds.filter(Boolean)));
+      const normalizedReservedCheckinIds = Array.from(new Set(group.reservedCheckinIds.filter(Boolean)));
+
+      if (normalizedOwnerCheckinIds.length === 0) {
+        continue;
+      }
+
+      if (normalizedPropertyManagerIds.length === 0) {
+        throw new Error("Todo grupo OWNER precisa ter ao menos um PM responsável.");
+      }
+
+      for (const propertyManagerId of normalizedPropertyManagerIds) {
+        if (!availableManagerIds.has(propertyManagerId)) {
+          throw new Error("Os PMs definidos para grupos OWNER precisam estar selecionados como disponíveis no dia.");
+        }
+        reservedOwnerManagerIds.add(propertyManagerId);
+      }
+
+      for (const ownerCheckinId of normalizedOwnerCheckinIds) {
+        const ownerCheckin = checkinById.get(ownerCheckinId);
+
+        if (!ownerCheckin || !ownerCheckinIds.has(ownerCheckinId)) {
+          throw new Error("Foi encontrado um check-in OWN inválido dentro da pré-rota OWNER.");
+        }
+
+        if (groupedOwnerIds.has(ownerCheckinId)) {
+          throw new Error("Um mesmo check-in OWN não pode aparecer em mais de um grupo OWNER.");
+        }
+
+        groupedOwnerIds.add(ownerCheckinId);
+      }
+
+      const reservedGroupCheckins = normalizedReservedCheckinIds.map((checkinId) => {
+        const checkin = checkinById.get(checkinId);
+
+        if (!checkin || ownerCheckinIds.has(checkinId)) {
+          throw new Error("Os check-ins reservados na pré-rota OWNER precisam ser check-ins normais do upload.");
+        }
+
+        if (reservedManualCheckinIds.has(checkinId)) {
+          throw new Error("Um mesmo check-in reservado não pode aparecer em mais de um grupo OWNER.");
+        }
+
+        reservedManualCheckinIds.add(checkinId);
+        return checkin;
+      });
+
+      const ownerGroupCheckins = normalizedOwnerCheckinIds
+        .map((checkinId) => checkinById.get(checkinId))
+        .filter((value): value is NonNullable<typeof operationalCheckins[number]> => Boolean(value));
+      const groupCheckins = [...ownerGroupCheckins, ...reservedGroupCheckins];
+      const groupManagers = normalizedPropertyManagerIds
+        .map((propertyManagerId) => managersForOperationById.get(propertyManagerId))
+        .filter((value): value is NonNullable<typeof managersForOperation[number]> => Boolean(value));
+      const groupLabel = `owner-group:${group.id}`;
+
+      const ownerGroupBasePlan = groupCheckins.length > 0
+        ? enforceFarResortLimitedMix(
+            enforceSmallResortSingleManager(
+              await buildOperationPlan({
+                checkins: groupCheckins,
+                availableManagers: groupManagers,
+                decisionMode: input.decisionMode,
+                preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+                forceEqualCheckins: input.forceEqualCheckins ?? true,
+              }),
+              groupCheckins,
+            ),
+            {
+              checkins: groupCheckins,
+              availableManagers: groupManagers,
+              decisionMode: input.decisionMode,
+              preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+              forceEqualCheckins: input.forceEqualCheckins ?? true,
+            },
+          )
+        : [];
+
+      const ownerGroupPlan = groupCheckins.length > 0
+        ? enforceFarResortLimitedMix(
+            enforceEqualCheckinCounts(
+              enforceFarResortLimitedMix(
+                enforceSmallResortSingleManager(ownerGroupBasePlan, groupCheckins),
+                {
+                  checkins: groupCheckins,
+                  availableManagers: groupManagers,
+                  decisionMode: input.decisionMode,
+                  preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+                  forceEqualCheckins: input.forceEqualCheckins ?? true,
+                },
+              ),
+              {
+                checkins: groupCheckins,
+                availableManagers: groupManagers,
+                decisionMode: input.decisionMode,
+                preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+                forceEqualCheckins: input.forceEqualCheckins ?? true,
+              },
+            ),
+            {
+              checkins: groupCheckins,
+              availableManagers: groupManagers,
+              decisionMode: input.decisionMode,
+              preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
+              forceEqualCheckins: input.forceEqualCheckins ?? true,
+            },
+          )
+        : [];
+
+      for (const assignment of ownerGroupPlan) {
+        ownerAssignmentRows.push({
+          ...assignment,
+          clusterLabel: groupLabel,
+          source: ownerCheckinIds.has(assignment.checkinId) ? "owner_manual" : "owner_group_manual",
+        });
+      }
+    }
+
+    if (groupedOwnerIds.size !== ownerCheckinIds.size) {
+      throw new Error("Todos os check-ins OWN do dia precisam estar dentro de um grupo da pré-rota OWNER.");
+    }
+  } else {
+    for (const ownerCheckin of ownerCheckins) {
+      const selectedManagerIds = Array.from(
+        new Set((ownerAssignmentsByCheckinId[ownerCheckin.id] ?? []).filter(Boolean)),
+      );
+
+      if (selectedManagerIds.length === 0) {
+        throw new Error(
+          `Defina ao menos um PM responsável para o OWN ${ownerCheckin.propertyName ?? ownerCheckin.address ?? ownerCheckin.id}.`,
+        );
+      }
+
+      selectedManagerIds.forEach((propertyManagerId, index) => {
+        if (!availableManagerIds.has(propertyManagerId)) {
+          throw new Error("Os PMs definidos para OWN precisam estar selecionados como disponíveis no dia.");
+        }
+
+        reservedOwnerManagerIds.add(propertyManagerId);
+        ownerAssignmentRows.push({
+          checkinId: ownerCheckin.id,
+          propertyManagerId,
+          routeOrder: index + 1,
+          workload: 1,
+          clusterLabel: ownerCheckin.condominiumName ?? null,
+          source: "owner_manual",
+        });
+      });
+    }
+
+    for (const checkinId of Object.keys(ownerAssignmentsByCheckinId)) {
+      if (!ownerCheckinIds.has(checkinId)) {
+        throw new Error("Foi encontrada uma atribuição de OWN para um check-in que não pertence mais ao upload atual.");
+      }
+    }
+  }
+
   const managersForDistribution = managersForOperation.filter(
     (managerRecord) => !reservedOwnerManagerIds.has(managerRecord.id),
   );
 
-  if (distributionCheckins.length > 0 && managersForDistribution.length === 0) {
+  const distributionCheckinsRemaining = distributionCheckins.filter(
+    (checkin) => !reservedManualCheckinIds.has(checkin.id),
+  );
+
+  if (distributionCheckinsRemaining.length > 0 && managersForDistribution.length === 0) {
     throw new Error("Selecione ao menos um PM livre para a distribuição automática dos check-ins que não são OWN.");
   }
 
   const basePlan =
-    distributionCheckins.length > 0
+    distributionCheckinsRemaining.length > 0
       ? enforceFarResortLimitedMix(
           enforceSmallResortSingleManager(
             await buildOperationPlan({
-              checkins: distributionCheckins,
+              checkins: distributionCheckinsRemaining,
               availableManagers: managersForDistribution,
               decisionMode: input.decisionMode,
               preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
               forceEqualCheckins: input.forceEqualCheckins ?? true,
             }),
-            distributionCheckins,
+            distributionCheckinsRemaining,
           ),
           {
-            checkins: distributionCheckins,
+            checkins: distributionCheckinsRemaining,
             availableManagers: managersForDistribution,
             decisionMode: input.decisionMode,
             preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
@@ -378,7 +545,7 @@ export async function runDailyOperation(input: RunOperationInput) {
         )
       : [];
   const plan =
-    distributionCheckins.length > 0
+    distributionCheckinsRemaining.length > 0
       ? enforceFarResortLimitedMix(
           enforceEqualCheckinCounts(
             enforceFarResortLimitedMix(
@@ -386,7 +553,7 @@ export async function runDailyOperation(input: RunOperationInput) {
                 input.useHereRouting
                   ? await optimizePlanWithHere(
                       {
-                        checkins: distributionCheckins,
+                        checkins: distributionCheckinsRemaining,
                         availableManagers: managersForDistribution,
                         decisionMode: input.decisionMode,
                         preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
@@ -395,10 +562,10 @@ export async function runDailyOperation(input: RunOperationInput) {
                       basePlan,
                     )
                   : basePlan,
-                distributionCheckins,
+                distributionCheckinsRemaining,
               ),
               {
-                checkins: distributionCheckins,
+                checkins: distributionCheckinsRemaining,
                 availableManagers: managersForDistribution,
                 decisionMode: input.decisionMode,
                 preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
@@ -406,7 +573,7 @@ export async function runDailyOperation(input: RunOperationInput) {
               },
             ),
             {
-              checkins: distributionCheckins,
+              checkins: distributionCheckinsRemaining,
               availableManagers: managersForDistribution,
               decisionMode: input.decisionMode,
               preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,
@@ -414,7 +581,7 @@ export async function runDailyOperation(input: RunOperationInput) {
             },
           ),
           {
-            checkins: distributionCheckins,
+            checkins: distributionCheckinsRemaining,
             availableManagers: managersForDistribution,
             decisionMode: input.decisionMode,
             preventMixedCondominiumOffices: input.preventMixedCondominiumOffices ?? true,

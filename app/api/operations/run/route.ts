@@ -17,6 +17,12 @@ export async function POST(request: Request) {
       decisionMode?: "default" | "override";
       availablePropertyManagerIds?: string[];
       ownerAssignmentsByCheckinId?: Record<string, string[]>;
+      ownerRouteGroups?: Array<{
+        id: string;
+        ownerCheckinIds: string[];
+        propertyManagerIds: string[];
+        reservedCheckinIds: string[];
+      }>;
       useSpreadsheetPmAssignments?: boolean;
       preventMixedCondominiumOffices?: boolean;
       forceEqualCheckins?: boolean;
@@ -34,6 +40,7 @@ export async function POST(request: Request) {
       decisionMode: payload.decisionMode === "override" ? "override" : "default",
       availablePropertyManagerIds: payload.availablePropertyManagerIds ?? [],
       ownerAssignmentsByCheckinId: payload.ownerAssignmentsByCheckinId ?? {},
+      ownerRouteGroups: payload.ownerRouteGroups ?? [],
       useSpreadsheetPmAssignments: payload.useSpreadsheetPmAssignments === true,
       preventMixedCondominiumOffices: payload.preventMixedCondominiumOffices !== false,
       forceEqualCheckins: payload.forceEqualCheckins !== false,

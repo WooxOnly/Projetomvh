@@ -99,13 +99,24 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
         select: {
           id: true,
           sourceRowNumber: true,
+          classification: true,
           propertyManagerId: true,
           propertyManagerName: true,
           integratorName: true,
+          guestName: true,
+          numberOfNights: true,
+          hasEarlyCheckin: true,
           condominiumName: true,
           propertyName: true,
           building: true,
           address: true,
+          lat: true,
+          lng: true,
+          condominium: {
+            select: {
+              officeId: true,
+            },
+          },
         },
       },
       operationRuns: {
@@ -211,6 +222,23 @@ export async function getUploadHistory(filter: UploadHistoryFilter = {}) {
       totalUniqueProperties: historyMetrics.totalUniqueProperties,
       totalUniquePMs: historyMetrics.totalUniquePMs,
       importedPropertyManagers,
+      routePlanningCheckins: upload.checkins
+        .filter((checkin) => checkin.classification === CheckinClassification.CHECKIN)
+        .map((checkin) => ({
+          id: checkin.id,
+          sourceRowNumber: checkin.sourceRowNumber,
+          integratorName: checkin.integratorName,
+          guestName: checkin.guestName,
+          numberOfNights: checkin.numberOfNights,
+          hasEarlyCheckin: checkin.hasEarlyCheckin,
+          condominiumName: checkin.condominiumName,
+          propertyName: checkin.propertyName,
+          building: checkin.building,
+          address: checkin.address,
+          officeId: checkin.condominium?.officeId ?? null,
+          lat: checkin.lat,
+          lng: checkin.lng,
+        })),
       ownerCheckins: upload.checkins
         .filter((checkin) => isOwnerStayIntegrator(checkin.integratorName))
         .map((checkin) => ({

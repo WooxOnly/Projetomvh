@@ -153,6 +153,21 @@ type DashboardShellProps = {
         id: string | null;
         name: string;
       }>;
+      routePlanningCheckins: Array<{
+        id: string;
+        sourceRowNumber: number | null;
+        integratorName: string | null;
+        guestName: string | null;
+        numberOfNights: number | null;
+        hasEarlyCheckin: boolean | null;
+        condominiumName: string | null;
+        propertyName: string | null;
+        building: string | null;
+        address: string | null;
+        officeId: string | null;
+        lat: number | null;
+        lng: number | null;
+      }>;
       ownerCheckins: Array<{
         id: string;
         sourceRowNumber: number | null;
@@ -199,6 +214,7 @@ type DashboardShellProps = {
         routeOrder: number;
         workload: number;
         source: string;
+        clusterLabel: string | null;
         propertyManager: {
           id: string;
           name: string;

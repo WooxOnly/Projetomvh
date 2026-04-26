@@ -8,6 +8,7 @@ import { HERE_ROUTING_NOTE, getHereRoutingLockedUntil } from "@/lib/operations/h
 import { getLatestOperationRun } from "@/lib/operations/queries";
 import { ensureOperationRouteCoordinates } from "@/lib/operations/route-geocoding";
 import { refreshOperationRunRouting, runDailyOperation } from "@/lib/operations/run-operation";
+import { isOwnerStayIntegrator } from "@/lib/upload/integrator-rules";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -65,6 +66,55 @@ export async function POST(request: Request) {
       availablePropertyManagerIds.push(availablePm.propertyManagerId);
     }
 
+    const ownerRouteGroups = (() => {
+      const groupedAssignments = new Map<
+        string,
+        {
+          id: string;
+          ownerCheckinIds: Set<string>;
+          propertyManagerIds: Set<string>;
+          reservedCheckinIds: Set<string>;
+        }
+      >();
+
+      for (const assignment of latestOperationRun.assignments) {
+        if (
+          assignment.source !== "owner_manual" &&
+          assignment.source !== "owner_group_manual"
+        ) {
+          continue;
+        }
+
+        const prefixedClusterLabel = assignment.clusterLabel?.startsWith("owner-group:")
+          ? assignment.clusterLabel.slice("owner-group:".length)
+          : null;
+        const groupId = prefixedClusterLabel || `owner-legacy-${assignment.checkin.id}`;
+        const currentGroup = groupedAssignments.get(groupId) ?? {
+          id: groupId,
+          ownerCheckinIds: new Set<string>(),
+          propertyManagerIds: new Set<string>(),
+          reservedCheckinIds: new Set<string>(),
+        };
+
+        currentGroup.propertyManagerIds.add(assignment.propertyManager.id);
+
+        if (isOwnerStayIntegrator(assignment.checkin.integratorName)) {
+          currentGroup.ownerCheckinIds.add(assignment.checkin.id);
+        } else {
+          currentGroup.reservedCheckinIds.add(assignment.checkin.id);
+        }
+
+        groupedAssignments.set(groupId, currentGroup);
+      }
+
+      return Array.from(groupedAssignments.values()).map((group) => ({
+        id: group.id,
+        ownerCheckinIds: Array.from(group.ownerCheckinIds),
+        propertyManagerIds: Array.from(group.propertyManagerIds),
+        reservedCheckinIds: Array.from(group.reservedCheckinIds),
+      }));
+    })();
+
     const operationRun = await runDailyOperation({
       spreadsheetUploadId: latestOperationRun.spreadsheetUpload.id,
       decisionMode: latestOperationRun.decisionMode === "override" ? "override" : "default",
@@ -84,6 +134,7 @@ export async function POST(request: Request) {
 
         return groupedAssignments;
       })(),
+      ownerRouteGroups,
       useSpreadsheetPmAssignments: latestOperationRun.useSpreadsheetPmAssignments,
       preventMixedCondominiumOffices: latestOperationRun.preventMixedCondominiumOffices,
       forceEqualCheckins: latestOperationRun.forceEqualCheckins,
