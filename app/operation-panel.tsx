@@ -1635,6 +1635,16 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
 
     return map;
   }, [form.ownerRouteGroups]);
+  const ownerGroupIndexById = useMemo(() => {
+    return new Map(form.ownerRouteGroups.map((group, index) => [group.id, index + 1]));
+  }, [form.ownerRouteGroups]);
+  const ungroupedOwnerCheckins = useMemo(() => {
+    const groupedOwnerIds = new Set(
+      form.ownerRouteGroups.flatMap((group) => group.ownerCheckinIds),
+    );
+
+    return selectedUploadOwnerCheckins.filter((checkin) => !groupedOwnerIds.has(checkin.id));
+  }, [form.ownerRouteGroups, selectedUploadOwnerCheckins]);
   const ownerGroupCards = useMemo(() => {
     return form.ownerRouteGroups.map((group) => {
       const ownerCheckins = group.ownerCheckinIds
@@ -1755,6 +1765,9 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
         reservedCheckins,
         ownerCentroid,
         condominiums,
+        selectedManagers: selectedAvailableManagers.filter((manager) =>
+          group.propertyManagerIds.includes(manager.id),
+        ),
       };
     });
   }, [
@@ -1763,6 +1776,7 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     ownerGroupCondominiumFilterById,
     ownerGroupSearchById,
     reservedCheckinGroupIdByCheckinId,
+    selectedAvailableManagers,
     selectedUploadCheckinById,
     selectedUploadRegularCheckins,
   ]);
@@ -3204,9 +3218,39 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         : "Selecione primeiro os PMs do dia acima antes de configurar a pré-rota OWNER."}
                     </p>
                   ) : null}
+                  {ungroupedOwnerCheckins.length > 0 ? (
+                    <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-xs text-amber-50">
+                      <p className="font-semibold">
+                        {isEnglish
+                          ? "There are OWN check-ins still outside any group."
+                          : "Ainda existem check-ins OWN fora de qualquer grupo."}
+                      </p>
+                      <p className="mt-1 text-amber-100/90">
+                        {ungroupedOwnerCheckins
+                          .map(
+                            (item) =>
+                              item.propertyName ||
+                              formatCheckinAddress({
+                                address: item.address,
+                                building: item.building,
+                              }) ||
+                              item.id,
+                          )
+                          .join(" • ")}
+                      </p>
+                    </div>
+                  ) : null}
 
                   <div className="mt-4 space-y-4">
-                    {ownerGroupCards.map(({ group, ownerCheckins, reservedCheckins, ownerCentroid, condominiums }, groupIndex) => (
+                    {ownerGroupCards.map(
+                      ({
+                        group,
+                        ownerCheckins,
+                        reservedCheckins,
+                        ownerCentroid,
+                        condominiums,
+                        selectedManagers,
+                      }, groupIndex) => (
                       <div key={group.id} className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                           <div>
@@ -3237,6 +3281,38 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                             {isEnglish ? "Remove group" : "Remover grupo"}
                           </button>
                         </div>
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <span className="rounded-full border border-amber-300/25 bg-amber-300/12 px-3 py-1 text-xs text-amber-50">
+                            {ownerCheckins.length} OWN
+                          </span>
+                          <span className="rounded-full border border-cyan-300/25 bg-cyan-300/12 px-3 py-1 text-xs text-cyan-50">
+                            {selectedManagers.length} {isEnglish ? "PM(s)" : "PM(s)"}
+                          </span>
+                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+                            {reservedCheckins.length}{" "}
+                            {isEnglish ? "reserved check-in(s)" : "check-in(s) reservados"}
+                          </span>
+                        </div>
+                        {ownerCheckins.length === 0 || selectedManagers.length === 0 ? (
+                          <div className="mt-3 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-xs text-rose-100">
+                            {ownerCheckins.length === 0
+                              ? isEnglish
+                                ? "This group still needs at least one OWN check-in."
+                                : "Este grupo ainda precisa de pelo menos um check-in OWN."
+                              : isEnglish
+                                ? "This group still needs at least one PM."
+                                : "Este grupo ainda precisa de pelo menos um PM."}
+                          </div>
+                        ) : null}
+                        {selectedManagers.length > 0 ? (
+                          <p className="mt-3 text-xs text-slate-300">
+                            {isEnglish ? "Selected PMs" : "PMs selecionados"}:{" "}
+                            {selectedManagers
+                              .map((manager) => cleanPropertyManagerName(manager.name))
+                              .join(" • ")}
+                          </p>
+                        ) : null}
 
                         <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr,0.95fr]">
                           <div className="space-y-4">
@@ -3421,9 +3497,14 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                         <div className="space-y-2">
                                           {condominium.checkins.map((checkin) => {
                                             const checked = group.reservedCheckinIds.includes(checkin.id);
+                                            const reservedByOtherGroupId =
+                                              reservedCheckinGroupIdByCheckinId.get(checkin.id) ?? null;
                                             const reservedByOtherGroup =
-                                              reservedCheckinGroupIdByCheckinId.get(checkin.id) &&
-                                              reservedCheckinGroupIdByCheckinId.get(checkin.id) !== group.id;
+                                              reservedByOtherGroupId != null && reservedByOtherGroupId !== group.id;
+                                            const reservedByOtherGroupIndex =
+                                              reservedByOtherGroupId != null
+                                                ? ownerGroupIndexById.get(reservedByOtherGroupId) ?? null
+                                                : null;
 
                                             return (
                                               <label
@@ -3431,6 +3512,8 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                                 className={`flex cursor-pointer items-start justify-between gap-3 rounded-2xl border px-3 py-3 text-left transition ${
                                                   checked
                                                     ? "border-cyan-300/35 bg-cyan-300/12"
+                                                    : reservedByOtherGroup
+                                                      ? "cursor-not-allowed border-amber-300/20 bg-amber-300/8 opacity-80"
                                                     : "border-white/10 bg-slate-950/35"
                                                 }`}
                                               >
@@ -3454,6 +3537,13 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                                         {isEnglish ? "Row" : "Linha"} {checkin.sourceRowNumber}
                                                       </span>
                                                     ) : null}
+                                                    {reservedByOtherGroup && reservedByOtherGroupIndex != null ? (
+                                                      <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[10px] text-amber-100">
+                                                        {isEnglish
+                                                          ? `Reserved in group ${reservedByOtherGroupIndex}`
+                                                          : `Reservado no grupo ${reservedByOtherGroupIndex}`}
+                                                      </span>
+                                                    ) : null}
                                                   </div>
                                                   <p className="mt-2 text-sm font-semibold text-white">
                                                     {formatCheckinAddress({
@@ -3464,6 +3554,13 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                                                   <p className="mt-1 text-xs text-amber-100">
                                                     Guest: {checkin.guestName || (isEnglish ? "Not informed" : "Não informado")}
                                                   </p>
+                                                  {reservedByOtherGroup && reservedByOtherGroupIndex != null ? (
+                                                    <p className="mt-1 text-[11px] text-amber-100/90">
+                                                      {isEnglish
+                                                        ? "Remove it from the other group to use it here."
+                                                        : "Remova do outro grupo para usar aqui."}
+                                                    </p>
+                                                  ) : null}
                                                 </div>
                                                 <div className="text-right text-xs text-slate-300">
                                                   <p>{isEnglish ? "Nights" : "Noites"}: {checkin.numberOfNights ?? "N/D"}</p>
