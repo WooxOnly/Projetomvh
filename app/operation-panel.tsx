@@ -1808,6 +1808,32 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
     selectedUploadCheckinById,
     selectedUploadRegularCheckins,
   ]);
+  const ownerPreRouteSummary = useMemo(() => {
+    const groupedOwnerCount = form.ownerRouteGroups.reduce(
+      (total, group) => total + group.ownerCheckinIds.length,
+      0,
+    );
+    const reservedRegularCount = form.ownerRouteGroups.reduce(
+      (total, group) => total + group.reservedCheckinIds.length,
+      0,
+    );
+
+    return {
+      totalOwn: selectedUploadOwnerCheckins.length,
+      groupedOwn: groupedOwnerCount,
+      remainingOwn: ungroupedOwnerCheckins.length,
+      reservedRegular: reservedRegularCount,
+      remainingAutomatic: Math.max(
+        0,
+        selectedUploadRegularCheckins.length - reservedRegularCount,
+      ),
+    };
+  }, [
+    form.ownerRouteGroups,
+    selectedUploadOwnerCheckins.length,
+    selectedUploadRegularCheckins.length,
+    ungroupedOwnerCheckins.length,
+  ]);
   const ownerPreRouteIssues = useMemo(() => {
     if (form.useSpreadsheetPmAssignments || selectedUploadOwnerCheckins.length === 0) {
       return [] as string[];
@@ -3306,6 +3332,36 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                       ) : null}
                     </div>
                   </div>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">OWN</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{ownerPreRouteSummary.totalOwn}</p>
+                    </div>
+                    <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-amber-200">
+                        {isEnglish ? "OWN grouped" : "OWN agrupados"}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-amber-50">{ownerPreRouteSummary.groupedOwn}</p>
+                    </div>
+                    <div className="rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-rose-200">
+                        {isEnglish ? "OWN pending" : "OWN pendentes"}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-rose-50">{ownerPreRouteSummary.remainingOwn}</p>
+                    </div>
+                    <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-200">
+                        {isEnglish ? "Reserved check-ins" : "Check-ins reservados"}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-cyan-50">{ownerPreRouteSummary.reservedRegular}</p>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">
+                        {isEnglish ? "Auto distribution left" : "Restante automático"}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-emerald-50">{ownerPreRouteSummary.remainingAutomatic}</p>
+                    </div>
+                  </div>
 
                   {selectedAvailableManagers.length === 0 ? (
                     <p className="mt-4 text-xs text-amber-100">
@@ -3425,9 +3481,24 @@ export function OperationPanel({ data, mode = "full", onOpenRouteTab }: Operatio
                         ) : null}
                         {reservedCheckins.length > 0 ? (
                           <div className="mt-3">
-                            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                              {isEnglish ? "Reserved in this group" : "Reservados neste grupo"}
-                            </p>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                                {isEnglish ? "Reserved in this group" : "Reservados neste grupo"}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setReservedCheckinsForGroup(
+                                    group.id,
+                                    reservedCheckins.map((checkin) => checkin.id),
+                                    false,
+                                  )
+                                }
+                                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+                              >
+                                {isEnglish ? "Clear reserved" : "Limpar reservados"}
+                              </button>
+                            </div>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {reservedCheckins.map((checkin) => (
                                 <button
